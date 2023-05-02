@@ -38,6 +38,7 @@ To accomplish this goal, the L8ARP will ultimately act as a CDN like distributor
 
 __Fig. 1: Highlevel Architecture of a future Layer8 System.__
 
+
 ## Task Overview
 (For the purposes of this initial implementation / contest, secure transmission of symmetric keys is to be assumed. Predetermined symmetric keys are to be used with the assumption that an asymmetric key exchange protocol will be developed and deployed in the future.) 
 You are to write:
@@ -70,20 +71,20 @@ Upon receipt of the POST request(s), your Layer8 Interpreter is to reverse the a
 
 ### Visual Overview of a Message With Encrypted Body
 ```
-**HTTPs Headers** 
+HTTPs Headers:
  POST </server-api-endpoint> <HTTPs>
  Content-Type: Plain/Text
  Content-Length: <length> 
  < …other HTTPs headers… >
 
-**Custom Headers** 
+Custom Headers:
   x-cin: <16 bits (b64)>
   x-msg-cntr: <32-128 bits (b64)>
 
-**Body** 
-  Q29udHJhcnkgdG8gcG9wdWxhciBiZWxpZWYsIExvcmVtIElwc3VtIGlzIG5vdCBzaW1wbHkgcmFuZG9tIHRleHQuIEl0IGhhcyByb290cyBpbiBhIHBpZWNlIG9mIGNsYXNzaWNhbCBMYXRpbiBsaXRlcmF0dXJlIGZyb20gNDUgQkMsIG1ha2luZyBpdCBvdmVyIDIwMDAgeWVhcRoaXMgYm9vayBpcyBhIHRyZWF0aXNlIG9uIHRoZSB0aGVvcnkgb2YgZXRoaWNzLCB2ZXJ5IHBvcHVsYXIgZHVyaW5nIHRoZSBSZW5haXNzYW5jZS4gVGhlIGZpcnN0IGxpbmUgb2YgTG9yZW0gSXBzdW0sICJMb3JlbSBpcHN1bSBkb2xvciBzYgTG9yZW0YgTG9yZW0YgTG9yZW0bslbSBpcHN1bSBkb2xvciBzYgTG9yZW0YNsNsCCCWTG9yZWTG9aXQgYW1ldC4uIIwgY29tZXMgZnJvbSBhIGxpbmUgaW4gc2VjdGlvbiAxLjEwLjMy
+Body:
+Q29udHJhcnkgdG8gcG9wdWxhciBiZWxpZWYsIExvcmVtIElwc3VtIGlzIG5vdCBzaW1wbHkgcmFuZG9tIHRleHQuIEl0IGhhcyByb290cyBpbiBhIHBpZWNlIG9mIGNsYXNzaWNhbCBMYXRpbiBsaXRlcmF0dXJlIGZyb20gNDUgQkMsIG1ha2luZyBpdCBvdmVyIDIwMDAgeWVhcRoaXMgYm9vayBpcyBhIHRyZWF0aXNlIG9uIHRoZSB0aGVvcnkgb2YgZXRoaWNzLCB2ZXJ5IHBvcHVsYXIgZHVyaW5nIHRoZSBSZW5haXNzYW5jZS4gVGhlIGZpcnN0IGxpbmUgb2YgTG9yZW0gSXBzdW0sICJMb3JlbSBpcHN1bSBkb2xvciBzYgTG9yZW0YgTG9yZW0YgTG9yZW0bslbSBpcHN1bSBkb2xvciBzYgTG9yZW0YNsNsCCCWTG9yZWTG9aXQgYW1ldC4uIIwgY29tZXMgZnJvbSBhIGxpbmUgaW4gc2VjdGlvbiAxLjEwLjMy
 
-**Mac** 
+Mac: 
     gYW1ldC4uIIwgY29tZXMgZnJvbSBhIGxpbmUgaW4gc2VjdGlvbiAxLjEwLjMy
 ```
 _Fig. 2: Example HTTPs Message_

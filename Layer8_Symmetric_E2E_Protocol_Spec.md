@@ -1,4 +1,5 @@
-# Layer8 E2E Symmetric Encryption Protocol: Software Competition Specification and Criteria
+# Layer8 E2E Symmetric Encryption Protocol: RFP-01
+## Software Competition Specification and Criteria
 
 ## Summary
 
@@ -11,7 +12,7 @@
 **Background**: Layer8 is intended to be a suite protocols that implement standard cryptographic primitives and VPN techniques to facilitate end-to-end encryption services between a user-agent (e.g., a browser) and a Service Provider (e.g., any participating website or API). It distinguishes itself from other VPN implementations by running exclusively within the browser as a WASM module that connects to the intended end point Service Provider through the Layer8 Anonymizing Reverse Proxy. Currently Layer8 exists only as a proof of concept (see HTTPs://github.com/satsite13/Layer8). 
 Layer8 development is supported by Globe&Citizen: A fully remote startup dedicated to becoming Web3.0’s premier, distributed, news service (see HTTPs://github.com/globe-and-citizen). Its members currently span 7 nations: Canada, Brazil, Togo, Nigeria, Uzbekistan, Pakistan, and Bangladesh.
 
-**This Competition Specifically**: You will deliver a Golang WASM module that can be distributed via a CDN that successfully connects to a custom HTTPs server, also written by you, in Golang. All standard Golang libraries are allowed in addition to well established packages (e.g., gorilla/mux).
+**This RFP Specifically**: You will deliver a Golang WASM module that can be distributed via a CDN that successfully connects to a custom HTTPs server, also written by you, in Golang. All standard Golang libraries are allowed in addition to well established packages (e.g., gorilla/mux).
 Future Competitions: This is the first of a series of competitions to implement the suite of protocols necessary to make Layer8 work as a beta release. Upcoming implementation competitions include the Layer8 Asymmetric Key Exchange Protocol; Layer8 JWT Authentication Protocol (based on OIDC); and the Layer8 Forwarding Protocol (list expected to change and modify with development). 
 Regardless of your success in any one competition, you are strongly encouraged to continue participating in all subsequent competitions and to engage with the members of Globe&Citizen in an ongoing manner. Once Layer8 enters production, staff developers will be required and your participation during the competition phase—May through December 2023—will be your primary distinguishing criteria if you are interested in applying. 
 
@@ -47,8 +48,9 @@ The Golang WASM module functionality is to be incorporated into the global windo
 1)	connect(serverUrl string, [options JSON])(connectionID uint16)
 2)	sendEncrypted(content string, [options json])(r HTTP_Response)
 The method connect(), at present, is simply a mock implementation of what will be the asymmetric key exchange between the client and server. Returned is the Connection Identification Cumber (CIN) assigned by the L8 Server (currently a 16 bit uint). 
+
 The method L8.sendEncrypted() acts on the aforementioned connection to execute the following: 
-1.	Encode the user’s chosen content as binary data.
+1. Encode the user’s chosen content as binary data.
 2.	Chunk the content into segments. 
 3.	Symmetrically encrypt each segment using an established cipher (e.g., AES-256)
 4.	Package each segment into a Data Bundle (as described later).
@@ -57,7 +59,8 @@ The method L8.sendEncrypted() acts on the aforementioned connection to execute t
 7.	Convert the Encrypted Data Bundle and MAC from binary to b64 encoded ASCII text.
 8.	Send a standard HTTPs POST request composed of the custom HTTPs headers, Data Bundle, and MAC to the Layer8 server where it is to be reconstituted and interpreted.
 Upon receipt of the POST request(s), your Layer8 Interpreter is to reverse the above process using the preestablished, dummy, symmetric key(s) “shared” with the client. Special attention should be made to de-segmenting the content for reconstitution by the server into its original form. 
-General Considerations
+
+## General Considerations
 -	The client side WASM module is to use standard browser APIs (i.e., fetch) so that all Layer8 functioning is transparent to lower networking levels (e.g., HTTPs, TLS, TCP, IP, etc.).
 -	You are to make use of standard HTTPs message formatting so that extension to the protocol such as HTTPs/2 are utilized by default. 
 -	Future implementations will make use of Websockets BUT DO NOT use Websockets in your current implementation. 
@@ -66,25 +69,23 @@ General Considerations
 -	Cookies should be unnecessary and, in fact, are not allowed.
 
 ### Visual Overview of a Message With Encrypted Body
-  
-**HTTPs Headers** {
-POST </server-api-endpoint> <HTTPs>
-  Content-Type: Plain/Text
-  Content-Length: <length> 
-  < …other HTTPs headers… >
+```
+**HTTPs Headers** 
+ POST </server-api-endpoint> <HTTPs>
+ Content-Type: Plain/Text
+ Content-Length: <length> 
+ < …other HTTPs headers… >
 
-**Custom Headers** {
+**Custom Headers** 
   x-cin: <16 bits (b64)>
   x-msg-cntr: <32-128 bits (b64)>
 
-**Body** {
-  Q29udHJhcnkgdG8gcG9wdWxhciBiZWxpZWYsIExvcmVtIElwc3VtIGlzIG5vdCBzaW1wbHkgcmFuZG9tIHRleHQuIEl0IGhhcyByb290cyBpbiBhIHBpZWNlIG9mIGNsYXNzaWNhbCBMYXRpbiBsaXRlcmF0dXJlIGZyb20gNDUgQkMsIG1ha2luZyBpdCBvdmVyIDIwMDAgeWVhcRoaXMgYm9vayBpcyBhIHRyZWF0aXNlIG9uIHRoZSB0aGVvcnkgb2YgZXRoaWNzLCB2ZXJ5IHBvcHVsYXIgZHVyaW5nIHRoZSBSZW5haXNzYW5jZS4gVGhlIGZpcnN0IGxpbmUgb2YgTG9yZW0gSXBzdW0sICJMb3JlbSBpcHN1bSBkb2xvciBzYgTG9yZW0YgTG9yZW0YgTG9yZW0bslbSBpcHN1bSBkb2xvciBzYgTG9yZW0YNsNsCCCWTG9yZWTG9y
-  aXQgYW1ldC4uIIwgY29tZXMgZnJvbSBhIGxpbmUgaW4gc2VjdGlvbiAxLjEwLjMy
+**Body** 
+  Q29udHJhcnkgdG8gcG9wdWxhciBiZWxpZWYsIExvcmVtIElwc3VtIGlzIG5vdCBzaW1wbHkgcmFuZG9tIHRleHQuIEl0IGhhcyByb290cyBpbiBhIHBpZWNlIG9mIGNsYXNzaWNhbCBMYXRpbiBsaXRlcmF0dXJlIGZyb20gNDUgQkMsIG1ha2luZyBpdCBvdmVyIDIwMDAgeWVhcRoaXMgYm9vayBpcyBhIHRyZWF0aXNlIG9uIHRoZSB0aGVvcnkgb2YgZXRoaWNzLCB2ZXJ5IHBvcHVsYXIgZHVyaW5nIHRoZSBSZW5haXNzYW5jZS4gVGhlIGZpcnN0IGxpbmUgb2YgTG9yZW0gSXBzdW0sICJMb3JlbSBpcHN1bSBkb2xvciBzYgTG9yZW0YgTG9yZW0YgTG9yZW0bslbSBpcHN1bSBkb2xvciBzYgTG9yZW0YNsNsCCCWTG9yZWTG9aXQgYW1ldC4uIIwgY29tZXMgZnJvbSBhIGxpbmUgaW4gc2VjdGlvbiAxLjEwLjMy
 
-
-**Mac** {
+**Mac** 
     gYW1ldC4uIIwgY29tZXMgZnJvbSBhIGxpbmUgaW4gc2VjdGlvbiAxLjEwLjMy
-
+```
 _Fig. 2: Example HTTPs Message_
 
 ## Custom HTTPS Headers
@@ -99,45 +100,49 @@ A variable subset of CIN numbers (e.g., 0 – 100) may be reserved for special u
 (Note: the top level Data Bundle, that which includes the HTTPs custom headers is a special case. All other nested Data Bundles include their headers within the encrypted payload.)
 “Data Bundle” refers to a set of headers + encrypted payload + associated MAC computed over both. All Data Bundles MUST start with an 8 bit header value that indicates the type of Data Bundle. Implied is the possibility of 256 different types of Data Bundle that could be defined in the future. 
 Every data bundle always has the following headers followed by some combination of custom headers, defined by you in your implementation, and attached to a Data Bundle Type as follows:
-
-0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
-[Data Bundle Type| Length                        | Flags        ] 
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-[Maj V. |Min V. |
-+-+-+-+-+-+-+-+-+
-Fig. 3: Headers Standard to All Data Bundles
-
-After your Layer8 Interpreter decrypts a Data Bundle, it reads the first 8 bits to determine the type of bundle which, through a standardized specification, indicates to the Layer8 Interpreter the number and type of header(s). Your interpreter will then read the next 16 bits to determine the bit length pertaining to the current Data Bundle (including any MAC). Eight flags, whose importance remains TBD, are then interpreted followed by the major / minor version.     
+```
+  0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+  [Data Bundle Type| Length                        | Flags        ] 
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  [Maj V. |Min V. |
+  +-+-+-+-+-+-+-+-+
+```
+_Fig. 3: Headers Standard to All Data Bundles_
+  After your Layer8 Interpreter decrypts a Data Bundle, it reads the first 8 bits to determine the type of bundle which, through a standardized specification, indicates to the Layer8 Interpreter the number and type of header(s). Your interpreter will then read the next 16 bits to determine the bit length pertaining to the current Data Bundle (including any MAC). Eight flags, whose importance remains TBD, are then interpreted followed by the major / minor version.     
 
 An example Data Bundle would be: 
-0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
-[Data Bundle Type| Length                        | Flags      ] 
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-[V. Maj |V. Min | Custom Header | Custom Header | Custom Header |                             
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-[ Custom Header | Custom Header | Custom Header | Custom Header ]
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-[ Payload +/- IV                                                ]
-|                                                               |
-~                                                               ~
-~                                                               ~                                                               |                                                               |  
-[                                                               ]  
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-[ Random, Variable Length, Padding                              ]
-~                                                               ~
-[                                                               ]
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-[ MAC (covering the padding, payload and headers)               ]
-~                                                               ~
-[                                                               ]
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+  
-
+  
+ ```
+  0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ 
+  [Data Bundle Type| Length                        | Flags        ] 
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  [V. Maj |V. Min | Custom Header | Custom Header | Custom Header |                             
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  [ Custom Header | Custom Header | Custom Header | Custom Header ]
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  [ Payload +/- IV                                                ]
+  |                                                               |
+  ~                                                               ~
+  ~                                                               ~ 
+  |                                                               |  
+  [                                                               ]  
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  [ Random, Variable Length, Padding                              ]
+  ~                                                               ~
+  [                                                               ]
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  [ MAC (covering the padding, payload and headers)               ]
+  ~                                                               ~
+  [                                                               ]
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+  
+```
 _Fig. 4: An Example Data Bundle_
 
 The purpose of this arrangement is to allow for rapid, recursive processing of data bundles that can be processed in parallel. 
 The inspiration of the Data Bundles comes from the structure of JSON. Each payload is actually just an array of JSON objects. 
+```
 [{
   type: 1,
   length: 900,
@@ -163,7 +168,8 @@ The inspiration of the Data Bundles comes from the structure of JSON. Each paylo
    }],
   mac: G8gcG9wdWx9…tZXhciBiZWxp
 }]
-    
+```
+  
 _Figure 3: Notice the three levels of payload, 1st (yellow), 2nd (green), 3rd (pink). _
 
 In the above example, Type 33, is and invented Data Bundle that communicates to the Layer8 Interpreter what its headers are, what bytes correspond to its payload, and how long its total length is. This allows any Data Bundle (more precisely, those bytes that pertain to a Data Bundle) to be sliced from the ASCII blob and passed in their entirety to a service worker for processing.
@@ -192,16 +198,16 @@ The data bundle type of 002 represents a dummy data bundle. It is used for obfus
 Ultimately, the Layer8 system is envisioned to work over a full duplex connection such as Websockets. However, for the purposes of this implementation, you are to make use of HTTPs with the assumption that the server cannot, unilaterally, send messages. Fort the purposes of this competition, you are to assume that the client can only send requests and that the server can only send responses. (Theoretically, all modern browsers, under the hood, implement HTTP/2 transparently. This should, in theory, enable full duplex communication over the lifetime of an HTTPs request/response cycle. However, the goal is to make Layer8 transparent to the end user meaning that invoking L8.sendEncrypted() should behave near equivalent to the native fetch()and carry a near equivalent function signature.) 
 
 In time, and once Layer8 is implemented over a full duplex connection, a bytewise TCP style, sliding, windowing algorithm is to be developed for data integrity. For the purposes of this competition, however, you are to implement a “Stop-n-Wait, Hail Mary” protocol as follows:
-•	The client is to track, on a byte-by-byte level, all data sent and acknowledged.
-•	The client maintains a SEND window which mirrors a RECEIVE window on the server. 
-•	The server is to advertise, through the use of custom response headers, the state of it’s RECEIVE window.  
-•	Bytes in the client’s SEND window are to be categorized as one of the following: sent & acknowledged; sent but not yet acknowledged; not sent but ready to be received; not sent and not ready to be received.
-•	Bytes in the server’s RECEIVE window are to be categorized as one of the following: received and acknowledged; ready to be received; not ready to be received. 
-•	If the client is required to send data spread across multiple messages, it is to communicate all necessary information regarding the total message to be received to the server using custom headers.
-•	The server is to acknowledge all data received on a byte-by-byte basis. 
-•	The client is to STOP sending as necessary.
-•	The client is to WAIT for acknowledgements before resending messages presumed lost (i.e., “Stop-n-Wait”)
-•	The server, by contrast, is to acknowledge the receipt of all messages and bytes and then, in a single streamed HTTPs message, respond on the assumption that the underlying internet protocols will work as expected. The server is then free to close the connection if appropriate (i.e., a “Hail Mary”, return to the client, of the requested resource with the assumption of success).
+  •	The client is to track, on a byte-by-byte level, all data sent and acknowledged.
+  •	The client maintains a SEND window which mirrors a RECEIVE window on the server. 
+  •	The server is to advertise, through the use of custom response headers, the state of it’s RECEIVE window.  
+  •	Bytes in the client’s SEND window are to be categorized as one of the following: sent & acknowledged; sent but not yet acknowledged; not sent but ready to be received; not sent and not ready to be received.
+  •	Bytes in the server’s RECEIVE window are to be categorized as one of the following: received and acknowledged; ready to be received; not ready to be received. 
+  •	If the client is required to send data spread across multiple messages, it is to communicate all necessary information regarding the total message to be received to the server using custom headers.
+  •	The server is to acknowledge all data received on a byte-by-byte basis. 
+  •	The client is to STOP sending as necessary.
+  •	The client is to WAIT for acknowledgements before resending messages presumed lost (i.e., “Stop-n-Wait”)
+  •	The server, by contrast, is to acknowledge the receipt of all messages and bytes and then, in a single streamed HTTPs message, respond on the assumption that the underlying internet protocols will work as expected. The server is then free to close the connection if appropriate (i.e., a “Hail Mary”, return to the client, of the requested resource with the assumption of success).
 
 Notwithstanding the above, it is possible that advances in HTTPs/2 make the process of bytewise, high fidelity, reconstitution trivial and largely implemented by default. If so, this would represent a substantial advantage and you will not be penalized for making use of default functionality. In fact, achieving full functionality with a minimum of custom code is the ideal. However, if your chunking / windowing solution relies on in built functionality, you are to identify and explain how it works.
 
@@ -223,7 +229,7 @@ Please note:
 “Premature optimization is the root of all evil” – Donald Knuth.
 Your implementation is expected to be “good enough” which is why all implementors will be paid for their entries and the payout for “winning” only a portion of the winner’s total compensation.  
 
-##Negotiating Algorithms
+## Negotiating Algorithms
 Future versions of the Layer8 E2E Symmetric Encryption Protocol may include negotiation of different cryptographic algorithms configured in various ways. Your implementation of version 0, however, need only include a single set of predetermined algorithms and configurations chosen by you.
 Message Counter: 16  to 64 Bits(?)
 For every message sent, message counter must be incremented by 1 such that every message sent between two endpoints is uniquely identified by the combination of CIN and message counter. 

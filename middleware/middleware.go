@@ -10,14 +10,9 @@ const VERSION = "1.0.2"
 func main() {
 	c := make(chan struct{}, 0)
 	fmt.Printf("L8 WASM Middleware version %s loaded.\n\n", VERSION)
-	js.Global().Set("testWASM", js.FuncOf(testWASM))
+	js.Global().Set("testWASM", js.FuncOf(async_test_WASM))
 	js.Global().Set("WASMMiddleware", js.FuncOf(WASMMiddleware))
 	<-c
-}
-
-func mockResponse(this js.Value, args []js.Value) interface{} {
-	fmt.Println("jokes on u bro...")
-	return nil
 }
 
 func WASMMiddleware(this js.Value, args []js.Value) interface{} {
@@ -38,7 +33,7 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
-func testWASM(this js.Value, args []js.Value) interface{} {
+func async_test_WASM(this js.Value, args []js.Value) interface{} {
 	fmt.Println("Fisrt argument: ", args[0])
 	fmt.Println("Second argument: ", args[1])
 	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {

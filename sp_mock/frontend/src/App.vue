@@ -1,27 +1,17 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
-
-async function testWASMHandler(){
-  const res = await window.testWASM(42, "42")
-  console.log(res)
-}
-
+import WelcomeMock from "./components/WelcomeMock.vue";
+import { RouterView } from "vue-router";
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="We Got Poems Mock" />
-      <button @click="testWASMHandler">Test WASM</button>
-    </div>
-  </header>
-
-  <!-- <main>
-    <TheWelcome />
-  </main> -->
+  <div class="grid grid-cols-2 gap-x-2">
+    <header>
+      <div>
+        <WelcomeMock msg="Welcome! We Got Poems Mock" />
+      </div>
+    </header>
+    <RouterView />
+  </div>
 </template>
 
 <style scoped>

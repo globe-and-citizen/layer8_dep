@@ -1,3 +1,7 @@
+/**
+ * Sets up an Express server with middleware and a single route handler.
+ * Listens on port 3000 and logs a message when the server starts.
+ */
 const express = require('express')
 const cors = require('cors')
 const Layer8 = require("../../middleware/dist/loadWASM.js")

@@ -19,11 +19,11 @@ const router = createRouter({
     //   name: 'oauth2-callback',
     //   component: () => import('../views/CallbackView.vue')
     // },
-    // {
-    //   path: '/poems/:id',
-    //   name: 'poem',
-    //   component: () => import('../views/PoemView.vue')
-    // }
+    {
+      path: '/poems/:id',
+      name: 'poem',
+      component: () => import('../views/PoemView.vue')
+    }
   ],
 });
 

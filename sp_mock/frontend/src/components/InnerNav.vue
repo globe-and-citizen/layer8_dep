@@ -36,7 +36,7 @@ const poems = ref([
     <div v-for="(i, index) in poems" :key="index">
       <RouterLink
         :to="i.toName"
-        class="cursor-pointer px-4 py-2 hover:bg-green-300 hover:scale-105 hover:text-white select-none"
+        class="cursor-pointer px-4 pb-1 pt-3 hover:bg-green-300 hover:scale-105 hover:text-white select-none"
         >{{ i.name }}</RouterLink
       >
     </div>

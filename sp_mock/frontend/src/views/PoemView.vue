@@ -31,7 +31,8 @@ onMounted(() => {
   <main class="min-h-(screen-20) overflow-y-auto">
     <InnerNav />
     <h1 class="mb-4 text-2xl font-bold">{{ poem.title }}</h1>
-    <p v-html="poem.body" class="mb-4"></p>
+    <p v-html="poem.content" class="mb-4"></p>
+    <p class="flex justify-end">{{ poem.author }}</p>
   </main>
 </template>
 

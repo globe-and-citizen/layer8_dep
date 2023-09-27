@@ -22,6 +22,13 @@ app.get("/", (req, res)=>{
     res.send("Bro, ur poems coming soon. Relax a little.")
 })
 
+app.get("/api/poems/:id", (req, res)=>{
+    const poemId = req.params.id
+    console.log("api/poems.body: ", poemId)
+    console.log("api/poems.custom_test_prop: ", res.custom_test_prop)
+    res.send("API POEMS 1")
+})
+
 app.listen(port, () => {
     console.log(`\nA mock Service Provider backend is now listening on port ${port}.`)
 })

@@ -16,7 +16,7 @@ func main() {
 }
 
 func WASMMiddleware(this js.Value, args []js.Value) interface{} {
-	// request := args[0]
+	request := args[0]
 	response := args[1]
 	next := args[2]
 
@@ -27,7 +27,7 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 	// so that end users don't notice any difference.
 	nativeFunc := response.Get("send")
 	response.Set("send", nativeFunc)
-	fmt.Println("Request has transitted the WASM middleware.")
+	fmt.Println("Request has transitted the WASM middleware.", request)
 
 	next.Invoke()
 	return nil

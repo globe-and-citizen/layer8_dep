@@ -7,6 +7,24 @@ async function testWASMHandler(){
   console.log(res)
 }
 
+async function pingProxyHandler(){
+  try{
+    const res = await window.pingProxy("http://localhost:5000/success")//proxy
+    console.log("Response from JS: ", res)
+  } catch(err){
+    console.log("Err from JS:", err)
+  }
+}
+
+async function genericPostHandler(){
+  try{
+    const res = await window.genericPost("http://localhost:5000/success", "This is my content!")
+    console.log("Response from JS: ", res)
+  } catch(err){
+    console.log("Err from JS: ", err)
+  }
+}
+
 </script>
 
 <template>
@@ -16,6 +34,8 @@ async function testWASMHandler(){
     <div class="wrapper">
       <HelloWorld msg="We Got Poems Mock" />
       <button @click="testWASMHandler">Test WASM</button>
+      <button @click="pingProxyHandler">Ping Proxy</button>
+      <button @click="genericPostHandler">Trigger Post Handler</button>
     </div>
   </header>
 

@@ -9,21 +9,21 @@ const router = createRouter({
       name: "home",
       component: HomeView,
     },
-    {
-      path: "/login",
-      name: "login",
-      component: () => import("../views/LoginView.vue"),
-    },
+    // {
+    //   path: "/login",
+    //   name: "login",
+    //   component: () => import("../views/LoginView.vue"),
+    // },
     // {
     //   path: '/oauth2/callback',
     //   name: 'oauth2-callback',
     //   component: () => import('../views/CallbackView.vue')
     // },
-    {
-      path: '/poems/:id',
-      name: 'poem',
-      component: () => import('../views/PoemView.vue')
-    }
+    // {
+    //   path: '/poems/:id',
+    //   name: 'poem',
+    //   component: () => import('../views/PoemView.vue')
+    // }
   ],
 });
 

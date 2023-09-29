@@ -1,19 +1,152 @@
 <script setup>
-import InnerNav from '../components/InnerNav.vue';
+import { computed, ref } from "vue";
+
+const registerEmail = ref("");
+const registerPassword = ref("");
+const loginEmail = ref("");
+const loginPassword = ref("");
+const isRegister = ref(false);
+const token = ref(localStorage.getItem("token") || null);
+
+const isLoggedIn = computed(() => token.value !== null);
+
+const registerUser = async () => {
+  try {
+    await fetch("http://localhost:3000/api/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: registerEmail.value,
+        password: registerPassword.value,
+      }),
+    });
+    alert("Registration successful!");
+  } catch (error) {
+    console.log(error);
+    alert("Registration failed!");
+    isRegister.value = true
+  }
+};
+
+const loginUser = async () => {
+  try {
+    const response = await fetch("http://localhost:3000/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: loginEmail.value,
+        password: loginPassword.value,
+      }),
+    });
+    const data = await response.json();
+    token.value = data.token;
+    localStorage.setItem("token", token.value);
+    alert("Login successful!");
+  } catch (error) {
+    console.error(error);
+    alert("Login failed!");
+  }
+};
+
+const logoutUser = () => {
+  token.value = null;
+  localStorage.removeItem("token");
+};
+
+const userEmail = computed(() => {
+  if (token.value) {
+    const payload = JSON.parse(atob(token.value.split(".")[1]));
+    return payload.email;
+  }
+  return "";
+});
 </script>
 
 <template>
-  <div>
-    <div>
-      <h1 class="font-extrabold text-2xl text-center mb-8">Poem title</h1>
-      <InnerNav/>
-      <div>
-        <p class="font-normal text-md mx-16">
-          Poem body Lorem ipsum dolor, sit amet consectetur adipisicing elit. Harum
-          obcaecati aperiam ullam modi suscipit eos quam amet explicabo perspiciatis? Vel
-          tempora doloremque esse dicta? Porro doloribus itaque culpa magnam omnis.
-        </p>
+  <div id="app">
+    <div class="container" v-if="!isLoggedIn">
+      <div v-if="isRegister" class="form-container">
+        <h2>Register</h2>
+        <div class="input-group">
+          <input v-model="registerEmail" placeholder="Email" />
+        </div>
+        <div class="input-group">
+          <input v-model="registerPassword" type="password" placeholder="Password" />
+        </div>
+        <button class="btn-primary" @click="registerUser">Register</button>
+        <a style="display: block" @click="isRegister = false">Already registered? Login</a>
       </div>
+
+      <div v-if="!isRegister" class="form-container">
+        <h2>Login</h2>
+        <div class="input-group">
+          <input v-model="loginEmail" placeholder="Email" />
+        </div>
+        <div class="input-group">
+          <input v-model="loginPassword" type="password" placeholder="Password" />
+        </div>
+        <button class="btn-primary" @click="loginUser">Login</button>
+        <a style="display: block" @click="isRegister = true">Don't have an account? Register</a>
+      </div>
+    </div>
+
+    <div v-if="isLoggedIn" class="welcome-container">
+      <h2>Welcome, {{ userEmail }}</h2>
+      <button class="btn-primary" @click="logoutUser">Logout</button>
     </div>
   </div>
 </template>
+
+<style scoped>
+#app {
+  font-family: "Arial", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  width: 100vh;
+  background-color: #f4f4f4;
+}
+
+.container {
+  display: flex;
+  justify-content: space-around;
+  width: 50%;
+  background-color: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-container {
+  width: 100%;
+}
+
+.input-group {
+  margin-bottom: 15px;
+}
+
+.btn-primary {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.btn-primary:hover {
+  background-color: #45a049;
+}
+
+.welcome-container {
+  text-align: center;
+  width: 100%;
+}
+</style>

@@ -6,6 +6,8 @@ require('dotenv').config()
 // INIT
 const port = 8000
 const app = express()
+const userDatabase = [{username:"chester", password:"tester"}]
+
 
 // MIDDLEWARE
 app.use(Layer8)
@@ -19,16 +21,55 @@ app.get("/", (req, res)=>{
 })
 
 app.get("/success", (req, res)=>{
-    console.log("dude you're close...")
-    console.log("req.body: ", req.headers)
-    res.send("unfortunately, success has no final form.")
+    console.log("req.headers: ", req.headers)
+    res.send("Unfortunately, success has no final form.")
 })
 
 app.post("/success", (req, res)=>{
-    console.log("dude you're even closer...")
+    console.log("Dude you're even closer...")
     console.log("req.header: ", req.headers)
-    console.log("req.body: ", req.body)
-    res.send("keep hustling...")
+    console.log("req.body", req.body)
+    res.send("Well done. Never stop hustling.")
+})
+
+app.get("/login", (req, res)=>{
+    console.log("Arrival at '/login'", req.query)
+    const username = req.query.username
+    const password = req.query.password
+
+    const index = userDatabase.findIndex((user)=>{
+        return user.username === username
+    })
+
+    if (userDatabase[index].password == password) {
+        console.log("User now logged in.")
+        res.send("You are logged in")
+    } else {
+        console.log("Error: Usertried to use incorrect password.")
+        res.send("Denied! Get the fuck out you bum.")
+    }
+})
+
+app.post("/register", (req, res)=>{
+    console.log("Arrival at '/register'")
+
+    const {username, password} = req.body
+
+    const newUser = {
+        username,
+        password
+    }
+
+    if (userDatabase.findIndex((user)=>{
+        return user.username === username
+    }) != -1){
+        console.log("Error: Username already taken.")
+        res.send("Err: Username already exists.")
+    } else {
+        userDatabase.push(newUser)
+        console.log(userDatabase)
+        res.send("new user registered successfully")
+    }
 })
 
 app.listen(port, () => {

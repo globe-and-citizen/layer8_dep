@@ -20,6 +20,8 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 	response := args[1]
 	next := args[2]
 
+	//fmt.Println("request", request)
+
 	// Set any layer8 particular custom props
 	response.Set("custom_test_prop", js.ValueOf("Example string"))
 

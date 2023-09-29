@@ -1,10 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 	"syscall/js"
 )
 
@@ -13,7 +13,7 @@ const VERSION = "1.0.2"
 func main() {
 	c := make(chan struct{}, 0)
 	js.Global().Set("testWASM", js.FuncOf(testWASM))
-	js.Global().Set("pingProxy", js.FuncOf(pingProxy))
+	js.Global().Set("genericGetRequest", js.FuncOf(genericGetRequest))
 	js.Global().Set("genericPost", js.FuncOf(genericPost))
 	// js.Global().Set("", js.FuncOf())
 	fmt.Println("WASM interceptor")
@@ -39,7 +39,7 @@ func testWASM(this js.Value, args []js.Value) interface{} {
 	return promise
 }
 
-func pingProxy(this js.Value, args []js.Value) interface{} {
+func genericGetRequest(this js.Value, args []js.Value) interface{} {
 	url := args[0]
 	fmt.Println("HERE: ", url.String())
 	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
@@ -47,7 +47,7 @@ func pingProxy(this js.Value, args []js.Value) interface{} {
 		reject := args[1]
 		go func() {
 			// Main function body
-			res, err := http.Get(url.String())
+			res, err := http.Get(url.String()) // http://localhost:5000/success
 			if err != nil {
 				fmt.Println("Failure to get ", url.String())
 				reject.Invoke(js.ValueOf(err.Error()))
@@ -86,15 +86,20 @@ func pingProxy(this js.Value, args []js.Value) interface{} {
 
 func genericPost(this js.Value, args []js.Value) interface{} {
 	url := args[0]
-	body_text_as_str := args[1].String()
-	body_as_ioReader := strings.NewReader(body_text_as_str)
+	//stringifiedObject := `{"client_message": "hello, server!"}`
+	stringifiedObject := args[1].String()
+	fmt.Println(stringifiedObject)
+	jsonBody := []byte(stringifiedObject)
+	bodyReader := bytes.NewReader(jsonBody)
+	//	bodyReader := bytes.NewReader(byteObject)
+
 	fmt.Println("Interceptor will now POST to this url: ", url.String())
 	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		reject := args[1]
 		go func() {
 			// Main function body
-			res, err := http.Post(url.String(), "text/html", body_as_ioReader)
+			res, err := http.Post(url.String(), "application/json", bodyReader)
 			if err != nil {
 				fmt.Println("Failure to Post ", url.String())
 				reject.Invoke(js.ValueOf(err.Error()))

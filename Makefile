@@ -1,3 +1,7 @@
+## NPM install
+npm_install_all:
+	cd sp_mock/frontend && npm install && cd ../backend && npm install 
+
 ## Interceptor Calls
 build_interceptor: ## must do from a bash terminal
 	cd interceptor/ && GOARCH=wasm GOOS=js go build -o dist/interceptor.wasm && cp ./dist/interceptor.wasm ../sp_mock/frontend/public/interceptor.wasm && cp ./dist/wasm_exec.js ../sp_mock/frontend/public/wasm_exec.js
@@ -7,8 +11,6 @@ build_middleware:
 	cd ./middleware/ && GOARCH=wasm GOOS=js go build -o ./dist/middleware.wasm
 
 ## Run Mock
-# run_mock_sp:
-# 	make run_mock_frontend && run_mock_backend
 
 run_frontend:
 	cd sp_mock/frontend && npm run dev

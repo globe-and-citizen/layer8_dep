@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -152,50 +153,61 @@ func genericPost(this js.Value, args []js.Value) interface{} {
 }
 
 func fetch(this js.Value, args []js.Value) interface{} {
-	url := args[0].String()                       // transition the URL to Golang
-	options := js.ValueOf(map[string]interface{}{ //declare a js Value Of
-		"method":  "GET",                                // I feel like this could be blank? ********
-		"headers": js.ValueOf(map[string]interface{}{}), // headers is a js value of a golang map of string key and any value
+	url := args[0].String()
+	options := js.ValueOf(map[string]interface{}{
+		"method":  js.ValueOf(""),
+		"headers": js.ValueOf(map[string]interface{}{}),
 	})
+
 	if len(args) > 1 {
 		options = args[1]
 	}
 
-	method := options.Get("method").String() // if the method is not set, default to a "GET" request
+	method := options.Get("method").String()
 	if method == "" {
 		method = "GET"
 	}
 
-	headers := options.Get("headers") // recall that options is a "js value of"
+	headers := options.Get("headers")
+	// setting headers to an empty object if it's undefined or null
 	if headers.String() == "<undefined>" || headers.String() == "null" {
-		headers = js.ValueOf(map[string]interface{}{}) // not done above?
+		headers = js.ValueOf(map[string]interface{}{})
 	}
 
+	//fmt.Println("headers outside: ", headers)
 	body := options.Get("body").String()
 	if body == "<undefined>" {
 		body = ""
 	}
+
+	fmt.Println("body: ", body)
 
 	promise := js.Global().Get("Promise").New(js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		go func() {
 			headersMap := make(map[string]string)
 			// build the headersMap
 			js.Global().Get("Object").Call("keys", headers).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-				headersMap[args[0].String()] = args[1].String() // args[0] is key & args[1] is value? or the index?
+				// args[0] is key & args[1] is value? or the index?
+				fmt.Println("args [1]  & [2]", args[0], args[1])
+				headersMap[args[0].String()] = args[1].String()
 				return nil
 			}))
 
-			// forward request to the layer8 proxy server
-			client := &http.Client{}
-			r, err := http.NewRequest(method, url, bytes.NewBuffer([]byte(body)))
+			data, err := json.Marshal(map[string]interface{}{
+				"data": "this is a string",
+			})
+			fmt.Println("data as string: ", data)
 
 			if err != nil {
-				res := &utilities.Response{
-					Status:     500,
-					StatusText: err.Error(),
-				}
-				resByte, _ := res.ToJSON()
-				args[1].Invoke(js.ValueOf(string(resByte)))
+				panic("fuck this...")
+			}
+
+			// forward request to the layer8 proxy server
+			client := &http.Client{}
+			r, err := http.NewRequest(method, url, bytes.NewBuffer(data))
+
+			if err != nil {
+				args[1].Invoke(js.ValueOf("Problem Creating Request"))
 			}
 
 			res, err := client.Do(r)
@@ -212,7 +224,7 @@ func fetch(this js.Value, args []js.Value) interface{} {
 
 			buf := new(bytes.Buffer)
 			buf.ReadFrom(res.Body)
-			args[0].Invoke(js.ValueOf("Closer than before"))
+			args[0].Invoke(js.ValueOf(buf.String()))
 			return
 		}()
 		return nil

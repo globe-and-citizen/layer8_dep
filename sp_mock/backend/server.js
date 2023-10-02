@@ -15,15 +15,23 @@ const users = []; // Store users in memory
 const SECRET_KEY = 'my_very_secret_key'
 
 // MIDDLEWARE
-app.use(Layer8)
+
 app.use(cors())
 app.use(express.json())
+app.use(Layer8)
 
 app.get("/", (req, res)=>{
     console.log("req.body: ", req.body)
     console.log("res.custom_test_prop: ", res.custom_test_prop)
     res.send("Bro, ur poems coming soon. Relax a little.")
 })
+
+app.post("/", (req, res)=>{
+    console.log("req.body: ", req.body)
+    //console.log("headers:: ", req.headers)
+    res.send("Server has registered a POST.")
+})
+
 
 app.post('/api/register', async (req, res) => {
     console.log("req.body: ", req.body)

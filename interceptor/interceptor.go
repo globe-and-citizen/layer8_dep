@@ -210,6 +210,8 @@ func fetch(this js.Value, args []js.Value) interface{} {
 				Body:    []byte("Hello Layer8"),
 			}
 
+			testRequest.Headers["x-test"] = "test header"
+
 			data, err := json.Marshal(testRequest)
 
 			if err != nil {

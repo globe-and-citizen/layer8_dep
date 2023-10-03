@@ -27,10 +27,9 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 	request := args[0]
 	response := args[1]
 	next := args[2]
-	var dataMap map[string]interface{}
+	//var dataMap map[string]interface{}
 
 	request.Call("on", "data", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		fmt.Println("chunck: ", args[0])
 		var uint8array []byte
 
 		js.Global().Get("Object").Call("values", args[0]).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
@@ -46,7 +45,9 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 			fmt.Println("damn")
 		}
 
-		fmt.Println(myRequest)
+		fmt.Println("Method: ", string(myRequest.Method))
+		fmt.Println("Headers: ", myRequest.Headers)
+		fmt.Println("Body: ", string(myRequest.Body))
 
 		return nil
 	}))

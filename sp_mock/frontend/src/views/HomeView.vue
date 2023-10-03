@@ -10,12 +10,31 @@ const token = ref(localStorage.getItem("token") || null);
 
 const isLoggedIn = computed(() => token.value !== null);
 
+
+async function testFetchHandler(){
+  // layer8.testWASM("42", 42)
+  let res = await layer8.fetch("http://localhost:5000/", {
+    method: "POST",
+    body: JSON.stringify({
+        email: "fake@mail.com",
+        password: "1234"
+      })
+  })
+  console.log(res)
+} 
+
 const registerUser = async () => {
   try {
-    await window.genericPost("http://localhost:5000/api/register", JSON.stringify({
-        email: registerEmail.value,
-        password: registerPassword.value
-      }));
+    await layer8.fetch("http://localhost:5000/api/register", {
+        method: "POST",  
+        headers: {
+          "Content-Type": "Application/Json"
+        },
+        body: JSON.stringify({
+          email: registerEmail.value,
+          password: registerPassword.value
+        })
+      });
     alert("Registration successful!");
   } catch (error) {
     console.log(error);
@@ -26,10 +45,17 @@ const registerUser = async () => {
 
 const loginUser = async () => {
   try {
-    const response_as_string = await window.genericPost("http://localhost:5000/api/login", JSON.stringify({
+    const response_as_string = await layer8.fetch("http://localhost:5000/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "Application/Json"
+      },
+      body: JSON.stringify({
         email: loginEmail.value,
         password: loginPassword.value
-    }));
+      })
+    })      
+
     token.value =  response_as_string
     localStorage.setItem("token", response_as_string);
     alert("Login successful!");
@@ -85,6 +111,9 @@ const userEmail = computed(() => {
       <h2>Welcome, {{ userEmail }}</h2>
       <button class="btn-primary" @click="logoutUser">Logout</button>
     </div>
+  </div>
+  <div>
+    <button @click="testFetchHandler">TestWASM</button>
   </div>
 </template>
 

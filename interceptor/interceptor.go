@@ -13,6 +13,12 @@ import (
 
 const VERSION = "1.0.2"
 
+type Request struct {
+	Method  string            `json:"method"`
+	Headers map[string]string `json:"headers"`
+	Body    []byte            `json:"body"`
+}
+
 var (
 	Layer8Scheme  string
 	Layer8Host    string
@@ -193,10 +199,18 @@ func fetch(this js.Value, args []js.Value) interface{} {
 				return nil
 			}))
 
-			data, err := json.Marshal(map[string]interface{}{
-				"data": "this is a string",
-			})
-			fmt.Println("data: ", data)
+			// data, err := json.Marshal(map[string]interface{}{
+			// 	"data": "this is a string",
+			// })
+			// fmt.Println("data: ", data)
+
+			testRequest := Request{
+				Method:  "POST",
+				Headers: make(map[string]string),
+				Body:    []byte("Hello Layer8"),
+			}
+
+			data, err := json.Marshal(testRequest)
 
 			if err != nil {
 				panic("fuck this...")

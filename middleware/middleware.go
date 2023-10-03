@@ -9,6 +9,12 @@ import (
 
 const VERSION = "1.0.2"
 
+type Request struct {
+	Method  string            `json:"method"`
+	Headers map[string]string `json:"headers"`
+	Body    []byte            `json:"body"`
+}
+
 func main() {
 	c := make(chan struct{}, 0)
 	fmt.Printf("L8 WASM Middleware version %s loaded.\n\n", VERSION)
@@ -34,11 +40,13 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 			return nil
 		}))
 
-		err := json.Unmarshal(uint8array, &dataMap)
+		myRequest := new(Request)
+		err := json.Unmarshal(uint8array, &myRequest)
 		if err != nil {
 			fmt.Println("damn")
 		}
-		fmt.Println(dataMap)
+
+		fmt.Println(myRequest)
 
 		return nil
 	}))

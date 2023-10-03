@@ -20,7 +20,37 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 	response := args[1]
 	next := args[2]
 
-	//jsBody := request.Get("body")
+	request.Call("on", "data", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		fmt.Println("chunck: ", args[0])
+		var uint8array []int
+
+		js.Global().Get("Object").Call("values", args[0]).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+
+			uint8array = append(uint8array, args[0].Int())
+
+			return nil
+		}))
+
+		fmt.Println("binary array: ", uint8array)
+		//js.CopyBytesToGo(bs, uint8array)
+
+		return nil
+	}))
+
+	// js.Global().Get("Object").Call("values", request).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	// 	// args[0] is key & args[1] is value? or the index?
+	// 	fmt.Println("Key of request object: ", args[0])
+	// 	//fmt.Println(args[0].String())
+	// 	return nil
+	// }))
+
+	url := request.Get("baseUrl").String()
+	// js.Global().Get("Object").Call("keys", rawHeaders).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+	// 	// args[0] is key & args[1] is value? or the index?
+	// 	fmt.Println("args [1]  & [2]", args[0], args[1])
+	// 	return nil
+	// }))
+	fmt.Println(url)
 
 	// Set any layer8 particular custom props
 	response.Set("custom_test_prop", js.ValueOf("Example string"))

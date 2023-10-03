@@ -1,5 +1,5 @@
 <script setup>
-import WelcomeMock from "./components/WelcomeMock.vue";
+import WelcomeMock from "./views/StressTest.vue";
 import { RouterView } from "vue-router";
 </script>
 

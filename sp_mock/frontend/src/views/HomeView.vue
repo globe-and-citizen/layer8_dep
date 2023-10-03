@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from "vue";
+import { RouterLink } from "vue-router";
 
 const registerEmail = ref("");
 const registerPassword = ref("");
@@ -26,7 +27,7 @@ const registerUser = async () => {
   } catch (error) {
     console.log(error);
     alert("Registration failed!");
-    isRegister.value = true
+    isRegister.value = true;
   }
 };
 
@@ -78,7 +79,9 @@ const userEmail = computed(() => {
           <input v-model="registerPassword" type="password" placeholder="Password" />
         </div>
         <button class="btn-primary" @click="registerUser">Register</button>
-        <a style="display: block" @click="isRegister = false">Already registered? Login</a>
+        <a style="display: block" @click="isRegister = false"
+          >Already registered? Login</a
+        >
       </div>
 
       <div v-if="!isRegister" class="form-container">
@@ -90,9 +93,12 @@ const userEmail = computed(() => {
           <input v-model="loginPassword" type="password" placeholder="Password" />
         </div>
         <button class="btn-primary" @click="loginUser">Login</button>
-        <a style="display: block" @click="isRegister = true">Don't have an account? Register</a>
+        <a style="display: block" @click="isRegister = true"
+          >Don't have an account? Register</a
+        >
       </div>
     </div>
+    <RouterLink to="/stress-test">Stress test</RouterLink>
 
     <div v-if="isLoggedIn" class="welcome-container">
       <h2>Welcome, {{ userEmail }}</h2>

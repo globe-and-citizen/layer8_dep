@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -199,28 +198,23 @@ func fetch(this js.Value, args []js.Value) interface{} {
 				return nil
 			}))
 
-			// data, err := json.Marshal(map[string]interface{}{
-			// 	"data": "this is a string",
-			// })
-			// fmt.Println("data: ", data)
+			// testRequest := Request{
+			// 	Method:  "POST",
+			// 	Headers: make(map[string]string),
+			// 	Body:    []byte("Hello Layer8"),
+			// }
 
-			testRequest := Request{
-				Method:  "POST",
-				Headers: make(map[string]string),
-				Body:    []byte("Hello Layer8"),
-			}
+			//testRequest.Headers["x-test"] = "test header"
 
-			testRequest.Headers["x-test"] = "test header"
+			//data, err := json.Marshal(testRequest)
 
-			data, err := json.Marshal(testRequest)
-
-			if err != nil {
-				panic("fuck this...")
-			}
+			// if err != nil {
+			// 	panic("fuck this...")
+			// }
 
 			// forward request to the layer8 proxy server
 			client := &http.Client{}
-			r, err := http.NewRequest(method, url, bytes.NewBuffer(data))
+			r, err := http.NewRequest(method, url, bytes.NewBuffer([]byte(body)))
 
 			if err != nil {
 				args[1].Invoke(js.ValueOf("Problem Creating Request"))
@@ -236,11 +230,29 @@ func fetch(this js.Value, args []js.Value) interface{} {
 				fmt.Println(resByte)
 				args[1].Invoke(js.ValueOf("Still and error but closer"))
 			}
+
+			if res == nil || res.Body == nil {
+				fmt.Println("res or res.body was nil.")
+			}
+
 			defer res.Body.Close()
 
-			buf := new(bytes.Buffer)
-			buf.ReadFrom(res.Body)
-			args[0].Invoke(js.ValueOf(buf.String()))
+			if res.StatusCode != http.StatusOK {
+				fmt.Println("Server returned non-OK stauts: ", res.Status)
+				args[1].Invoke(js.ValueOf(fmt.Sprintf("Server returned non-OK stauts: ", res.Status)))
+				return
+			}
+
+			// buf := new(bytes.Buffer)
+			// buf.ReadFrom(res.Body)
+			res_byteSlice, err := io.ReadAll(res.Body)
+			if err != nil {
+				fmt.Println("Server side error: ", err.Error())
+				args[1].Invoke(js.ValueOf(err.Error()))
+				return
+			}
+			args[0].Invoke(js.ValueOf(string(res_byteSlice)))
+
 			return
 		}()
 		return nil

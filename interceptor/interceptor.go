@@ -196,7 +196,7 @@ func fetch(this js.Value, args []js.Value) interface{} {
 			data, err := json.Marshal(map[string]interface{}{
 				"data": "this is a string",
 			})
-			fmt.Println("data as string: ", data)
+			fmt.Println("data: ", data)
 
 			if err != nil {
 				panic("fuck this...")

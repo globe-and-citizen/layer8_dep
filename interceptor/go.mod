@@ -1,6 +1,6 @@
 module globe-and-citizen/layer8/interceptor
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/globe-and-citizen/layer8-utils v0.0.0-20230927121854-b5403af080d8

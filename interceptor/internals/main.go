@@ -31,8 +31,9 @@ func NewClient(scheme, host, port string) ClientImpl {
 // Do sends a request to through the layer8 proxy server and returns a response
 func (c *Client) Do(url string, req *utilities.Request) *utilities.Response {
 	clientID := uuid.New().String()
-	// exchange key
-	shared, err := c.exchangeKey(url, clientID)
+	
+	// hardcoding a shared secret for now
+	secret, err := base64.StdEncoding.DecodeString("KfbCmY2v83ptAZLLKffx0ve2Br8hkMhCkIo5RkFaNlk=")
 	if err != nil {
 		return &utilities.Response{
 			Status:     500,
@@ -41,7 +42,7 @@ func (c *Client) Do(url string, req *utilities.Request) *utilities.Response {
 	}
 
 	// send request
-	res, err := c.transfer(shared, req, url, clientID)
+	res, err := c.transfer(secret, req, url, clientID)
 	if err != nil {
 		return &utilities.Response{
 			Status:     500,
@@ -49,43 +50,6 @@ func (c *Client) Do(url string, req *utilities.Request) *utilities.Response {
 		}
 	}
 	return res
-}
-
-// exchangeKey exchanges public keys with the service provider's backend through the layer8 proxy server
-// for symmetric encryption and returns a shared secret
-func (c *Client) exchangeKey(url, clientID string) ([]byte, error) {
-	// generating a key pair
-	pri, pub, err := utilities.GenerateKeyPair(utilities.ECDH_ALGO)
-	if err != nil {
-		return nil, err
-	}
-	// create and send the request
-	key, err := utilities.EncodePublicKey(pub)
-	if err != nil {
-		return nil, fmt.Errorf("could not encode public key: %v", err)
-	}
-	req := utilities.NewRequest("POST", map[string]string{
-		"X-Layer8-CPK": key,
-	}, nil)
-	reqByte, _ := req.ToJSON()
-	status, res := c.do(reqByte, nil, url, clientID, true)
-	if status != 200 {
-		resData, _ := utilities.FromJSONResponse(res)
-		return nil, fmt.Errorf("could not exchange keys: %s", resData.StatusText)
-	}
-
-	// decode response
-	resData, _ := utilities.FromJSONResponse(res)
-	spk, ok := resData.Headers["X-Layer8-SPK"]
-	if !ok {
-		spk = resData.Headers["x-layer8-spk"]
-	}
-
-	serverPub, err := utilities.DecodePublicKey(spk)
-	if err != nil {
-		return nil, fmt.Errorf("could not decode server public key: %v", err)
-	}
-	return utilities.DeriveSharedSecret(pri, serverPub), nil
 }
 
 // transfer sends the request to the remote server through the layer8 proxy server

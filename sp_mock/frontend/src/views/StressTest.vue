@@ -1,12 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { RouterLink } from "vue-router";
-defineProps({
-  msg: {
-    type: String,
-    required: true,
-  },
-});
+
 const requestsSent = ref(0);
 const totalTimeSpent = ref(0);
 const numberOfRequest = ref(0)

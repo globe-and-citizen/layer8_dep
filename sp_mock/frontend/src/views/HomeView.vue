@@ -11,41 +11,54 @@ const token = ref(localStorage.getItem("token") || null);
 
 const isLoggedIn = computed(() => token.value !== null);
 
+
+async function testFetchHandler(){
+  // layer8.testWASM("42", 42)
+  let res = await layer8.fetch("http://localhost:5000/", {
+    method: "POST",
+    body: JSON.stringify({
+        email: "fake@mail.com",
+        password: "1234"
+      })
+  })
+  console.log(res)
+} 
+
 const registerUser = async () => {
   try {
-    await fetch("http://localhost:3000/api/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: registerEmail.value,
-        password: registerPassword.value,
-      }),
-    });
+    await layer8.fetch("http://localhost:5000/api/register", {
+        method: "POST",  
+        headers: {
+          "Content-Type": "Application/Json"
+        },
+        body: JSON.stringify({
+          email: registerEmail.value,
+          password: registerPassword.value
+        })
+      });
     alert("Registration successful!");
   } catch (error) {
     console.log(error);
     alert("Registration failed!");
-    isRegister.value = true;
+    isRegister.value = true
   }
 };
 
 const loginUser = async () => {
   try {
-    const response = await fetch("http://localhost:3000/api/login", {
+    const response_as_string = await layer8.fetch("http://localhost:5000/api/login", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "Application/Json"
       },
       body: JSON.stringify({
         email: loginEmail.value,
-        password: loginPassword.value,
-      }),
-    });
-    const data = await response.json();
-    token.value = data.token;
-    localStorage.setItem("token", token.value);
+        password: loginPassword.value
+      })
+    })      
+
+    token.value =  response_as_string
+    localStorage.setItem("token", response_as_string);
     alert("Login successful!");
   } catch (error) {
     console.error(error);
@@ -79,9 +92,7 @@ const userEmail = computed(() => {
           <input v-model="registerPassword" type="password" placeholder="Password" />
         </div>
         <button class="btn-primary" @click="registerUser">Register</button>
-        <a style="display: block" @click="isRegister = false"
-          >Already registered? Login</a
-        >
+        <a style="display: block" @click="isRegister = false">Already registered? Login</a>
       </div>
 
       <div v-if="!isRegister" class="form-container">
@@ -93,17 +104,17 @@ const userEmail = computed(() => {
           <input v-model="loginPassword" type="password" placeholder="Password" />
         </div>
         <button class="btn-primary" @click="loginUser">Login</button>
-        <a style="display: block" @click="isRegister = true"
-          >Don't have an account? Register</a
-        >
+        <a style="display: block" @click="isRegister = true">Don't have an account? Register</a>
       </div>
     </div>
-    <RouterLink to="/stress-test">Stress test</RouterLink>
 
     <div v-if="isLoggedIn" class="welcome-container">
       <h2>Welcome, {{ userEmail }}</h2>
       <button class="btn-primary" @click="logoutUser">Logout</button>
     </div>
+  </div>
+  <div>
+    <button @click="testFetchHandler">TestWASM</button>
   </div>
 </template>
 

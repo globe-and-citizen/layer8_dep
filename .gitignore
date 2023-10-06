@@ -149,4 +149,5 @@ out
 
 # Compiles WASM binaries
 .wasm
+*.wasm
 

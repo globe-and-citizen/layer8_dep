@@ -1,11 +1,18 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"syscall/js"
 )
 
 const VERSION = "1.0.2"
+
+type Request struct {
+	Method  string            `json:"method"`
+	Headers map[string]string `json:"headers"`
+	Body    []byte            `json:"body"`
+}
 
 func main() {
 	c := make(chan struct{}, 0)
@@ -16,20 +23,47 @@ func main() {
 }
 
 func WASMMiddleware(this js.Value, args []js.Value) interface{} {
-	// request := args[0]
+	request := args[0]
 	response := args[1]
 	next := args[2]
 
-	// Set any layer8 particular custom props
-	response.Set("custom_test_prop", js.ValueOf("Example string"))
+	request.Call("on", "data", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		var uint8array []byte
 
-	// Replace the standard methods with the L8 equivalents
-	// so that end users don't notice any difference.
-	nativeFunc := response.Get("send")
-	response.Set("send", nativeFunc)
-	fmt.Println("Request has transitted the WASM middleware.")
+		js.Global().Get("Object").Call("values", args[0]).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+			theInt := args[0].Int()
+			uint8array = binary.AppendUvarint(uint8array, uint64(theInt))
+			return nil
+		}))
 
-	next.Invoke()
+		// // CHOICE: set the body of the request to be a JSON string
+		request.Set("body", js.ValueOf(string(uint8array)))
+
+		// // OR: process the request within the WASM module
+		// myRequest := new(Request)
+		// err := json.Unmarshal(uint8array, &myRequest)
+		// if err != nil {
+		// 	fmt.Println("damn")
+		// }
+		// fmt.Println("Method: ", string(myRequest.Method))
+		// fmt.Println("Headers: ", myRequest.Headers)
+		// fmt.Println("Body: ", string(myRequest.Body))
+		// url := request.Get("baseUrl").String()
+		// fmt.Println(url)
+
+		// Set any layer8 particular custom props
+		response.Set("custom_test_prop", js.ValueOf("Example string"))
+
+		// Replace the standard methods with the L8 equivalents
+		// so that end users don't notice any difference.
+		nativeFunc := response.Get("send")
+		response.Set("send", nativeFunc)
+		fmt.Println("Request has transitted the WASM middleware.", request)
+
+		next.Invoke()
+		return nil
+	}))
+
 	return nil
 }
 

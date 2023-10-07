@@ -1,5 +1,4 @@
 <script setup>
-import WelcomeMock from "./views/StressTest.vue";
 import { RouterView } from "vue-router";
 </script>
 
@@ -11,3 +10,4 @@ import { RouterView } from "vue-router";
 
 <style scoped>
 </style>
+

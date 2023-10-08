@@ -6,10 +6,16 @@ const requestsSent = ref(0);
 const totalTimeSpent = ref(0);
 const numberOfRequest = ref(0)
 
+async function testWASMLoadedHandler (){
+  let res = await layer8.testWASMLoaded()
+  console.log(res)
+}
+
+
 async function testWASMHandler() {
   const startTime = performance.now();
   for (let i = 0; i < numberOfRequest.value; i++) {
-    const res = await window.testWASM(i, "42");
+    const res = await layer8.testWASM(i, "42");
     requestsSent.value++;
     console.log(res);
   }
@@ -21,6 +27,12 @@ async function testWASMHandler() {
 </script>
 
 <template>
+    <div id="navbar">
+    <RouterLink to="/">Home</RouterLink>
+    <RouterLink to="/stress-test">Stress test</RouterLink>
+    <button @click="testWASMLoadedHandler">TestWASM</button>
+    <br><hr><br>
+  </div>
   <div class="greetings">
     <div>
       <label for="">Number of request</label>

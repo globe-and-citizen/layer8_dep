@@ -35,6 +35,7 @@ func main() {
 
 	// expose the layer8 functionality the global scope
 	js.Global().Set("layer8", js.ValueOf(map[string]interface{}{
+		"testWASMLoaded":    js.FuncOf(testWASMLoaded),
 		"testWASM":          js.FuncOf(testWASM),
 		"genericGetRequest": js.FuncOf(genericGetRequest),
 		"genericPost":       js.FuncOf(genericPost),
@@ -45,6 +46,23 @@ func main() {
 
 	// Wait indefinitely
 	<-c
+}
+
+func testWASMLoaded(this js.Value, args []js.Value) interface{} {
+	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		//reject := args[1]
+		go func() {
+			// Main function body
+			//fmt.Println(string(args[2]))
+			resolve.Invoke(js.ValueOf(fmt.Sprintf("WASM Interceptor version %s successfully loaded.", VERSION)))
+			//reject.Invoke()
+		}()
+		return nil
+	}
+	promiseConstructor := js.Global().Get("Promise")
+	promise := promiseConstructor.New(js.FuncOf(resolve_reject_internals))
+	return promise
 }
 
 func testWASM(this js.Value, args []js.Value) interface{} {

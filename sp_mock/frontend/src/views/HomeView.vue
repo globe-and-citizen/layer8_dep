@@ -1,5 +1,14 @@
 <script setup>
 import { computed, ref } from "vue";
+import { RouterLink } from "vue-router";
+
+
+async function testWASMLoadedHandler (){
+  let res = await layer8.testWASMLoaded()
+  console.log(res)
+}
+
+
 
 const registerEmail = ref("");
 const registerPassword = ref("");
@@ -9,7 +18,6 @@ const isRegister = ref(false);
 const token = ref(localStorage.getItem("token") || null);
 
 const isLoggedIn = computed(() => token.value !== null);
-
 
 async function testFetchHandler(){
   // layer8.testWASM("42", 42)
@@ -80,6 +88,12 @@ const userEmail = computed(() => {
 </script>
 
 <template>
+  <div id="navbar">
+    <RouterLink to="/">Home</RouterLink>
+    <RouterLink to="/stress-test">Stress test</RouterLink>
+    <button @click="testWASMLoadedHandler">TestWASM</button>
+    <br><hr><br>
+  </div>
   <div id="app">
     <div class="container" v-if="!isLoggedIn">
       <div v-if="isRegister" class="form-container">
@@ -113,7 +127,7 @@ const userEmail = computed(() => {
     </div>
   </div>
   <div>
-    <button @click="testFetchHandler">TestWASM</button>
+    
   </div>
 </template>
 

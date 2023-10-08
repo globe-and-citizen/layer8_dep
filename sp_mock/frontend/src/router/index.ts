@@ -15,11 +15,6 @@ const router = createRouter({
       component: () => import("../views/StressTest.vue"),
     },
     // {
-    //   path: "/login",
-    //   name: "login",
-    //   component: () => import("../views/LoginView.vue"),
-    // },
-    // {
     //   path: '/oauth2/callback',
     //   name: 'oauth2-callback',
     //   component: () => import('../views/CallbackView.vue')

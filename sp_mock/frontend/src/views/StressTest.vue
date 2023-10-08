@@ -1,16 +1,10 @@
 <script setup>
 import { ref } from "vue";
-import { RouterLink } from "vue-router";
+import Navbar from "../components/Navbar.vue";
 
 const requestsSent = ref(0);
 const totalTimeSpent = ref(0);
 const numberOfRequest = ref(0)
-
-async function testWASMLoadedHandler (){
-  let res = await layer8.testWASMLoaded()
-  console.log(res)
-}
-
 
 async function testWASMHandler() {
   const startTime = performance.now();
@@ -27,12 +21,7 @@ async function testWASMHandler() {
 </script>
 
 <template>
-    <div id="navbar">
-    <RouterLink to="/">Home</RouterLink>
-    <RouterLink to="/stress-test">Stress test</RouterLink>
-    <button @click="testWASMLoadedHandler">TestWASM</button>
-    <br><hr><br>
-  </div>
+  <Navbar></Navbar>
   <div class="greetings">
     <div>
       <label for="">Number of request</label>

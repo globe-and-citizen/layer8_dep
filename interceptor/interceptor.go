@@ -12,6 +12,8 @@ import (
 
 const VERSION = "1.0.2"
 
+var counter = 0
+
 type Request struct {
 	Method  string            `json:"method"`
 	Headers map[string]string `json:"headers"`
@@ -55,7 +57,9 @@ func testWASMLoaded(this js.Value, args []js.Value) interface{} {
 		go func() {
 			// Main function body
 			//fmt.Println(string(args[2]))
-			resolve.Invoke(js.ValueOf(fmt.Sprintf("WASM Interceptor version %s successfully loaded.", VERSION)))
+			fmt.Printf("WASM Interceptor version %s successfully loaded.", VERSION)
+			counter++
+			resolve.Invoke(js.ValueOf(counter))
 			//reject.Invoke()
 		}()
 		return nil

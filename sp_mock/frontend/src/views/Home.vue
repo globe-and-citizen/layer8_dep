@@ -1,14 +1,6 @@
 <script setup>
 import { computed, ref } from "vue";
-import { RouterLink } from "vue-router";
-
-
-async function testWASMLoadedHandler (){
-  let res = await layer8.testWASMLoaded()
-  console.log(res)
-}
-
-
+import Navbar from "../components/Navbar.vue";
 
 const registerEmail = ref("");
 const registerPassword = ref("");
@@ -18,18 +10,6 @@ const isRegister = ref(false);
 const token = ref(localStorage.getItem("token") || null);
 
 const isLoggedIn = computed(() => token.value !== null);
-
-async function testFetchHandler(){
-  // layer8.testWASM("42", 42)
-  let res = await layer8.fetch("http://localhost:5000/", {
-    method: "POST",
-    body: JSON.stringify({
-        email: "fake@mail.com",
-        password: "1234"
-      })
-  })
-  console.log(res)
-} 
 
 const registerUser = async () => {
   try {
@@ -88,12 +68,7 @@ const userEmail = computed(() => {
 </script>
 
 <template>
-  <div id="navbar">
-    <RouterLink to="/">Home</RouterLink>
-    <RouterLink to="/stress-test">Stress test</RouterLink>
-    <button @click="testWASMLoadedHandler">TestWASM</button>
-    <br><hr><br>
-  </div>
+  <Navbar></Navbar>
   <div id="app">
     <div class="container" v-if="!isLoggedIn">
       <div v-if="isRegister" class="form-container">

@@ -60,7 +60,7 @@ func (c *Client) transfer(secret []byte, req *utilities.Request, url, clientID s
 		return nil, fmt.Errorf("could not encode request: %v", err)
 	}
 	// send the request
-	_, res := c.do(b, secret, url, clientID, false)
+	_, res := c.do(b, secret, url, clientID)
 	// decode response body
 	resData, err := utilities.FromJSONResponse(res)
 	if err != nil {
@@ -71,7 +71,7 @@ func (c *Client) transfer(secret []byte, req *utilities.Request, url, clientID s
 
 // do sends the request to the remote server through the layer8 proxy server
 // returns a status code and response body
-func (c *Client) do(data, secret []byte, backendUrl, clientID string, isKeyExchange bool) (int, []byte) {
+func (c *Client) do(data, secret []byte, backendUrl, clientID string) (int, []byte) {
 	var err error
 
 	// encrypt request body if a secret is provided
@@ -115,9 +115,6 @@ func (c *Client) do(data, secret []byte, backendUrl, clientID string, isKeyExcha
 	r.Header.Add("X-Forwarded-Proto", parsedURL.Scheme)
 	r.Header.Add("X-Layer8-CID", clientID)
 	r.Header.Add("Content-Type", "application/json")
-	if isKeyExchange {
-		r.Header.Add("X-Layer8-Key-Exchange", "true")
-	}
 	// send request
 	res, err := client.Do(r)
 	if err != nil {

@@ -4,14 +4,13 @@ import (
 	"syscall/js"
 
 	utilities "github.com/globe-and-citizen/layer8-utils"
-	"globe-and-citizen/layer8/interceptor/internals"
+	"github.com/globe-and-citizen/layer8/interceptor/internals"
 )
 
 var (
-	Layer8Scheme  string = "http"
-	Layer8Host    string = "localhost"
-	Layer8Port    string = "5000"
-	Layer8Version string = "v1"
+	Layer8Scheme  string
+	Layer8Host    string
+	Layer8Port    string
 )
 
 func fetch(this js.Value, args []js.Value) interface{} {

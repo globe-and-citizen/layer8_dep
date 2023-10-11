@@ -19,3 +19,68 @@ Layer 8 is designed to be a scalable internet service platform that enables end-
 To succeed, Layer 8 must solve the fundamental problem(s) associated with trusting an unknown server to deliver an uncompromised application to the client with every new page load (see Kobeissi, N. (2021) An Analysis of the ProtonMail Cryptographic Architecture. Retrieved from https://eprint.iacr.org/2018/1121.pdf). To users, it will provide a free, anonymizing, authentication service. 
 
 Layer 8 must be open source so that it can be vetted by the larger internet security community. Crowd scrutiny will be fundamental to establishing its brand identity as a viable, trusted, third party. It should be noted that, technologically, it is already possible to build Layer 8. In fact, the working proof of concept that I wrote using Type Script is available on Github (github.com/satsite13/Layer8.git). Risky primary research and development should not be necessary to realize the project and will be avoided.
+
+## Usage
+
+### Local Development
+> For local development, the proxy is available as a docker container. First, ensure that you have [Docker](https://docs.docker.com/get-docker/) installed. Then, run the following command to pull and start the proxy:
+>
+> ```bash
+> docker run -d --network host deestarks/layer8-proxy
+> ```
+
+1. In your frontend application, add the following script tag to the head of your index.html file:
+    ```html
+    <script type="module" src="https://auth-service-5mcaj.ondigitalocean.app/assets/cdn/interceptor/index.local.js"></script>
+    ```
+2. In your backend application, install the following npm package:
+    > Note: Node version 20 or higher is recommended.
+    ```bash
+    npm i layer8-middleware
+    ```
+3. Also, in your backend application, add the following code to your application's entry point:
+    ```javascript
+    // import the layer8 middleware
+    const layer8 = require('layer8-middleware');
+    // use the layer8 middleware
+    app.use(layer8);
+    ```
+
+    An example usage in an express application is shown below:
+    ```javascript
+    const express = require('express');
+    const layer8 = require('layer8-middleware');
+
+    const app = express();
+
+    app.use(express.json());
+    app.use(layer8);
+    ```
+
+### Production
+
+1. In your frontend application, add the following script tag to the head of your index.html file:
+    ```html
+    <script type="module" src="https://auth-service-5mcaj.ondigitalocean.app/assets/cdn/interceptor/index.js"></script>
+    ```
+2. In your backend application, install the following npm package:
+    ```bash
+    npm i layer8-middleware
+    ```
+3. Also, in your backend application, add the following code to your application's entry point:
+    ```javascript
+    // import the layer8 middleware
+    const layer8 = require('layer8-middleware');
+    // use the layer8 middleware
+    app.use(layer8);
+    ```
+    An example usage in an express application is shown below:
+    ```javascript
+    const express = require('express');
+    const layer8 = require('layer8-middleware');
+
+    const app = express();
+
+    app.use(express.json());
+    app.use(layer8);
+    ```

@@ -13,19 +13,20 @@ const isLoggedIn = computed(() => token.value !== null);
 
 async function testFetchHandler(){
   // layer8.testWASM("42", 42)
-  let res = await layer8.fetch("http://localhost:5000/", {
-    method: "POST",
+  let res = await layer8.fetch("http://localhost:8090/", {
+    method: "GET",
     body: JSON.stringify({
         email: "fake@mail.com",
         password: "1234"
       })
   })
-  console.log(res)
+  const text = await res.text()
+  console.log(text)
 } 
 
 const registerUser = async () => {
   try {
-    await layer8.fetch("http://localhost:5000/api/register", {
+    await layer8.fetch("http://localhost:8090/api/register", {
         method: "POST",  
         headers: {
           "Content-Type": "Application/Json"
@@ -45,7 +46,7 @@ const registerUser = async () => {
 
 const loginUser = async () => {
   try {
-    const response_as_string = await layer8.fetch("http://localhost:5000/api/login", {
+    const response = await layer8.fetch("http://localhost:8090/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json"
@@ -54,10 +55,10 @@ const loginUser = async () => {
         email: loginEmail.value,
         password: loginPassword.value
       })
-    })      
-
-    token.value =  response_as_string
-    localStorage.setItem("token", response_as_string);
+    })
+    const data = await response.json()
+    token.value = data.token;
+    localStorage.setItem("token", data.token);
     alert("Login successful!");
   } catch (error) {
     console.error(error);
@@ -71,7 +72,7 @@ const logoutUser = () => {
 };
 
 const userEmail = computed(() => {
-  if (token.value) {
+  if (token.value && token.value.split(".").length > 1) {
     const payload = JSON.parse(atob(token.value.split(".")[1]));
     return payload.email;
   }

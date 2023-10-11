@@ -1,13 +1,13 @@
 const express = require('express')
 const cors = require('cors')
-const Layer8 = require("../../middleware/dist/loadWASM.js")
+const Layer8 = require("layer8-middleware")
 require('dotenv').config()
 
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
 // INIT
-const port = 8000
+const port = 8090
 const app = express()
 
 const users = []; // Store users in memory
@@ -27,7 +27,7 @@ app.get("/", (req, res)=>{
 })
 
 app.post("/", (req, res)=>{
-    console.log("req.body: ", JSON.parse(req.body))
+    console.log("req.body: ", req.body)
     //console.log("headers:: ", req.headers)
     res.send("Server has registered a POST.")
 })
@@ -35,7 +35,7 @@ app.post("/", (req, res)=>{
 
 app.post('/api/register', async (req, res) => {
     console.log("req.body: ", req.body)
-    const { password, email } = JSON.parse(req.body);
+    const { password, email } = req.body;
     console.log(password, email)
     const hashedPassword = await bcrypt.hash(password, 10);
     users.push({ email, password: hashedPassword });
@@ -47,7 +47,7 @@ app.post('/api/login', async (req, res) => {
     console.log("res.custom_test_prop: ", res.custom_test_prop)
     console.log("req.body: ", req.body)
     console.log("users: ", users)
-    const { email, password } = JSON.parse(req.body);
+    const { email, password } = req.body;
     const user = users.find(u => u.email === email);
     console.log("user: ", user)
     if (user && await bcrypt.compare(password, user.password)) {

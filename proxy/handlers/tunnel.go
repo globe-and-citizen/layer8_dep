@@ -13,6 +13,8 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	scheme := r.Header.Get("X-Forwarded-Proto")
 	url := scheme + "://" + host + r.URL.Path
 
+	log.Println("Forwarding request to:", url)
+	
 	// create the request
 	req, err := http.NewRequest(r.Method, url, r.Body)
 	if err != nil {

@@ -9,8 +9,6 @@ import (
 	"net/url"
 
 	utilities "github.com/globe-and-citizen/layer8-utils"
-
-	"github.com/google/uuid"
 )
 
 type Client struct {
@@ -30,8 +28,6 @@ func NewClient(scheme, host, port string) ClientImpl {
 
 // Do sends a request to through the layer8 proxy server and returns a response
 func (c *Client) Do(url string, req *utilities.Request) *utilities.Response {
-	clientID := uuid.New().String()
-	
 	// hardcoding a shared secret for now
 	secret, err := base64.StdEncoding.DecodeString("KfbCmY2v83ptAZLLKffx0ve2Br8hkMhCkIo5RkFaNlk=")
 	if err != nil {
@@ -42,7 +38,7 @@ func (c *Client) Do(url string, req *utilities.Request) *utilities.Response {
 	}
 
 	// send request
-	res, err := c.transfer(secret, req, url, clientID)
+	res, err := c.transfer(secret, req, url)
 	if err != nil {
 		return &utilities.Response{
 			Status:     500,
@@ -53,14 +49,14 @@ func (c *Client) Do(url string, req *utilities.Request) *utilities.Response {
 }
 
 // transfer sends the request to the remote server through the layer8 proxy server
-func (c *Client) transfer(secret []byte, req *utilities.Request, url, clientID string) (*utilities.Response, error) {
+func (c *Client) transfer(secret []byte, req *utilities.Request, url string) (*utilities.Response, error) {
 	// encode request body
 	b, err := req.ToJSON()
 	if err != nil {
 		return nil, fmt.Errorf("could not encode request: %v", err)
 	}
 	// send the request
-	_, res := c.do(b, secret, url, clientID)
+	_, res := c.do(b, secret, url)
 	// decode response body
 	resData, err := utilities.FromJSONResponse(res)
 	if err != nil {
@@ -71,7 +67,7 @@ func (c *Client) transfer(secret []byte, req *utilities.Request, url, clientID s
 
 // do sends the request to the remote server through the layer8 proxy server
 // returns a status code and response body
-func (c *Client) do(data, secret []byte, backendUrl, clientID string) (int, []byte) {
+func (c *Client) do(data, secret []byte, backendUrl string) (int, []byte) {
 	var err error
 
 	// encrypt request body if a secret is provided
@@ -113,7 +109,6 @@ func (c *Client) do(data, secret []byte, backendUrl, clientID string) (int, []by
 	// add headers
 	r.Header.Add("X-Forwarded-Host", parsedURL.Host)
 	r.Header.Add("X-Forwarded-Proto", parsedURL.Scheme)
-	r.Header.Add("X-Layer8-CID", clientID)
 	r.Header.Add("Content-Type", "application/json")
 	// send request
 	res, err := client.Do(r)

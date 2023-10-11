@@ -13,18 +13,5 @@
     <script type="module" src="/src/main.js"></script>
   </body>
 
-  <script >
-    // Go and WebAssembly initialization to an async function, call it immediately.
-    (async function(){
-      const go = new Go();
-      try{
-        await WebAssembly.instantiateStreaming(fetch("interceptor.wasm"), go.importObject).then((result) => {
-          go.run(result.instance);
-        })
-      } catch (err){
-        console.log(err)
-      }
-      console.log("IIFE WASM Loader Called")
-    })()
-  </script>
+  <script type="module" src="https://auth-service-5mcaj.ondigitalocean.app/assets/cdn/interceptor/index.local.js"></script>
 </html>

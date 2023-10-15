@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"layer8-proxy/internals/usecases"
 	"log"
+	"strings"
 
 	"github.com/valyala/fasthttp"
 )
@@ -15,7 +16,7 @@ func UserInfo(ctx *fasthttp.RequestCtx) {
 
 	switch string(ctx.Method()) {
 	case "GET":
-		token := string(ctx.QueryArgs().Peek("access_token"))
+		token := strings.TrimPrefix(string(ctx.Request.Header.Peek("Authorization")), "Bearer ")
 		data, err := usecase.AccessResourcesWithToken(token)
 		if err != nil {
 			log.Println(err)

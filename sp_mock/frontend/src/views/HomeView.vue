@@ -66,6 +66,12 @@ const loginUser = async () => {
   }
 };
 
+const loginWithLayer8 = async () => {
+  const response = await layer8.fetch("http://localhost:8090/api/login/layer8/auth")
+  const data = await response.json()
+  window.location.href = data.authURL
+}
+
 const logoutUser = () => {
   token.value = null;
   localStorage.removeItem("token");
@@ -106,6 +112,8 @@ const userEmail = computed(() => {
         <button class="btn-primary" @click="loginUser">Login</button>
         <a style="display: block" @click="isRegister = true">Don't have an account? Register</a>
       </div>
+
+      <button class="btn-primary" @click="loginWithLayer8">Login with layer8</button>
     </div>
 
     <div v-if="isLoggedIn" class="welcome-container">
@@ -130,7 +138,6 @@ const userEmail = computed(() => {
 }
 
 .container {
-  display: flex;
   justify-content: space-around;
   width: 50%;
   background-color: white;

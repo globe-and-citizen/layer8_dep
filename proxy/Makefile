@@ -1,8 +1,6 @@
 include .env
 export
 
-TAG := $(shell git rev-parse --short HEAD)
-
 docker-build:
 	@echo "Building proxy service..."
 	@docker build -t layer8-proxy -f ./docker/proxy/Dockerfile .
@@ -35,9 +33,9 @@ docker-push-auth: docker-push-auth-do docker-push-auth-hub
 
 docker-push-proxy-do:
 	@echo "pushing proxy service..."
-	@docker tag layer8-proxy:latest registry.digitalocean.com/$(DIGITALOCEAN_REGISTRY)/layer8-proxy:$(TAG)
-	@docker push registry.digitalocean.com/$(DIGITALOCEAN_REGISTRY)/layer8-proxy:$(TAG)
-	@echo "pushed proxy service to registry.digitalocean.com/$(DIGITALOCEAN_REGISTRY)/layer8-proxy:$(TAG)"
+	@docker tag layer8-proxy:latest registry.digitalocean.com/$(DIGITALOCEAN_REGISTRY)/layer8-proxy:latest
+	@docker push registry.digitalocean.com/$(DIGITALOCEAN_REGISTRY)/layer8-proxy:latest
+	@echo "pushed proxy service to registry.digitalocean.com/$(DIGITALOCEAN_REGISTRY)/layer8-proxy:latest"
 
 docker-push-proxy-hub:
 	@echo "pushing proxy service..."
@@ -47,9 +45,9 @@ docker-push-proxy-hub:
 
 docker-push-auth-do:
 	@echo "pushing auth service..."
-	@docker tag layer8-auth:latest registry.digitalocean.com/$(DIGITALOCEAN_REGISTRY)/layer8-auth:$(TAG)
-	@docker push registry.digitalocean.com/$(DIGITALOCEAN_REGISTRY)/layer8-auth:$(TAG)
-	@echo "pushed auth service to registry.digitalocean.com/$(DIGITALOCEAN_REGISTRY)/layer8-auth:$(TAG)"
+	@docker tag layer8-auth:latest registry.digitalocean.com/$(DIGITALOCEAN_REGISTRY)/layer8-auth:latest
+	@docker push registry.digitalocean.com/$(DIGITALOCEAN_REGISTRY)/layer8-auth:latest
+	@echo "pushed auth service to registry.digitalocean.com/$(DIGITALOCEAN_REGISTRY)/layer8-auth:latest"
 
 docker-push-auth-hub:
 	@echo "pushing auth service..."

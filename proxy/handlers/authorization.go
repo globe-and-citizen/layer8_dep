@@ -1,13 +1,16 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"encoding/json"
-	"github.com/globe-and-citizen/layer8-utils"
+	"errors"
 	"layer8-proxy/constants"
 	"layer8-proxy/internals/usecases"
 	"log"
 	"net/url"
 	"strings"
+
+	"github.com/globe-and-citizen/layer8-utils"
 
 	"github.com/valyala/fasthttp"
 	"golang.org/x/oauth2"
@@ -133,10 +136,31 @@ func OAuthToken(ctx *fasthttp.RequestCtx) {
 	case "POST":
 		var (
 			code         = string(ctx.FormValue("code"))
-			clientID     = string(ctx.FormValue("client_id"))
-			clientSecret = string(ctx.FormValue("client_secret"))
 			redirectURI  = string(ctx.FormValue("redirect_uri"))
 		)
+
+		// decode the basic auth header
+		fromBasicAuth := func(t string) (string, string, error) {
+			t = strings.TrimPrefix(t, "Basic ")
+			b, err := base64.StdEncoding.DecodeString(t)
+			if err != nil {
+				return "", "", err
+			}
+			// first remove the "Basic " prefix
+			s := strings.SplitN(string(b), ":", 2)
+			if len(s) != 2 {
+				return "", "", errors.New("invalid basic auth header")
+			}
+			return s[0], s[1], nil
+		}
+		clientID, clientSecret, err := fromBasicAuth(string(ctx.Request.Header.Peek("Authorization")))
+		if err != nil {
+			ctx.SetContentType("application/json")
+			ctx.SetStatusCode(fasthttp.StatusUnauthorized)
+			ctx.SetBody([]byte(`{"error": "` + err.Error() + `"}`))
+			return
+		}
+		
 		// get the client
 		client, err := usecase.GetClient(clientID)
 		if err != nil {

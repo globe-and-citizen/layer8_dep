@@ -1,6 +1,8 @@
 const express = require('express')
 const cors = require('cors')
+const popsicle = require('popsicle')
 const Layer8 = require("layer8-middleware")
+const ClientOAuth2 = require('client-oauth2')
 require('dotenv').config()
 
 const jwt = require('jsonwebtoken');
@@ -13,6 +15,17 @@ const app = express()
 const users = []; // Store users in memory
 
 const SECRET_KEY = 'my_very_secret_key'
+
+const LAYER8_CALLBACK_URL = "http://localhost:5010/oauth2/callback" // defined in the frontend
+const LAYER8_RESOURCE_URL = "https://auth-service-5mcaj.ondigitalocean.app/api/user"
+const layer8Auth = new ClientOAuth2({
+    clientId: "notanid",
+    clientSecret: "absolutelynotasecret!",
+    accessTokenUri: "https://auth-service-5mcaj.ondigitalocean.app/api/oauth",
+    authorizationUri: "https://auth-service-5mcaj.ondigitalocean.app/authorize",
+    redirectUri: LAYER8_CALLBACK_URL,
+    scopes: ["read:user"],
+})
 
 // MIDDLEWARE
 app.use(express.json())
@@ -58,6 +71,33 @@ app.post('/api/login', async (req, res) => {
         res.status(401).send('Invalid credentials!');
     }
 })
+
+app.get('/api/login/layer8/auth', async (req, res) => {
+    res.status(200).json({ authURL: layer8Auth.code.getUri() })
+})
+
+app.post('/api/login/layer8/auth', async (req, res) => {
+    const { callback_url } = req.body;
+    const user = await layer8Auth.code.getToken(callback_url)
+        .then(async (user) => {
+            // get the user data from the resource server
+            return await popsicle.request(user.sign({
+                method: 'GET',
+                url: LAYER8_RESOURCE_URL,
+            }))
+                .then((res) => {
+                    return JSON.parse(res.body)
+                })
+        })
+        .catch((err) => {
+            console.log("err: ", err)
+        })
+    
+    const email = user.profile.email;
+    const token = jwt.sign({ email }, SECRET_KEY);
+    res.status(200).json({ token });
+})
+
 
 app.listen(port, () => {
     console.log(`\nA mock Service Provider backend is now listening on port ${port}.`)

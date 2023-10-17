@@ -1,11 +1,16 @@
 package utils
 
 import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/ecdh"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"math/big"
 	"slices"
 )
@@ -103,7 +108,8 @@ func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 	} else {
 		keyUsage = ECDSA
 	}
-	if jwk.D != nil {
+	if len(jwk.D) != 0 {
+		// if jwk.D != nil {
 		privateFlag = true
 	}
 
@@ -130,4 +136,153 @@ func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 		return key, nil
 	}
 	return nil, fmt.Errorf("Unable to Export key. Unrecognized Key_opts.")
+}
+
+func (privateKey *JWK) GetECDHSharedSecret(publicKey *JWK) (*JWK, error) {
+	// is public key public?
+	if len(publicKey.D) != 0 {
+		return nil, fmt.Errorf("Function takes a public JWK as argument. Private key detected.")
+	}
+	// is publis key for ECDH?
+	if !slices.Contains(publicKey.Key_ops, "deriveKey") {
+		return nil, fmt.Errorf("The public JWK passed in as argument must have 'deriveKey' as one of the key_opts")
+	}
+	// is private private?
+	if len(privateKey.D) == 0 {
+		return nil, fmt.Errorf("Function receiver must be private JWK. No private key detected.")
+	}
+	// is private for ECDH?
+	if !slices.Contains(privateKey.Key_ops, "deriveKey") {
+		return nil, fmt.Errorf("Function receiver must be for ECDH. Key_ops does not contain 'deriveKey' as an option.")
+	}
+	// convert both to *ecdh.[private|public]Key
+	privKey_unCasted, err := privateKey.ExportKeyAsGoType()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	var privKey *ecdh.PrivateKey
+	if pk, ok := privKey_unCasted.(*ecdh.PrivateKey); ok {
+		privKey = pk
+	}
+
+	pubKey_unCasted, err := publicKey.ExportKeyAsGoType()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	var pubKey *ecdh.PublicKey
+	if pk, ok := pubKey_unCasted.(*ecdh.PublicKey); ok {
+		pubKey = pk
+	}
+	// to the ECDH
+	ss, err := privKey.ECDH(pubKey)
+
+	// Kid is derived from the private key's Kid
+
+	symmetricJWK := &JWK{
+		Kty:     "EC",
+		Key_ops: []string{"encrypt", "decrypt"},
+		Kid:     "shared_" + privateKey.Kid[4:],
+		Crv:     privateKey.Crv,
+		X:       ss,
+	}
+
+	// convert the result to a JWK.
+	return symmetricJWK, err
+}
+
+func (privateKey *JWK) SignByteSlice(data []byte) ([]byte, error) {
+	ecdsaPrivateKey, err := privateKey.ExportKeyAsGoType()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to call ExportKeyAsGoType on function receiver. Error: %s", err.Error())
+	}
+	var ecdsaKeyAsGoType *ecdsa.PrivateKey
+	if privKey, ok := ecdsaPrivateKey.(*ecdsa.PrivateKey); ok {
+		ecdsaKeyAsGoType = privKey
+	} else {
+		return nil, fmt.Errorf("Receiver, privateKey, of type %T could not be cast as compatible Go type, *ecdsa.PrivateKey.", privateKey)
+	}
+
+	hash32 := sha256.Sum256(data) //sha256 outputs a [32]byte that must be converted to []byte
+	var hash []byte
+	copy(hash, hash32[:])
+	signature, err := ecdsa.SignASN1(rand.Reader, ecdsaKeyAsGoType, hash)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to sign data. Internal error: %s", err.Error())
+	}
+	return signature, nil
+}
+
+func (publicKey *JWK) VerifyASN1SignatureOfByteSlice(signature, data []byte) (bool, error) {
+	if !slices.Contains(publicKey.Key_ops, "verify") {
+		return false, fmt.Errorf("Check function receiver. Must be a *JWK with Key_ops including 'verify'")
+	}
+
+	ecdsPublicKey, err := publicKey.ExportKeyAsGoType()
+	if err != nil {
+		return false, fmt.Errorf("Unable to call ExportKeyAsGoType on function receiver. Error: %s", err.Error())
+	}
+	var ecdsaKeyAsGoType *ecdsa.PublicKey
+	if pubKey, ok := ecdsPublicKey.(*ecdsa.PublicKey); ok {
+		ecdsaKeyAsGoType = pubKey
+	} else {
+		return false, fmt.Errorf("Receiver, publicKey, of type %T could not be cast as a compatible *ecdsa.PublicKey.", publicKey)
+	}
+
+	hash32 := sha256.Sum256(data)
+	var hash []byte
+	copy(hash, hash32[:])
+	verified := ecdsa.VerifyASN1(ecdsaKeyAsGoType, hash, signature)
+	if verified != true {
+		return false, fmt.Errorf("Signature validation failed for this public key")
+	}
+
+	return verified, nil
+}
+
+func (ss *JWK) SymmetricEncrypt(data []byte) ([]byte, error) {
+	if !slices.Contains(ss.Key_ops, "encrypt") {
+		return nil, fmt.Errorf("Receiver Key_ops must include 'encrypt' ")
+	}
+
+	blockCipher, err := aes.NewCipher(ss.X)
+	if err != nil {
+		return nil, fmt.Errorf("Symmetric encryption failed: %s, %d", err.Error())
+	}
+	aesgcm, err := cipher.NewGCM(blockCipher)
+	if err != nil {
+		return nil, fmt.Errorf("Symmetric encryption failed: %s", err.Error())
+	}
+	nonce := make([]byte, aesgcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return nil, fmt.Errorf("Symmetric encryption failed: %s", err.Error())
+	}
+
+	cipherText := aesgcm.Seal(nonce, nonce, data, nil)
+
+	return cipherText, nil
+}
+
+func (ss *JWK) SymmetricDecrypt(ciphertext []byte) ([]byte, error) {
+	if !slices.Contains(ss.Key_ops, "decrypt") {
+		return nil, fmt.Errorf("Receiver Key_ops must include 'decrypt' ")
+	}
+
+	blockCipher, err := aes.NewCipher(ss.X)
+	if err != nil {
+		return nil, fmt.Errorf("Symmetric encryption failed: %s", err.Error())
+	}
+	aesgcm, err := cipher.NewGCM(blockCipher)
+	if err != nil {
+		return nil, fmt.Errorf("Symmetric encryption failed: %s", err.Error())
+	}
+	nonceSize := aesgcm.NonceSize()
+	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
+
+	plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
+	if err != nil {
+		return nil, fmt.Errorf("Symmetric encryption failed: %s", err.Error())
+	}
+	return plaintext, nil
 }

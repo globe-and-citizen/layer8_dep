@@ -72,6 +72,18 @@ const loginWithLayer8 = async () => {
   window.location.href = data.authURL
 }
 
+const loginWithLayer8Popup = async () => {
+  const response = await layer8.fetch("http://localhost:8090/api/login/layer8/auth")
+  const data = await response.json()
+
+  // create opener window
+  const popup = window.open(data.authURL, "Login with Layer8", "width=600,height=600");
+  window.addEventListener("message", async (event) => {
+    popup.close();
+    window.location.href = event.data.url;
+  });
+}
+
 const logoutUser = () => {
   token.value = null;
   localStorage.removeItem("token");
@@ -113,7 +125,10 @@ const userEmail = computed(() => {
         <a style="display: block" @click="isRegister = true">Don't have an account? Register</a>
       </div>
 
-      <button class="btn-primary" @click="loginWithLayer8">Login with layer8</button>
+      <div class="d-flex">
+        <button class="btn-primary mar" @click="loginWithLayer8">Login with layer8 in current window</button>
+        <button class="btn-primary mar" @click="loginWithLayer8Popup">Login with layer8 in popup</button>
+      </div>
     </div>
 
     <div v-if="isLoggedIn" class="welcome-container">
@@ -172,5 +187,9 @@ const userEmail = computed(() => {
 .welcome-container {
   text-align: center;
   width: 100%;
+}
+
+.mar {
+  margin: 10px;
 }
 </style>

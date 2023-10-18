@@ -36,7 +36,7 @@
                 {{end}}
             </div>
             <br>
-            <form method="POST">
+            <form method="POST" id="submit">
                 <input type="hidden" name="decision" value="allow">
                 <input type="submit" value="Authorize">
             </form>
@@ -46,5 +46,40 @@
             </div>
         </div>
     </div>
+    <script>
+        document.getElementById('submit').addEventListener('submit', e => {
+            // if the window is an opener, then send the result to the opener and close the window
+            if (window.opener) {
+                e.preventDefault();
+                console.log('authorize');
+                const form = e.target;
+                const data = new FormData(form);
+                const method = form.method;
+                var url = form.action;
+                // add "return_result=true" to inform the server to return the result to the opener
+                // instead of redirecting the user to the redirect_uri
+                url += (url.includes('?') ? '&' : '?') + 'return_result=true';
+                fetch(url, {
+                    method: method,
+                    body: data
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // if there is a "redr" in the data, then redirect the opener to that url
+                    if (data.redr) {
+                        window.opener.location.href = data.redr;
+                    } else {
+                        // else, send the data to the opener
+                        window.opener.postMessage(data, '*');
+                    }
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+                return false;
+            }
+            return true;
+        });
+    </script>
 </body>
 </html>

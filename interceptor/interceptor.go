@@ -43,8 +43,8 @@ func fetch(this js.Value, args []js.Value) interface{} {
 		go func() {
 			// add headers
 			headersMap := make(map[string]string)
-			js.Global().Get("Object").Call("keys", headers).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-				headersMap[args[0].String()] = args[1].String()
+			js.Global().Get("Object").Call("entries", headers).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+				headersMap[args[0].Index(0).String()] = args[0].Index(1).String()
 				return nil
 			}))
 

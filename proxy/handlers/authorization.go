@@ -8,6 +8,7 @@ import (
 	"layer8-proxy/internals/usecases"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/globe-and-citizen/layer8-utils"
@@ -81,11 +82,18 @@ func Authorize(ctx *fasthttp.RequestCtx) {
 		var (
 			clientID = string(ctx.QueryArgs().Peek("client_id"))
 			scopes   = string(ctx.QueryArgs().Peek("scope"))
+			returnResult, _ = strconv.ParseBool(string(ctx.QueryArgs().Peek("return_result")))
 		)
 		// get authorization decision
 		decision := string(ctx.FormValue("decision"))
 		if decision != "allow" {
 			log.Println("User denied access")
+			if returnResult {
+				ctx.SetContentType("application/json")
+				ctx.SetStatusCode(fasthttp.StatusOK)
+				ctx.SetBody([]byte(`{"redr": "/error?opt=access_denied"}`))
+				return
+			}
 			ctx.Redirect("/error?opt=access_denied", fasthttp.StatusSeeOther)
 			return
 		}
@@ -97,7 +105,12 @@ func Authorize(ctx *fasthttp.RequestCtx) {
 		client, err := usecase.GetClient(clientID)
 		if err != nil {
 			log.Println(err)
-			// redirect to the redirect_uri with error
+			if returnResult {
+				ctx.SetContentType("application/json")
+				ctx.SetStatusCode(fasthttp.StatusOK)
+				ctx.SetBody([]byte(`{"redr": "/error?opt=invalid_client"}`))
+				return
+			}
 			ctx.Redirect("/error?opt=invalid_client", fasthttp.StatusSeeOther)
 			return
 		}
@@ -105,6 +118,12 @@ func Authorize(ctx *fasthttp.RequestCtx) {
 		token := ctx.Request.Header.Cookie("token")
 		user, err := usecase.GetUserByToken(string(token))
 		if err != nil || user == nil {
+			if returnResult {
+				ctx.SetContentType("application/json")
+				ctx.SetStatusCode(fasthttp.StatusOK)
+				ctx.SetBody([]byte(`{"redr": "/login?next=` + string(ctx.RequestURI()) + `"}`))
+				return
+			}
 			ctx.Redirect("/login?next="+string(ctx.RequestURI()), fasthttp.StatusSeeOther)
 			return
 		}
@@ -116,10 +135,22 @@ func Authorize(ctx *fasthttp.RequestCtx) {
 		}, user.ID)
 		if err != nil {
 			log.Println("Server error: ", err)
+			if returnResult {
+				ctx.SetContentType("application/json")
+				ctx.SetStatusCode(fasthttp.StatusOK)
+				ctx.SetBody([]byte(`{"redr": "/error?opt=server_error"}`))
+				return
+			}
 			ctx.Redirect("error?opt=server_error", fasthttp.StatusSeeOther)
 			return
 		}
 		// redirect to the authorization url
+		if returnResult {
+			ctx.SetContentType("application/json")
+			ctx.SetStatusCode(fasthttp.StatusOK)
+			ctx.SetBody([]byte(`{"url": "` + authURL.String() + `"}`))
+			return
+		}
 		ctx.Redirect(authURL.String(), fasthttp.StatusSeeOther)
 		return
 	default:

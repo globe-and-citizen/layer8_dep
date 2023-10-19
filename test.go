@@ -7,6 +7,7 @@ import (
 )
 
 func main() {
+	test1()
 	test2()
 	err := errors.New("Two")
 	errToPrint := fmt.Errorf("One: %w", err)
@@ -26,15 +27,15 @@ func test2() {
 		panic(err.Error())
 	}
 
-	_, errTest := pubJWK_ecdsa1.SignWithKey(data)
-	if errTest != nil {
-		fmt.Println(errTest.Error())
-	}
+	// _, errTest := pubJWK_ecdsa1.SignWithKey(data)
+	// if errTest != nil {
+	// 	fmt.Println(errTest.Error())
+	// }
 
-	_, errTest2 := utils.SignData(pubJWK_ecdsa1, data)
-	if errTest2 != nil {
-		panic(errTest2)
-	}
+	// _, errTest2 := utils.SignData(pubJWK_ecdsa1, data)
+	// if errTest2 != nil {
+	// 	panic(errTest2)
+	// }
 
 	verified, err := pubJWK_ecdsa1.CheckAgainstASN1Signature(siganture, data)
 	if err != nil {

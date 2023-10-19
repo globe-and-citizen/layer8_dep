@@ -1,27 +1,42 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"globe-and-citizen/layer8/utils"
 )
 
 func main() {
-	test1()
+	test2()
+	err := errors.New("Two")
+	errToPrint := fmt.Errorf("One: %w", err)
+	fmt.Println(errToPrint)
 }
 
+// TEST ECDSA
 func test2() {
-	// TEST ECDSA
+
 	privJWK_ecdsa1, pubJWK_ecdsa1, _ := utils.GenerateKeyPair(utils.ECDSA)
 	//privJWK_ecdsa2, pubJWK_ecdsa2, _ := utils.GenerateKeyPair(utils.ECDSA)
 
 	data := []byte("GSIGN ME!")
 
-	siganture, err := privJWK_ecdsa1.SignByteSlice(data)
+	siganture, err := privJWK_ecdsa1.SignWithKey(data)
 	if err != nil {
 		panic(err.Error())
 	}
 
-	verified, err := pubJWK_ecdsa1.VerifyASN1SignatureOfByteSlice(siganture, data)
+	_, errTest := pubJWK_ecdsa1.SignWithKey(data)
+	if errTest != nil {
+		fmt.Println(errTest.Error())
+	}
+
+	_, errTest2 := utils.SignData(pubJWK_ecdsa1, data)
+	if errTest2 != nil {
+		panic(errTest2)
+	}
+
+	verified, err := pubJWK_ecdsa1.CheckAgainstASN1Signature(siganture, data)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -30,8 +45,8 @@ func test2() {
 
 }
 
+// TEST ECDH
 func test1() {
-	// TEST ECDH
 	// Generate First Key pair
 	privJWK, pubJWK, err := utils.GenerateKeyPair(utils.ECDH)
 	if err != nil {

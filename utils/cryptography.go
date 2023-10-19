@@ -1,5 +1,7 @@
 package utils
 
+// TOMORROWS LABOUR CLEAN, ADD, REFACTOR TEST
+
 import (
 	"crypto/aes"
 	"crypto/cipher"
@@ -32,11 +34,10 @@ type JWK struct {
 	D       []byte   `json:"d,omitempty"`   // private keys only
 }
 
-// This will give you a private and public key pair as *JWK structs.
-// The Kid is shared but for the prefix "priv_" or "pub_"
-// The Crv parameter is hardcoded for now as are the key opts.
-// To get the *ecdh.PrivateKey/PublicKey or *ecdsa.PublicKey/*ecdsa.PrivateKey
-// use *JWK.ExportKeyAsGoType() and then type assert the resulting key
+// This will give you a private and public key pair both as *JWK structs.
+// The Kid (i.e., "key-id") is equivalent shared but for the prefix "priv_" or "pub_"
+// appended to a random base64 URL encoded string.The Crv parameter is hardcoded
+// for now during key creation as are the key_ops.
 
 func GenerateKeyPair(keyUse KeyUse) (*JWK, *JWK, error) {
 	id := make([]byte, 16)
@@ -49,7 +50,7 @@ func GenerateKeyPair(keyUse KeyUse) (*JWK, *JWK, error) {
 	privKey.Kid = "priv_" + id_str
 	privKey.Key_ops = []string{}
 	if keyUse == ECDSA {
-		privKey.Key_ops = append(privKey.Key_ops, "sign", "decrypt")
+		privKey.Key_ops = append(privKey.Key_ops, "sign")
 	} else if keyUse == ECDH {
 		privKey.Key_ops = append(privKey.Key_ops, "deriveKey")
 	} else {
@@ -192,55 +193,6 @@ func (privateKey *JWK) GetECDHSharedSecret(publicKey *JWK) (*JWK, error) {
 	return symmetricJWK, err
 }
 
-func (privateKey *JWK) SignByteSlice(data []byte) ([]byte, error) {
-	ecdsaPrivateKey, err := privateKey.ExportKeyAsGoType()
-	if err != nil {
-		return nil, fmt.Errorf("Unable to call ExportKeyAsGoType on function receiver. Error: %s", err.Error())
-	}
-	var ecdsaKeyAsGoType *ecdsa.PrivateKey
-	if privKey, ok := ecdsaPrivateKey.(*ecdsa.PrivateKey); ok {
-		ecdsaKeyAsGoType = privKey
-	} else {
-		return nil, fmt.Errorf("Receiver, privateKey, of type %T could not be cast as compatible Go type, *ecdsa.PrivateKey.", privateKey)
-	}
-
-	hash32 := sha256.Sum256(data) //sha256 outputs a [32]byte that must be converted to []byte
-	var hash []byte
-	copy(hash, hash32[:])
-	signature, err := ecdsa.SignASN1(rand.Reader, ecdsaKeyAsGoType, hash)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to sign data. Internal error: %s", err.Error())
-	}
-	return signature, nil
-}
-
-func (publicKey *JWK) VerifyASN1SignatureOfByteSlice(signature, data []byte) (bool, error) {
-	if !slices.Contains(publicKey.Key_ops, "verify") {
-		return false, fmt.Errorf("Check function receiver. Must be a *JWK with Key_ops including 'verify'")
-	}
-
-	ecdsPublicKey, err := publicKey.ExportKeyAsGoType()
-	if err != nil {
-		return false, fmt.Errorf("Unable to call ExportKeyAsGoType on function receiver. Error: %s", err.Error())
-	}
-	var ecdsaKeyAsGoType *ecdsa.PublicKey
-	if pubKey, ok := ecdsPublicKey.(*ecdsa.PublicKey); ok {
-		ecdsaKeyAsGoType = pubKey
-	} else {
-		return false, fmt.Errorf("Receiver, publicKey, of type %T could not be cast as a compatible *ecdsa.PublicKey.", publicKey)
-	}
-
-	hash32 := sha256.Sum256(data)
-	var hash []byte
-	copy(hash, hash32[:])
-	verified := ecdsa.VerifyASN1(ecdsaKeyAsGoType, hash, signature)
-	if verified != true {
-		return false, fmt.Errorf("Signature validation failed for this public key")
-	}
-
-	return verified, nil
-}
-
 func (ss *JWK) SymmetricEncrypt(data []byte) ([]byte, error) {
 	if !slices.Contains(ss.Key_ops, "encrypt") {
 		return nil, fmt.Errorf("Receiver Key_ops must include 'encrypt' ")
@@ -285,4 +237,70 @@ func (ss *JWK) SymmetricDecrypt(ciphertext []byte) ([]byte, error) {
 		return nil, fmt.Errorf("Symmetric encryption failed: %s", err.Error())
 	}
 	return plaintext, nil
+}
+
+func (privateKey *JWK) SignWithKey(data []byte) ([]byte, error) {
+	ecdsaPrivateKey, err := privateKey.ExportKeyAsGoType()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to call ExportKeyAsGoType on function receiver. Error: %s", err.Error())
+	}
+	var ecdsaKeyAsGoType *ecdsa.PrivateKey
+	if privKey, ok := ecdsaPrivateKey.(*ecdsa.PrivateKey); ok {
+		ecdsaKeyAsGoType = privKey
+	} else {
+		return nil, fmt.Errorf("Receiver, privateKey, of type %T could not be cast as compatible Go type, *ecdsa.PrivateKey.", privateKey)
+	}
+
+	hash32 := sha256.Sum256(data) //sha256 outputs a [32]byte that must be converted to []byte
+	var hash []byte
+	copy(hash, hash32[:])
+	signature, err := ecdsa.SignASN1(rand.Reader, ecdsaKeyAsGoType, hash)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to sign data. Internal error: %s", err.Error())
+	}
+	return signature, nil
+}
+
+func (publicKey *JWK) CheckAgainstASN1Signature(signature, data []byte) (bool, error) {
+	if !slices.Contains(publicKey.Key_ops, "verify") {
+		return false, fmt.Errorf("Check function receiver. Must be a *JWK with Key_ops including 'verify'")
+	}
+
+	ecdsPublicKey, err := publicKey.ExportKeyAsGoType()
+	if err != nil {
+		return false, fmt.Errorf("Unable to call ExportKeyAsGoType on function receiver. Error: %s", err.Error())
+	}
+	var ecdsaKeyAsGoType *ecdsa.PublicKey
+	if pubKey, ok := ecdsPublicKey.(*ecdsa.PublicKey); ok {
+		ecdsaKeyAsGoType = pubKey
+	} else {
+		return false, fmt.Errorf("Receiver, publicKey, of type %T could not be cast as a compatible *ecdsa.PublicKey.", publicKey)
+	}
+
+	hash32 := sha256.Sum256(data)
+	var hash []byte
+	copy(hash, hash32[:])
+	verified := ecdsa.VerifyASN1(ecdsaKeyAsGoType, hash, signature)
+	if verified != true {
+		return false, fmt.Errorf("Signature validation failed for this public key")
+	}
+
+	return verified, nil
+}
+
+func VerifyASN1Signature(JWK *JWK, signature, data []byte) (bool, error) {
+	result, err := JWK.CheckAgainstASN1Signature(signature, data)
+	if err != nil {
+		return false, fmt.Errorf("Unable to verify signature: %w", err)
+	}
+	return result, nil
+}
+
+func SignData(JWK *JWK, data []byte) ([]byte, error) {
+	ASN1Signature, err := JWK.SignWithKey(data)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to sign: %w", err)
+	}
+
+	return ASN1Signature, nil
 }

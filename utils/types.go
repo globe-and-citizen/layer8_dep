@@ -1,4 +1,4 @@
-package utilities
+package utils
 
 import (
 	"encoding/json"
@@ -61,7 +61,7 @@ func (r *Response) ToJSONString() (string, error) {
 		resHeaders = string(b)
 	}
 	res := fmt.Sprintf(
-		`{"status": %d,"status_text": "%s","headers": %s,"body": "%s"}`, 
+		`{"status": %d,"status_text": "%s","headers": %s,"body": "%s"}`,
 		r.Status, r.StatusText, resHeaders, string(r.Body))
 	return res, nil
 }

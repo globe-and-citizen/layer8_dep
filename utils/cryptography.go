@@ -115,7 +115,7 @@ func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 	} else {
 		keyUsage = ECDSA
 	}
-	if len(jwk.D) != 0 {
+	if jwk.D != "" {
 		privateFlag = true
 	}
 
@@ -169,22 +169,26 @@ func (privateKey *JWK) GetECDHSharedSecret(publicKey *JWK) (*JWK, error) {
 	// convert both to *ecdh.[private|public]Key
 	privKey_unCasted, err := privateKey.ExportKeyAsGoType()
 	if err != nil {
-		fmt.Println(err.Error())
+		return nil, fmt.Errorf("Unable to export private key as Go Type: %w", err)
 	}
 
 	var privKey *ecdh.PrivateKey
 	if pk, ok := privKey_unCasted.(*ecdh.PrivateKey); ok {
 		privKey = pk
+	} else {
+		return nil, fmt.Errorf("Returned private key could not be cast as *ecdh.PrivateKey")
 	}
 
 	pubKey_unCasted, err := publicKey.ExportKeyAsGoType()
 	if err != nil {
-		fmt.Println(err.Error())
+		return nil, fmt.Errorf("Unable to export public key as Go Type: %w", err)
 	}
 
 	var pubKey *ecdh.PublicKey
 	if pk, ok := pubKey_unCasted.(*ecdh.PublicKey); ok {
 		pubKey = pk
+	} else {
+		return nil, fmt.Errorf("Returned public key could not be cast as *ecdh.PublicKey")
 	}
 
 	// Do ECDH
@@ -201,7 +205,7 @@ func (privateKey *JWK) GetECDHSharedSecret(publicKey *JWK) (*JWK, error) {
 	}
 
 	// convert the result to a JWK.
-	return symmetricJWK, err
+	return symmetricJWK, nil
 }
 
 func (ss *JWK) SymmetricEncrypt(data []byte) ([]byte, error) {

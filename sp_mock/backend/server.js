@@ -73,7 +73,6 @@ app.post('/api/login', async (req, res) => {
 })
 
 app.get('/api/login/layer8/auth', async (req, res) => {
-    console.log(req.headers)
     res.status(200).json({ authURL: layer8Auth.code.getUri() })
 })
 

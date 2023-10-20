@@ -51,7 +51,6 @@
             // if the window is an opener, then send the result to the opener and close the window
             if (window.opener) {
                 e.preventDefault();
-                console.log('authorize');
                 const form = e.target;
                 const data = new FormData(form);
                 const method = form.method;

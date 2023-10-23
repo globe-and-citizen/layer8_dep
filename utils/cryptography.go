@@ -149,9 +149,11 @@ func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 	return nil, fmt.Errorf("Unable to Export key. Unrecognized Key_ops.")
 }
 
+// func (*JWK) ExportECDSAKeyPair() (*ecdsa.PrivateKey, *ecdsa.PublicKey, error)
+
 func (privateKey *JWK) GetECDHSharedSecret(publicKey *JWK) (*JWK, error) {
 	// is public key public?
-	if len(publicKey.D) != 0 {
+	if publicKey.D != "" {
 		return nil, fmt.Errorf("Function takes a public JWK as argument. Private key detected.")
 	}
 	// is publis key for ECDH?
@@ -159,7 +161,7 @@ func (privateKey *JWK) GetECDHSharedSecret(publicKey *JWK) (*JWK, error) {
 		return nil, fmt.Errorf("The public JWK passed in as argument must have 'deriveKey' as one of the key_ops")
 	}
 	// is private private?
-	if len(privateKey.D) == 0 {
+	if privateKey.D == "" {
 		return nil, fmt.Errorf("Function receiver must be private JWK. No private key detected.")
 	}
 	// is private for ECDH?

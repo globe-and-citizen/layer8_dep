@@ -3,6 +3,7 @@ package utils
 // TOMORROWS LABOUR CLEAN, ADD, REFACTOR TEST
 
 import (
+	"crypto"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/ecdh"
@@ -10,6 +11,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -60,6 +62,8 @@ func GenerateKeyPair(keyUse KeyUse) (*JWK, *JWK, error) {
 	privKey.D = base64.URLEncoding.EncodeToString(privKey_ecdsaPtr.D.Bytes())
 	privKey.X = base64.URLEncoding.EncodeToString(privKey_ecdsaPtr.X.Bytes())
 	privKey.Y = base64.URLEncoding.EncodeToString(privKey_ecdsaPtr.Y.Bytes())
+
+	privKey_ecdsaPtr.ECDH()
 
 	var pubKey JWK
 	pubKey.Kid = "pub_" + id_str
@@ -149,8 +153,31 @@ func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 	return nil, fmt.Errorf("Unable to Export key. Unrecognized Key_ops.")
 }
 
-// func (*JWK) ExportECDSAKeyPair() (*ecdsa.PrivateKey, *ecdsa.PublicKey, error)
+func (jwk *JWK) Equal(x crypto.PublicKey) bool {
 
+	xx, ok := x.(*ecdsa.PublicKey)
+	if !ok {
+		return false
+	}
+	XBS, err := base64.URLEncoding.DecodeString(jwk.X)
+	if err != nil {
+		return false
+	}
+
+	XBI := new(big.Int).SetBytes(XBS)
+
+	YBS, err := base64.URLEncoding.DecodeString(jwk.Y)
+	if err != nil {
+		return false
+	}
+	YBI := new(big.Int).SetBytes(YBS)
+
+	return bigIntEqual(XBI, xx.X) && bigIntEqual(YBI, xx.Y) &&
+		jwk.Crv == xx.Curve.Params().Name
+
+}
+
+// func (*JWK) ExportECDSAKeyPair() (*ecdsa.PrivateKey, *ecdsa.PublicKey, error)
 func (privateKey *JWK) GetECDHSharedSecret(publicKey *JWK) (*JWK, error) {
 	// is public key public?
 	if publicKey.D != "" {
@@ -291,12 +318,12 @@ func (publicKey *JWK) CheckAgainstASN1Signature(signature, data []byte) (bool, e
 		return false, fmt.Errorf("Check function receiver. *JWK Key_ops must include 'verify'")
 	}
 
-	ecdsPublicKey, err := publicKey.ExportKeyAsGoType()
+	ecdsaPublicKey, err := publicKey.ExportKeyAsGoType()
 	if err != nil {
 		return false, fmt.Errorf("Unable to call ExportKeyAsGoType on function receiver. Error: %w", err)
 	}
 	var ecdsaKeyAsGoType *ecdsa.PublicKey
-	if pubKey, ok := ecdsPublicKey.(*ecdsa.PublicKey); ok {
+	if pubKey, ok := ecdsaPublicKey.(*ecdsa.PublicKey); ok {
 		ecdsaKeyAsGoType = pubKey
 	} else {
 		return false, fmt.Errorf("Receiver, publicKey, of type %T could not be cast as a compatible *ecdsa.PublicKey.", publicKey)
@@ -328,4 +355,9 @@ func SignData(JWK *JWK, data []byte) ([]byte, error) {
 	}
 
 	return ASN1Signature, nil
+}
+
+// Util Utils?
+func bigIntEqual(a, b *big.Int) bool {
+	return subtle.ConstantTimeCompare(a.Bytes(), b.Bytes()) == 1
 }

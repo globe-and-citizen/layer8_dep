@@ -79,6 +79,10 @@ func Test_GenerateKeyPair(t *testing.T) {
 
 }
 
+func Test_PublicKeyEquals() {
+
+}
+
 func Test_SignWithKey(t *testing.T) {
 	const NUMBER_OF_CASES = 10
 

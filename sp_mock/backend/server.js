@@ -17,12 +17,13 @@ const users = []; // Store users in memory
 const SECRET_KEY = 'my_very_secret_key'
 
 const LAYER8_CALLBACK_URL = "http://localhost:5010/oauth2/callback" // defined in the frontend
-const LAYER8_RESOURCE_URL = "https://auth-service-5mcaj.ondigitalocean.app/api/user"
+// https://auth-service-5mcaj.ondigitalocean.app
+const LAYER8_RESOURCE_URL = "http://localhost:5000/api/user"
 const layer8Auth = new ClientOAuth2({
     clientId: "notanid",
     clientSecret: "absolutelynotasecret!",
-    accessTokenUri: "https://auth-service-5mcaj.ondigitalocean.app/api/oauth",
-    authorizationUri: "https://auth-service-5mcaj.ondigitalocean.app/authorize",
+    accessTokenUri: "http://localhost:5000/api/oauth",
+    authorizationUri: "http://localhost:5000/authorize",
     redirectUri: LAYER8_CALLBACK_URL,
     scopes: ["read:user"],
 })

@@ -1,37 +1,49 @@
 package handlers
 
 import (
-	"github.com/globe-and-citizen/layer8-utils"
+	"html/template"
 	"layer8-proxy/internals/usecases"
-
-	"github.com/valyala/fasthttp"
+	"net/http"
 )
 
-func Welcome(ctx *fasthttp.RequestCtx) {
-	usecase := ctx.UserValue("usecase").(*usecases.UseCase)
+func Welcome(w http.ResponseWriter, r *http.Request) {
+	usecase := r.Context().Value("usecase").(*usecases.UseCase)
 
-	switch string(ctx.Method()) {
+	switch r.Method {
 	case "GET":
-		next := string(ctx.QueryArgs().Peek("next"))
-		token := ctx.Request.Header.Cookie("token")
-		user, err := usecase.GetUserByToken(string(token))
-		if token == nil || err != nil || user == nil {
+		next := r.URL.Query().Get("next")
+		token, err := r.Cookie("token")
+		if err != nil {
 			if next == "" {
-				ctx.Redirect("/login", fasthttp.StatusSeeOther)
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
 			} else {
-				ctx.Redirect("/login?next="+next, fasthttp.StatusSeeOther)
+				http.Redirect(w, r, "/login?next="+next, http.StatusSeeOther)
+			}
+			return
+		}
+		user, err := usecase.GetUserByToken(token.Value)
+		if err != nil || user == nil {
+			if next == "" {
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
+			} else {
+				http.Redirect(w, r, "/login?next="+next, http.StatusSeeOther)
 			}
 			return
 		}
 
 		// load the welcome page
-		utilities.LoadTemplate(ctx, "assets/templates/welcome.html", map[string]interface{}{
+		t, err := template.ParseFiles("assets/templates/welcome.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		t.Execute(w, map[string]interface{}{
 			"User":    user,
 			"HasNext": next != "",
 			"Next":    next,
 		})
 		return
 	default:
-		ctx.Error("Method not allowed", fasthttp.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }

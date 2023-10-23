@@ -14,7 +14,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	url := scheme + "://" + host + r.URL.Path
 
 	log.Println("Forwarding request to:", url)
-	
+
 	// create the request
 	req, err := http.NewRequest(r.Method, url, r.Body)
 	if err != nil {

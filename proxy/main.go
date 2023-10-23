@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"layer8-proxy/handlers"
@@ -9,8 +10,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-
-	"github.com/valyala/fasthttp"
 )
 
 var (
@@ -47,38 +46,41 @@ func AuthServer(port int) {
 		log.Fatal(err)
 	}
 
-	
-	fasthttp.ListenAndServe(fmt.Sprintf(":%d", port), func(ctx *fasthttp.RequestCtx) {
-		// allow from all origins
-		ctx.Response.Header.Set("Access-Control-Allow-Origin", "*")
-		ctx.Response.Header.Set("Access-Control-Allow-Headers", "*")
+	server := http.Server{
+		Addr: fmt.Sprintf(":%d", port),
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// allow from all origins
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+			w.Header().Set("Access-Control-Allow-Headers", "*")
 
-		// add the usecase to context
-		ctx.SetUserValue("usecase", usecase)
-		// routing
-		switch path := string(ctx.Path()); {
-		case path == "" || path == "/":
-			handlers.Welcome(ctx)
-		case path == "/login":
-			handlers.Login(ctx)
-		case path == "/register":
-			handlers.Register(ctx)
-		case path == "/authorize":
-			handlers.Authorize(ctx)
-		case path == "/error":
-			handlers.Error(ctx)
-		case path == "/api/oauth":
-			handlers.OAuthToken(ctx)
-		case path == "/api/user":
-			handlers.UserInfo(ctx)
-		case strings.HasPrefix(path, "/assets"):
-			// serve static files
-			fasthttp.FSHandler("./assets", 1)(ctx)
-		default:
-			ctx.Error("Invalid path", fasthttp.StatusNotFound)
-		}
-		log.Printf("%d %s\t%s", ctx.Response.StatusCode(), ctx.Method(), ctx.Path())
-	})
+			// add the usecase to context
+			r = r.WithContext(context.WithValue(r.Context(), "usecase", usecase))
+			// routing
+			switch path := r.URL.Path; {
+			case path == "" || path == "/":
+				handlers.Welcome(w, r)
+			case path == "/login":
+				handlers.Login(w, r)
+			case path == "/register":
+				handlers.Register(w, r)
+			case path == "/authorize":
+				handlers.Authorize(w, r)
+			case path == "/error":
+				handlers.Error(w, r)
+			case path == "/api/oauth":
+				handlers.OAuthToken(w, r)
+			case path == "/api/user":
+				handlers.UserInfo(w, r)
+			case strings.HasPrefix(path, "/assets"):
+				// serve static files
+				http.StripPrefix("/assets", http.FileServer(http.Dir("./assets"))).ServeHTTP(w, r)
+			default:
+				http.Error(w, "Invalid path", http.StatusNotFound)
+			}
+			log.Printf("%d %s\t%s", http.StatusOK, r.Method, r.URL.Path)
+		}),
+	}
+	log.Fatal(server.ListenAndServe())
 }
 
 func ProxyServer(port int) {

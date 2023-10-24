@@ -1,9 +1,12 @@
 package utils
 
-// TOMORROWS LABOUR CLEAN, ADD, REFACTOR TEST
+// Tomorrow's Labour:
+// 1) Benchmarking?
+// 2) Coverage?
+// 3) Reflection / type introspection?
+// 4) func ConvertToJWK() (*JWK, error) {}
 
 import (
-	"crypto"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/ecdh"
@@ -63,7 +66,7 @@ func GenerateKeyPair(keyUse KeyUse) (*JWK, *JWK, error) {
 	privKey.X = base64.URLEncoding.EncodeToString(privKey_ecdsaPtr.X.Bytes())
 	privKey.Y = base64.URLEncoding.EncodeToString(privKey_ecdsaPtr.Y.Bytes())
 
-	privKey_ecdsaPtr.ECDH()
+	//privKey_ecdsaPtr.ECDH()
 
 	var pubKey JWK
 	pubKey.Kid = "pub_" + id_str
@@ -153,28 +156,104 @@ func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 	return nil, fmt.Errorf("Unable to Export key. Unrecognized Key_ops.")
 }
 
-func (jwk *JWK) Equal(x crypto.PublicKey) bool {
+// Currently only supports checking against pk of type *ecdsa.Private/Public & *ecdh.Private/Public
 
-	xx, ok := x.(*ecdsa.PublicKey)
-	if !ok {
+func (jwk *JWK) Equal(pk interface{}) bool {
+	// 1) Is pk ECDSA or ECDH? If neither, error.
+	// 2) Is pk key private or public?
+	// 3) Wrap with common checks?
+
+	switch key := pk.(type) {
+	case *ecdsa.PrivateKey:
+		if jwk.Crv != key.Curve.Params().Name {
+			return false
+		}
+
+	case *ecdsa.PublicKey:
+		if jwk.Crv != key.Curve.Params().Name {
+			return false
+		}
+
+	case *ecdh.PrivateKey:
+		if jwk.Crv != fmt.Sprint(key.Curve()) {
+			return false
+		}
+
+	case *ecdh.PublicKey:
+		if jwk.Crv != fmt.Sprint(key.Curve()) {
+			return false
+		}
+
+	default:
+		//fmt.Println("ERROR: At this time only ECDSA & ECDH keys are supported.")
 		return false
 	}
-	XBS, err := base64.URLEncoding.DecodeString(jwk.X)
-	if err != nil {
+
+	// for _, val := range jwk1.Key_ops {
+	// 	if !slices.Contains(jwk2.Key_ops, val) {
+	// 		return false
+	// 	}
+	// }
+
+	// if jwk1.Kty != jwk2.Kty {
+	// 	return false
+	// }
+
+	// if jwk1.Kid != jwk2.Kid {
+	// 	return false
+	// }
+
+	// if jwk1.Crv != jwk2.Crv {
+	// 	return false
+	// }
+
+	// if jwk1.X != jwk2.X {
+	// 	return false
+	// }
+
+	// if jwk1.Y != jwk2.Y {
+	// 	return false
+	// }
+
+	// if jwk1.D != jwk2.D {
+	// 	return false
+	// }
+
+	// return true
+}
+
+func (jwk1 *JWK) EqualToJWK(jwk2 *JWK) bool {
+	for _, val := range jwk1.Key_ops {
+		if !slices.Contains(jwk2.Key_ops, val) {
+			return false
+		}
+	}
+
+	if jwk1.Kty != jwk2.Kty {
 		return false
 	}
 
-	XBI := new(big.Int).SetBytes(XBS)
-
-	YBS, err := base64.URLEncoding.DecodeString(jwk.Y)
-	if err != nil {
+	if jwk1.Kid != jwk2.Kid {
 		return false
 	}
-	YBI := new(big.Int).SetBytes(YBS)
 
-	return bigIntEqual(XBI, xx.X) && bigIntEqual(YBI, xx.Y) &&
-		jwk.Crv == xx.Curve.Params().Name
+	if jwk1.Crv != jwk2.Crv {
+		return false
+	}
 
+	if jwk1.X != jwk2.X {
+		return false
+	}
+
+	if jwk1.Y != jwk2.Y {
+		return false
+	}
+
+	if jwk1.D != jwk2.D {
+		return false
+	}
+
+	return true
 }
 
 // func (*JWK) ExportECDSAKeyPair() (*ecdsa.PrivateKey, *ecdsa.PublicKey, error)
@@ -357,7 +436,7 @@ func SignData(JWK *JWK, data []byte) ([]byte, error) {
 	return ASN1Signature, nil
 }
 
-// Util Utils?
+// PRIVATE FUNCTIONS FOR PKG UTILS
 func bigIntEqual(a, b *big.Int) bool {
 	return subtle.ConstantTimeCompare(a.Bytes(), b.Bytes()) == 1
 }

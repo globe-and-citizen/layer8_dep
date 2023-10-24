@@ -2,14 +2,58 @@ package utils
 
 import (
 	"bytes"
+	"crypto/ecdh"
 	"crypto/ecdsa"
+	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"math/big"
 	"math/rand"
 	"slices"
 	"testing"
 	"time"
 )
+
+// SHOULD YOU IMPLEMENT A CONVERSION FUNCTION?
+func Test_One(t *testing.T) {
+	//Everything it Seems I need to do the conversion?
+
+	privKey_ECDH, pubKey_ECDH, err := GenerateKeyPair(ECDH)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	pKeyInt, _ := privKey_ECDH.ExportKeyAsGoType()
+	privKeyCasted, _ := pKeyInt.(*ecdh.PrivateKey)
+	D_bytes := privKeyCasted.Bytes()
+	D_bigInt := new(big.Int).SetBytes(D_bytes)
+
+	coorD_BS, _ := base64.URLEncoding.DecodeString(privKey_ECDH.D)
+	coorD_bigInt := new(big.Int).SetBytes(coorD_BS)
+	if coorD_bigInt.Cmp(D_bigInt) != 0 {
+		t.Log("Values of the D coordinate do not match after exporting and conversion.")
+	}
+
+	t.Log("BSD1: ", D_bytes)
+	t.Log("BSD2: ", coorD_BS)
+	pubKey_BS := privKeyCasted.PublicKey().Bytes()
+
+	/* It means 'this elliptic curve point is specified in uncompressed format', that is, the x and y
+	*  coordinates are given explicitly.The other alternatives are:
+	*  02, which means 'this is a compressed point, where we give the x coordinate explicitly; of the two possible y coordinates that are compatible with that x coordinate, select the one with the 0 lsbit.
+	*  03, which is the same, except you select the y coordinate with a 1 lsbit. The compressed formats are about half as long (saving space), but requires more computation (a modular square root) to use if you perform an operation that requires the y coordinate.
+	* This is why the first byte is removed.
+	 */
+	t.Log("BSX1: ", pubKey_BS[1:33])
+	t.Log("BSY1: ", pubKey_BS[33:])
+
+	orginalX_BS, _ := base64.URLEncoding.DecodeString(pubKey_ECDH.X)
+	t.Log("BSX2: ", orginalX_BS)
+
+	orginalY_BS, _ := base64.URLEncoding.DecodeString(pubKey_ECDH.Y)
+	t.Log("BSY2: ", orginalY_BS)
+
+	fmt.Println(fmt.Sprint(privKeyCasted.Curve())) // now I can get the string.
+}
 
 func Test_GenerateKeyPair(t *testing.T) {
 	privKey_ECDSA, pubKey_ECDSA, err := GenerateKeyPair(ECDSA)
@@ -79,8 +123,92 @@ func Test_GenerateKeyPair(t *testing.T) {
 
 }
 
-func Test_PublicKeyEquals() {
+func Test_Equal(t *testing.T) {
+	// Check creation, conversion and equivalence of a private/public ECDSA key
+	privJWK_ecdsa, pubJWK_ecdsa, err := GenerateKeyPair(ECDSA)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 
+	privJWKCopy := &JWK{
+		Key_ops: make([]string, len(privJWK_ecdsa.Key_ops)),
+		Kty:     privJWK_ecdsa.Kty,
+		Kid:     privJWK_ecdsa.Kid,
+		Crv:     privJWK_ecdsa.Crv,
+		X:       privJWK_ecdsa.X,
+		Y:       privJWK_ecdsa.Y,
+		D:       privJWK_ecdsa.D,
+	}
+
+	for i, val := range privJWK_ecdsa.Key_ops {
+		privJWKCopy.Key_ops[i] = val
+	}
+
+	if !privJWK_ecdsa.Equal(privJWKCopy) {
+		t.Errorf("Exported ECDSA private key doesn't equal itself after copying.")
+	}
+
+	pubJWK_Copy := &JWK{
+		Key_ops: make([]string, len(pubJWK_ecdsa.Key_ops)),
+		Kty:     pubJWK_ecdsa.Kty,
+		Kid:     pubJWK_ecdsa.Kid,
+		Crv:     pubJWK_ecdsa.Crv,
+		X:       pubJWK_ecdsa.X,
+		Y:       pubJWK_ecdsa.Y,
+		D:       pubJWK_ecdsa.D,
+	}
+
+	for i, val := range pubJWK_ecdsa.Key_ops {
+		pubJWK_Copy.Key_ops[i] = val
+	}
+
+	if !pubJWK_ecdsa.Equal(pubJWK_Copy) {
+		t.Errorf("Exported ECDSA public key doesn't equal itself after copying.")
+	}
+
+	// Check creation, conversion and equivalence of a private/public ECDH key
+	privJWK_ecdh, pubJWK_ecdh, err := GenerateKeyPair(ECDH)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	// Copy & then test the private key
+	privJWKCopy = &JWK{
+		Key_ops: make([]string, len(privJWK_ecdh.Key_ops)),
+		Kty:     privJWK_ecdh.Kty,
+		Kid:     privJWK_ecdh.Kid,
+		Crv:     privJWK_ecdh.Crv,
+		X:       privJWK_ecdh.X,
+		Y:       privJWK_ecdh.Y,
+		D:       privJWK_ecdh.D,
+	}
+
+	for i, val := range privJWK_ecdh.Key_ops {
+		privJWKCopy.Key_ops[i] = val
+	}
+
+	if !privJWK_ecdh.Equal(privJWKCopy) {
+		t.Errorf("Exported ECDH private key doesn't equal itself after copying.")
+	}
+
+	// Copy & then test the public key
+	pubJWK_Copy = &JWK{
+		Key_ops: make([]string, len(pubJWK_ecdh.Key_ops)),
+		Kty:     pubJWK_ecdh.Kty,
+		Kid:     pubJWK_ecdh.Kid,
+		Crv:     pubJWK_ecdh.Crv,
+		X:       pubJWK_ecdh.X,
+		Y:       pubJWK_ecdh.Y,
+		D:       pubJWK_ecdh.D,
+	}
+
+	for i, val := range pubJWK_ecdh.Key_ops {
+		pubJWK_Copy.Key_ops[i] = val
+	}
+
+	if !pubJWK_ecdh.Equal(pubJWK_Copy) {
+		t.Errorf("Exported ECDH public key doesn't equal itself after copying.")
+	}
 }
 
 func Test_SignWithKey(t *testing.T) {
@@ -117,108 +245,63 @@ func Test_SignWithKey(t *testing.T) {
 	}
 }
 
-// func Test_SymmetricEncrypt(t *testing.T){}
-
-// func
-
-// func main() {
-// 	test1()
-// 	test2()
-// 	err := errors.New("Two")
-// 	errToPrint := fmt.Errorf("One: %w", err)
-// 	fmt.Println(errToPrint)
-// }
-
 // TEST ECDSA
-func test2() {
-
-	privJWK_ecdsa1, pubJWK_ecdsa1, _ := GenerateKeyPair(ECDSA)
-	//privJWK_ecdsa2, pubJWK_ecdsa2, _ := utils.GenerateKeyPair(utils.ECDSA)
-
-	data := []byte("GSIGN ME!")
-
-	signature, err := privJWK_ecdsa1.SignWithKey(data)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	// _, errTest := pubJWK_ecdsa1.SignWithKey(data)
-	// if errTest != nil {
-	// 	fmt.Println(errTest.Error())
-	// }
-
-	// _, errTest2 := utils.SignData(pubJWK_ecdsa1, data)
-	// if errTest2 != nil {
-	// 	panic(errTest2)
-	// }
-
-	verified, err := pubJWK_ecdsa1.CheckAgainstASN1Signature(signature, data)
-	if err != nil {
-		panic(err.Error())
-	}
-
-	fmt.Println("verified? ", verified)
-
-}
-
-// TEST ECDH
-func test1() {
-	// Generate First Key pair
+func Test_SymmetricEncryption(t *testing.T) {
+	// Generate first key pair
 	privJWK, pubJWK, err := GenerateKeyPair(ECDH)
 	if err != nil {
-		fmt.Println(err.Error())
+		t.Error(err.Error())
 	}
 
-	// Generate Second Key pair
+	// Generate second Key pair
 	privJWK2, pubJWK2, err := GenerateKeyPair(ECDH)
 	if err != nil {
-		fmt.Println(err.Error())
+		t.Error(err.Error())
 	}
 
-	// Derive the two shared secrets
+	// Derive the shared secret
 	ssJWK1, err := privJWK.GetECDHSharedSecret(pubJWK2)
 	if err != nil {
-		fmt.Println(err.Error())
+		t.Error(err.Error())
 	}
 	ssJWK2, err := privJWK2.GetECDHSharedSecret(pubJWK)
 	if err != nil {
-		fmt.Println(err.Error())
+		t.Error(err.Error())
 	}
-	//bs, _ := json.MarshalIndent(sJWK1, "", "  ")
-	//fmt.Println(string(bs))
-	//fmt.Println(ssJWK1)
-	//fmt.Println(ssJWK2)
 
-	//Test 1
-	data := []byte("HIT ME!")
-	ct, err := ssJWK1.SymmetricEncrypt(data)
-	if err != nil {
-		fmt.Println(err.Error())
+	dataPoints := [][]byte{
+		[]byte("Byte Slice 1 To Encrypt"),
+		[]byte("One, Two, three"),
+		[]byte(""),
+		[]byte("                           "),
 	}
-	fmt.Println("ct: ", string(ct))
-	pt, err := ssJWK2.SymmetricDecrypt(ct)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	fmt.Println("pt:", string(pt))
 
-	//Test 2
-	data2 := []byte("BABY ONE MORE TIME!")
-	ct2, err := ssJWK2.SymmetricEncrypt(data2)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	fmt.Println("ct2: ", string(ct2))
-	pt2, err := ssJWK1.SymmetricDecrypt(ct2)
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	fmt.Println("pt2:", string(pt2))
+	for _, data := range dataPoints {
+		ct, err := ssJWK1.SymmetricEncrypt(data)
+		if err != nil {
+			t.Error(err.Error())
+		}
 
-	if string(pt) == string(data) && string(pt2) == string(data2) {
-		fmt.Println("r u getting it?")
-	} else {
-		fmt.Println("try harder...")
+		pt, err := ssJWK2.SymmetricDecrypt(ct)
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		ct2, err := ssJWK2.SymmetricEncrypt(data)
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		pt2, err := ssJWK1.SymmetricDecrypt(ct2)
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		if string(pt) != string(data) ||
+			string(pt2) != string(data) ||
+			string(pt) != string(pt2) {
+			t.Error("Symmetric encryption | decryption is failing.")
+		}
 	}
 }
 

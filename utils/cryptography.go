@@ -4,7 +4,6 @@ package utils
 // 1) Benchmarking?
 // 2) Coverage?
 // 3) Reflection / type introspection?
-// 4) func ConvertToJWK() (*JWK, error) {}
 
 import (
 	"crypto/aes"
@@ -157,30 +156,60 @@ func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 }
 
 // Currently only supports checking against pk of type *ecdsa.Private/Public & *ecdh.Private/Public
-
 func (jwk *JWK) Equal(pk interface{}) bool {
-	// 1) Is pk ECDSA or ECDH? If neither, error.
-	// 2) Is pk key private or public?
-	// 3) Wrap with common checks?
-
 	switch key := pk.(type) {
 	case *ecdsa.PrivateKey:
-		if jwk.Crv != key.Curve.Params().Name {
+		if !slices.Contains(jwk.Key_ops, "sign") ||
+			jwk.Kty != "EC" ||
+			jwk.Crv != key.Params().Name ||
+			jwk.X != base64.URLEncoding.EncodeToString(key.PublicKey.X.Bytes()) ||
+			jwk.Y != base64.URLEncoding.EncodeToString(key.PublicKey.Y.Bytes()) ||
+			jwk.D != base64.URLEncoding.EncodeToString(key.D.Bytes()) {
 			return false
 		}
-
 	case *ecdsa.PublicKey:
-		if jwk.Crv != key.Curve.Params().Name {
+		if !slices.Contains(jwk.Key_ops, "verify") ||
+			jwk.Kty != "EC" ||
+			jwk.Crv != key.Params().Name ||
+			jwk.X != base64.URLEncoding.EncodeToString(key.X.Bytes()) ||
+			jwk.Y != base64.URLEncoding.EncodeToString(key.Y.Bytes()) ||
+			jwk.D != "" {
 			return false
 		}
 
 	case *ecdh.PrivateKey:
-		if jwk.Crv != fmt.Sprint(key.Curve()) {
+		if !slices.Contains(jwk.Key_ops, "deriveKey") ||
+			jwk.Kty != "EC" ||
+			jwk.Crv != fmt.Sprint(key.Curve()) ||
+			jwk.X != base64.URLEncoding.EncodeToString(key.PublicKey().Bytes()[1:33]) ||
+			jwk.Y != base64.URLEncoding.EncodeToString(key.PublicKey().Bytes()[33:]) ||
+			jwk.D != base64.URLEncoding.EncodeToString(key.Bytes()) {
 			return false
 		}
 
 	case *ecdh.PublicKey:
-		if jwk.Crv != fmt.Sprint(key.Curve()) {
+		if !slices.Contains(jwk.Key_ops, "deriveKey") ||
+			jwk.Kty != "EC" ||
+			jwk.Crv != fmt.Sprint(key.Curve()) ||
+			jwk.X != base64.URLEncoding.EncodeToString(key.Bytes()[1:33]) ||
+			jwk.Y != base64.URLEncoding.EncodeToString(key.Bytes()[33:]) ||
+			jwk.D != "" {
+			return false
+		}
+
+	case *JWK:
+		for _, val := range jwk.Key_ops {
+			if !slices.Contains(key.Key_ops, val) {
+				return false
+			}
+		}
+
+		if jwk.Kty != key.Kty ||
+			jwk.Kid != key.Kid ||
+			jwk.Crv != key.Crv ||
+			jwk.X != key.X ||
+			jwk.Y != key.Y ||
+			jwk.D != key.D {
 			return false
 		}
 
@@ -189,37 +218,7 @@ func (jwk *JWK) Equal(pk interface{}) bool {
 		return false
 	}
 
-	// for _, val := range jwk1.Key_ops {
-	// 	if !slices.Contains(jwk2.Key_ops, val) {
-	// 		return false
-	// 	}
-	// }
-
-	// if jwk1.Kty != jwk2.Kty {
-	// 	return false
-	// }
-
-	// if jwk1.Kid != jwk2.Kid {
-	// 	return false
-	// }
-
-	// if jwk1.Crv != jwk2.Crv {
-	// 	return false
-	// }
-
-	// if jwk1.X != jwk2.X {
-	// 	return false
-	// }
-
-	// if jwk1.Y != jwk2.Y {
-	// 	return false
-	// }
-
-	// if jwk1.D != jwk2.D {
-	// 	return false
-	// }
-
-	// return true
+	return true
 }
 
 func (jwk1 *JWK) EqualToJWK(jwk2 *JWK) bool {

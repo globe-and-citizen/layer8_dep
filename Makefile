@@ -3,8 +3,10 @@ npm_install_all:
 	cd sp_mock/frontend && npm install && cd ../backend && npm install 
 
 ## Interceptor Calls
-build_interceptor: ## must do from a bash terminal
-	cd interceptor/ && GOARCH=wasm GOOS=js go build -o dist/interceptor.wasm && cp ./dist/interceptor.wasm ../sp_mock/frontend/public/interceptor.wasm && cp ./dist/wasm_exec.js ../sp_mock/frontend/public/wasm_exec.js
+build_interceptor: ## must do from a bash terminal ..
+	## cd interceptor/ && GOARCH=wasm GOOS=js go build -o dist/interceptor.wasm && cp ./dist/interceptor.wasm ../proxy/assets/cdn/interceptor/interceptor__local.wasm && cp ./dist/wasm_exec.js ../proxy/assets/cdn/interceptor/wasm_exec.js
+	## cd interceptor/ && GOARCH=wasm GOOS=js go build -o dist/interceptor.wasm && cp ./dist/interceptor.wasm ../sp_mock/frontend/public/interceptor.wasm && cp ./dist/wasm_exec.js ../sp_mock/frontend/public/wasm_exec.js
+	@'$(MAKE)' -C ./interceptor build
 
 ## Build Middleware
 build_middleware:
@@ -19,8 +21,9 @@ run_backend:
 	cd sp_mock/backend && npm run dev
 
 ## Run Proxy
-
 run_proxy:
-	cd proxy && go run main.go
+	cd proxy && go run main.go --server=proxy --port=5001
 
-
+# Serve auth server
+run_auth:
+	cd proxy && go run main.go --server=auth

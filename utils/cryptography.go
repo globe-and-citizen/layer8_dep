@@ -6,6 +6,7 @@ package utils
 // 3) Reflection / type introspection?
 
 import (
+	"crypto"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/ecdh"
@@ -19,6 +20,8 @@ import (
 	"io"
 	"math/big"
 	"slices"
+
+	dep_ecdh "github.com/aead/ecdh"
 )
 
 type KeyUse int
@@ -326,15 +329,15 @@ func (ss *JWK) SymmetricEncrypt(data []byte) ([]byte, error) {
 	}
 	blockCipher, err := aes.NewCipher(ssBS)
 	if err != nil {
-		return nil, fmt.Errorf("Symmetric encryption failed: %w", err)
+		return nil, fmt.Errorf("Symmetric encryption failed @ 1 : %w", err)
 	}
 	aesgcm, err := cipher.NewGCM(blockCipher)
 	if err != nil {
-		return nil, fmt.Errorf("Symmetric encryption failed: %w", err)
+		return nil, fmt.Errorf("Symmetric encryption failed @ 2: %w", err)
 	}
 	nonce := make([]byte, aesgcm.NonceSize())
 	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, fmt.Errorf("Symmetric encryption failed: %w", err)
+		return nil, fmt.Errorf("Symmetric encryption failed @ 3: %w", err)
 	}
 
 	cipherText := aesgcm.Seal(nonce, nonce, data, nil)
@@ -343,6 +346,10 @@ func (ss *JWK) SymmetricEncrypt(data []byte) ([]byte, error) {
 }
 
 func (ss *JWK) SymmetricDecrypt(ciphertext []byte) ([]byte, error) {
+	if len(ciphertext) == 0 {
+		return nil, fmt.Errorf("Receiver Key_ops must include 'decrypt' ")
+	}
+
 	if !slices.Contains(ss.Key_ops, "decrypt") {
 		return nil, fmt.Errorf("Receiver Key_ops must include 'decrypt' ")
 	}
@@ -353,18 +360,18 @@ func (ss *JWK) SymmetricDecrypt(ciphertext []byte) ([]byte, error) {
 	}
 	blockCipher, err := aes.NewCipher(ssBS)
 	if err != nil {
-		return nil, fmt.Errorf("Symmetric encryption failed: %w", err)
+		return nil, fmt.Errorf("Symmetric encryption failed @ 1: %w", err)
 	}
 	aesgcm, err := cipher.NewGCM(blockCipher)
 	if err != nil {
-		return nil, fmt.Errorf("Symmetric encryption failed: %w", err)
+		return nil, fmt.Errorf("Symmetric encryption failed @ 2: %w", err)
 	}
 	nonceSize := aesgcm.NonceSize()
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
 	plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Symmetric encryption failed: %w", err)
+		return nil, fmt.Errorf("Symmetric encryption failed @ 3: %w", err)
 	}
 	return plaintext, nil
 }
@@ -438,4 +445,81 @@ func SignData(JWK *JWK, data []byte) ([]byte, error) {
 // PRIVATE FUNCTIONS FOR PKG UTILS
 func bigIntEqual(a, b *big.Int) bool {
 	return subtle.ConstantTimeCompare(a.Bytes(), b.Bytes()) == 1
+}
+
+// DANIEL'S UTILS
+
+// Algorithm represents an encryption algorithm
+type Algorithm int
+
+var (
+	ECDSA_ALGO Algorithm = 1
+	ECDH_ALGO  Algorithm = 2
+)
+
+// GenerateKeyPair generates a public/private key pair using the P-256 curve
+func Dep_GenerateKeyPair(algo Algorithm) (crypto.PrivateKey, crypto.PublicKey, error) {
+	switch algo {
+	case ECDSA_ALGO:
+		pri, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		if err != nil {
+			return nil, nil, fmt.Errorf("could not generate key pair: %s", err)
+		}
+		return pri, &pri.PublicKey, nil
+	case ECDH_ALGO:
+		pri, pub, err := dep_ecdh.KeyExchange.GenerateKey(dep_ecdh.X25519(), rand.Reader)
+		if err != nil {
+			return nil, nil, fmt.Errorf("could not generate key pair: %s", err)
+		}
+		return pri, pub, nil
+	default:
+		return nil, nil, fmt.Errorf("unknown algorithm")
+	}
+}
+
+func Dep_SymmetricDecrypt(ciphertext, secret []byte) (message []byte, err error) {
+	fmt.Println("well done....")
+	return nil, fmt.Errorf("Well done.")
+
+	//AES-GCM decryption
+	// key := make([]byte, 16)
+	// copy(key, secret)
+	// block, err := aes.NewCipher(key)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("")
+	// }
+	// aesgcm, err := cipher.NewGCM(block)
+	// if err != nil {
+	// 	return
+	// }
+	// // extract nonce and decrypt
+	// nonceSize := aesgcm.NonceSize()
+	// nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
+	// return nil, fmt.Errorf("yup right here....")
+	// message, err = aesgcm.Open(nil, nonce, ciphertext, nil)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("You found me...")
+	// }
+	// return
+}
+
+func Dep_SymmetricEncrypt(message, ss []byte) (ciphertext []byte, err error) {
+	// AES-GCM encryption
+	key := make([]byte, 16)
+	copy(key, ss)
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return
+	}
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		return
+	}
+	// generate nonce and encrypt
+	nonce := make([]byte, aesgcm.NonceSize())
+	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
+		return
+	}
+	ciphertext = aesgcm.Seal(nonce, nonce, message, nil)
+	return
 }

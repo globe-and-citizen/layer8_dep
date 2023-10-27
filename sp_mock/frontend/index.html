@@ -5,26 +5,13 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vite App</title>
-    <script src="./wasm_exec.js"></script>
+    <!-- <script src="./wasm_exec.js"></script> -->
+    <script type="module" src="http://localhost:5000/assets/cdn/interceptor/index.local.js"></script>
+    
 
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>
-
-  <script >
-    // Go and WebAssembly initialization to an async function, call it immediately.
-    (async function(){
-      const go = new Go();
-      try{
-        await WebAssembly.instantiateStreaming(fetch("interceptor.wasm"), go.importObject).then((result) => {
-          go.run(result.instance);
-        })
-      } catch (err){
-        console.log(err)
-      }
-      console.log("IIFE WASM Loader Called")
-    })()
-  </script>
 </html>

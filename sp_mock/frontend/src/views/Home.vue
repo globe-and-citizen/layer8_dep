@@ -59,10 +59,10 @@ const logoutUser = () => {
 };
 
 const userEmail = computed(() => {
-  if (token.value) {
-    const payload = JSON.parse(atob(token.value.split(".")[1]));
-    return payload.email;
-  }
+  // if (token.value) {
+  //   const payload = JSON.parse(atob(token.value.split(".")[1]));
+  //   return payload.email;
+  // }
   return "";
 });
 </script>

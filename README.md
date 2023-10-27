@@ -1,3 +1,12 @@
+## GOTCHAS
+1. 
+The auth server runs on port 5001 and must me started by calling: $go run main.go --server auth 
+In contrast, the proxy server runs on port 5000 and must be started by calling: $go run main.go --port 5000
+
+2. 
+All functions must be sync or async and CANNOT be both. This means that async functions that return a promise must be invoked in a stereotyped way. 
+ 
+
 # Layer8
 A suite of  network protocol implementations that sum to create an anonymizing reverse proxy dedicated to dissociating a user's true identity from their online content choices.  
 

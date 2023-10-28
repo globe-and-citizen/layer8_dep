@@ -33,12 +33,6 @@ func init() {
 	}
 }
 
-type Request struct {
-	Method  string            `json:"method"`
-	Headers map[string]string `json:"headers"`
-	Body    []byte            `json:"body"`
-}
-
 func main() {
 	c := make(chan struct{}, 0)
 	fmt.Printf("L8 WASM Middleware version %s loaded.\n\n", VERSION)
@@ -259,95 +253,33 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 	return nil
 }
 
-func parseJSObjectToMap(obj js.Value) map[string]interface{} {
-	m := map[string]interface{}{}
-
-	keys := js.Global().Get("Object").Call("keys", obj)
-	for i := 0; i < keys.Length(); i++ {
-		key := keys.Index(i).String()
-		val := obj.Get(key)
-
-		switch val.Type() {
-		case js.TypeNumber:
-			m[key] = val.Float()
-		case js.TypeBoolean:
-			m[key] = val.Bool()
-		case js.TypeString:
-			m[key] = val.String()
-		case js.TypeObject:
-			if val.Get("constructor").Get("name").String() == "Array" {
-				m[key] = parseJSObjectToSlice(val)
-				continue
-			}
-			m[key] = parseJSObjectToMap(val)
-		}
-	}
-
-	return m
-}
-
-func parseJSObjectToSlice(obj js.Value) []interface{} {
-	var s []interface{}
-
-	for i := 0; i < obj.Length(); i++ {
-		val := obj.Index(i)
-
-		switch val.Type() {
-		case js.TypeNumber:
-			s = append(s, val.Float())
-		case js.TypeBoolean:
-			s = append(s, val.Bool())
-		case js.TypeString:
-			s = append(s, val.String())
-		case js.TypeObject:
-			if val.Get("constructor").Get("name").String() == "Array" {
-				s = append(s, parseJSObjectToSlice(val))
-				continue
-			}
-			s = append(s, parseJSObjectToMap(val))
-		}
-	}
-
-	return s
-}
-
-////////////
+// WASM Middleware Version 2 Does not depend on the Express Body Parser//
 
 func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
-	// get the request and response objects and the next function
+	// Get the request and response objects and the next function
 	req := args[0]
 	res := args[1]
 	next := args[2]
 
+	// Decide if this is a redirect to ECDH init.
 	headers := req.Get("headers")
-	// if headers.String() == "<undefined>" {
-	// 	next.Invoke()
-	// 	return nil
-	// }
-
 	isECDHInit := headers.Get("x-ecdh-init").String()
 	if isECDHInit != "<undefined>" {
 		doECDHWithClient(req, res)
 		return nil
 	}
 
-	// I'd like to await here....
-	fmt.Println("Here 2")
-
+	// Parse the data into an object.
+	// Note, this must take place inside a callback.
 	req.Call("on", "data", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		var uint8array []byte
-
 		js.Global().Get("Object").Call("values", args[0]).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 			theInt := args[0].Int()
 			uint8array = binary.AppendUvarint(uint8array, uint64(theInt))
 			return nil
 		}))
 
-		// CHOICE: set the body of the request to be a JSON string
 		req.Set("body", js.ValueOf(string(uint8array)))
-		// check for layer8 request
-
-		//fmt.Println("Here 3: ", req.Get("body").String())
 
 		jsBody := req.Get("body")
 		if jsBody.String() == "<undefined>" {
@@ -357,11 +289,7 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 			return nil
 		}
 
-		fmt.Println("Here 4: ", jsBody)
-
 		object := js.Global().Get("JSON").Call("parse", jsBody)
-
-		fmt.Println("Here 5: ", object.Get("data"))
 
 		data, err := base64.URLEncoding.DecodeString(object.Get("data").String())
 		if err != nil {
@@ -426,7 +354,7 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 				b = []byte(data.String())
 			}
 
-			// encrypt response
+			// Encrypt response
 			jres := utils.Response{}
 			jres.Body = b
 			jres.Status = res.Get("statusCode").Int()
@@ -447,9 +375,8 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 				return nil
 			}
 
-			//b, err = utils.Dep_SymmetricEncrypt(b, secret)
 			b, err := spSymmetricKey.SymmetricEncrypt(b)
-			//fmt.Println("b: ", b)
+
 			if err != nil {
 				println("error encrypting response:", err.Error())
 				res.Set("statusCode", 500)
@@ -462,7 +389,7 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 				resHeaders[k] = v
 			}
 
-			// send response
+			// Send response
 			res.Set("statusCode", jres.Status)
 			res.Set("statusMessage", jres.StatusText)
 			res.Call("set", js.ValueOf(resHeaders))
@@ -472,44 +399,65 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 			return nil
 		}))
 
-		// continue to next middleware/handler
+		// Continue to next middleware/handler
 		next.Invoke()
-
 		return nil
 	}))
-
-	fmt.Println("Here XXX")
 	return nil
 }
 
-// func requestPreProcessor(request js.Value) interface{} {
-// 	request.Call("on", "data", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-// 		var uint8array []byte
+// UTILS
+func parseJSObjectToMap(obj js.Value) map[string]interface{} {
+	m := map[string]interface{}{}
 
-// 		js.Global().Get("Object").Call("values", args[0]).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-// 			theInt := args[0].Int()
-// 			uint8array = binary.AppendUvarint(uint8array, uint64(theInt))
-// 			return nil
-// 		}))
+	keys := js.Global().Get("Object").Call("keys", obj)
+	for i := 0; i < keys.Length(); i++ {
+		key := keys.Index(i).String()
+		val := obj.Get(key)
 
-// 		// CHOICE: set the body of the request to be a JSON string
-// 		request.Set("body", js.ValueOf(string(uint8array)))
+		switch val.Type() {
+		case js.TypeNumber:
+			m[key] = val.Float()
+		case js.TypeBoolean:
+			m[key] = val.Bool()
+		case js.TypeString:
+			m[key] = val.String()
+		case js.TypeObject:
+			if val.Get("constructor").Get("name").String() == "Array" {
+				m[key] = parseJSObjectToSlice(val)
+				continue
+			}
+			m[key] = parseJSObjectToMap(val)
+		}
+	}
 
-// 		// OR: process the request within the WASM module
-// 		myRequest := new(Request)
-// 		err := json.Unmarshal(uint8array, &myRequest)
-// 		if err != nil {
-// 			fmt.Println("damn")
-// 		}
-// 		fmt.Println("Method: ", string(myRequest.Method))
-// 		fmt.Println("Headers: ", myRequest.Headers)
-// 		fmt.Println("Body: ", string(myRequest.Body))
-// 		url := request.Get("baseUrl").String()
-// 		fmt.Println(url)
-// 		return nil
-// 	}))
-// 	return nil
-// }
+	return m
+}
+
+func parseJSObjectToSlice(obj js.Value) []interface{} {
+	var s []interface{}
+
+	for i := 0; i < obj.Length(); i++ {
+		val := obj.Index(i)
+
+		switch val.Type() {
+		case js.TypeNumber:
+			s = append(s, val.Float())
+		case js.TypeBoolean:
+			s = append(s, val.Bool())
+		case js.TypeString:
+			s = append(s, val.String())
+		case js.TypeObject:
+			if val.Get("constructor").Get("name").String() == "Array" {
+				s = append(s, parseJSObjectToSlice(val))
+				continue
+			}
+			s = append(s, parseJSObjectToMap(val))
+		}
+	}
+
+	return s
+}
 
 func async_test_WASM(this js.Value, args []js.Value) interface{} {
 	fmt.Println("Fisrt argument: ", args[0])

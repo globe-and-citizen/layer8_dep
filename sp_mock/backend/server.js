@@ -15,7 +15,7 @@ const users = []; // Store users in memory
 const SECRET_KEY = 'my_very_secret_key'
 
 // MIDDLEWARE
-app.use(express.json())
+//app.use(express.json())
 app.use(Layer8)
 app.use(cors())
 

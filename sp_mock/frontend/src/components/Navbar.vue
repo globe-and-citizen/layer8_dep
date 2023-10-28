@@ -22,14 +22,14 @@ async function ping8000 () {
         })
       });
       
-      let rawHeaderArray = {}
+      let rawHeaderObject = {}
       response.headers.forEach((val,key) => {
-        rawHeaderArray[key] = val
+        rawHeaderObject[key] = val
       })
 
-      console.log("Ping to 8000 succeeded from navbar: ", await response.text())
-      console.log("Ping to 8000 succeeded from navbar: ", response.status)
-      console.log("Ping to 8000 succeeded from navbar: ", rawHeaderArray)     
+      console.log("Ping 8000 - await response.text(): ", await response.text())
+      console.log("Ping 8000 - response.status: ", response.status)
+      console.log("Ping 8000 - rawHeaderObject: ", rawHeaderObject)     
 
 
   } catch (error) {

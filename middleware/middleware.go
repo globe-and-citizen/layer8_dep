@@ -3,6 +3,7 @@ package main
 import (
 	"crypto"
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"globe-and-citizen/layer8/utils"
@@ -17,22 +18,11 @@ type KeyPair struct {
 }
 
 var (
-	InstanceKey *KeyPair
-	//ServerJWKPair    *utils.JWK
-	//ClientPublicKeys map[string]crypto.PublicKey = make(map[string]crypto.PublicKey)
-	privKey_ECDH *utils.JWK
-	pubKey_ECDH  *utils.JWK
+	InstanceKey    *KeyPair
+	spSymmetricKey *utils.JWK
+	privKey_ECDH   *utils.JWK
+	pubKey_ECDH    *utils.JWK
 )
-
-var spoofedSymmetricKey *utils.JWK = &utils.JWK{
-	Key_ops: []string{"encrypt", "decrypt"},
-	Kty:     "EC",
-	Kid:     "SpoofedKey",
-	Crv:     "P-256",
-	X:       "KfbCmY2v83ptAZLLKffx0ve2Br8hkMhCkIo5RkFaNlk=",
-	Y:       "",
-	D:       "",
-}
 
 func init() {
 	var err error
@@ -52,7 +42,7 @@ type Request struct {
 func main() {
 	c := make(chan struct{}, 0)
 	fmt.Printf("L8 WASM Middleware version %s loaded.\n\n", VERSION)
-	js.Global().Set("WASMMiddleware", js.FuncOf(WASMMiddleware))
+	js.Global().Set("WASMMiddleware", js.FuncOf(WASMMiddleware_v2))
 	js.Global().Set("TestWASM", js.FuncOf(TestWASM))
 	<-c
 }
@@ -79,7 +69,7 @@ func doECDHWithClient(request, response js.Value) {
 	}
 
 	fmt.Println("shared secret: ", ss)
-	spoofedSymmetricKey = ss
+	spSymmetricKey = ss
 
 	ss_b64, err := ss.ExportAsBase64()
 	if err != nil {
@@ -112,7 +102,7 @@ func doECDHWithClient(request, response js.Value) {
 		server_pubKeyECDH, _ := pubKey_ECDH.ExportAsBase64()
 
 		response.Call("end", server_pubKeyECDH)
-		fmt.Println("SS_Server: ", spoofedSymmetricKey)
+		fmt.Println("SS_Server: ", spSymmetricKey)
 		return nil
 	}))
 
@@ -145,7 +135,8 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 		return nil
 	}
 
-	// get the body
+	// get the body. This depends on the express.json
+
 	jsBody := req.Get("body")
 	if jsBody.String() == "<undefined>" {
 		println("body not defined")
@@ -162,17 +153,7 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 		return nil
 	}
 
-	// Hardcoding a shared secret for now
-	// secret, err := base64.StdEncoding.DecodeString("KfbCmY2v83ptAZLLKffx0ve2Br8hkMhCkIo5RkFaNlk=")
-	// if err != nil {
-	// 	return &utils.Response{
-	// 		Status:     500,
-	// 		StatusText: err.Error(),
-	// 	}
-	// }
-	// b, err := utils.Dep_SymmetricDecrypt(data, secret)
-
-	b, err := spoofedSymmetricKey.SymmetricDecrypt(data)
+	b, err := spSymmetricKey.SymmetricDecrypt(data)
 	if err != nil {
 		println("error decrypting request:", err.Error())
 		res.Set("statusCode", 400)
@@ -249,7 +230,7 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 		}
 
 		//b, err = utils.Dep_SymmetricEncrypt(b, secret)
-		b, err := spoofedSymmetricKey.SymmetricEncrypt(b)
+		b, err := spSymmetricKey.SymmetricEncrypt(b)
 		//fmt.Println("b: ", b)
 		if err != nil {
 			println("error encrypting response:", err.Error())
@@ -330,52 +311,205 @@ func parseJSObjectToSlice(obj js.Value) []interface{} {
 	return s
 }
 
-func Dep_Ravi_WASMMiddleware(this js.Value, args []js.Value) interface{} {
-	//request := args[0]
-	//response := args[1]
+////////////
+
+func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
+	// get the request and response objects and the next function
+	req := args[0]
+	res := args[1]
 	next := args[2]
 
-	fmt.Println("closer....")
-
-	//request.Call("on", "data", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-	// var uint8array []byte
-
-	// js.Global().Get("Object").Call("values", args[0]).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-	// 	theInt := args[0].Int()
-	// 	uint8array = binary.AppendUvarint(uint8array, uint64(theInt))
-	// 	return nil
-	// }))
-
-	// // // CHOICE: set the body of the request to be a JSON string
-	// request.Set("body", js.ValueOf(string(uint8array)))
-
-	// // // OR: process the request within the WASM module
-	// // myRequest := new(Request)
-	// // err := json.Unmarshal(uint8array, &myRequest)
-	// // if err != nil {
-	// // 	fmt.Println("damn")
-	// // }
-	// // fmt.Println("Method: ", string(myRequest.Method))
-	// // fmt.Println("Headers: ", myRequest.Headers)
-	// // fmt.Println("Body: ", string(myRequest.Body))
-	// // url := request.Get("baseUrl").String()
-	// // fmt.Println(url)
-
-	// // Set any layer8 particular custom props
-	// response.Set("custom_test_prop", js.ValueOf("Example string"))
-
-	// // Replace the standard methods with the L8 equivalents
-	// // so that end users don't notice any difference.
-	// nativeFunc := response.Get("send")
-	// response.Set("send", nativeFunc)
-	// fmt.Println("Request has transitted the WASM middleware.", request)
-
+	headers := req.Get("headers")
+	// if headers.String() == "<undefined>" {
 	// 	next.Invoke()
 	// 	return nil
-	// }))
-	next.Invoke()
+	// }
+
+	isECDHInit := headers.Get("x-ecdh-init").String()
+	if isECDHInit != "<undefined>" {
+		doECDHWithClient(req, res)
+		return nil
+	}
+
+	// I'd like to await here....
+	fmt.Println("Here 2")
+
+	req.Call("on", "data", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		var uint8array []byte
+
+		js.Global().Get("Object").Call("values", args[0]).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+			theInt := args[0].Int()
+			uint8array = binary.AppendUvarint(uint8array, uint64(theInt))
+			return nil
+		}))
+
+		// CHOICE: set the body of the request to be a JSON string
+		req.Set("body", js.ValueOf(string(uint8array)))
+		// check for layer8 request
+
+		//fmt.Println("Here 3: ", req.Get("body").String())
+
+		jsBody := req.Get("body")
+		if jsBody.String() == "<undefined>" {
+			println("body not defined")
+			res.Set("statusCode", 400)
+			res.Set("statusMessage", "Invalid request")
+			return nil
+		}
+
+		fmt.Println("Here 4: ", jsBody)
+
+		object := js.Global().Get("JSON").Call("parse", jsBody)
+
+		fmt.Println("Here 5: ", object.Get("data"))
+
+		data, err := base64.URLEncoding.DecodeString(object.Get("data").String())
+		if err != nil {
+			println("error decoding request:", err.Error())
+			res.Set("statusCode", 500)
+			res.Set("statusMessage", "Internal server error")
+			return nil
+		}
+
+		b, err := spSymmetricKey.SymmetricDecrypt(data)
+		if err != nil {
+			println("error decrypting request:", err.Error())
+			res.Set("statusCode", 400)
+			res.Set("statusMessage", "Could not decrypt request")
+			return nil
+		}
+
+		jreq, err := utils.FromJSONRequest(b)
+		if err != nil {
+			println("error serializing json request:", err.Error())
+			res.Set("statusCode", 400)
+			res.Set("statusMessage", "Could not decode request")
+			return nil
+		}
+
+		req.Set("method", jreq.Method)
+		for k, v := range jreq.Headers {
+			headers.Set(k, v)
+		}
+		var reqBody map[string]interface{}
+		json.Unmarshal(jreq.Body, &reqBody)
+		req.Set("body", reqBody)
+
+		// OVERWRITE THE SEND FUNCTION
+		res.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+			// convert body to readable format
+			data := args[0]
+			var b []byte
+
+			if data.Type() == js.TypeObject {
+				switch data.Get("constructor").Get("name").String() {
+				case "Object":
+					b, err = json.Marshal(parseJSObjectToMap(data))
+					if err != nil {
+						println("error serializing json response:", err.Error())
+						res.Set("statusCode", 500)
+						res.Set("statusMessage", "Could not encode response")
+						return nil
+					}
+				case "Array":
+					b, err = json.Marshal(parseJSObjectToSlice(data))
+					if err != nil {
+						println("error serializing json response:", err.Error())
+						res.Set("statusCode", 500)
+						res.Set("statusMessage", "Could not encode response")
+						return nil
+					}
+				default:
+					b = []byte(data.String())
+				}
+			} else {
+				b = []byte(data.String())
+			}
+
+			// encrypt response
+			jres := utils.Response{}
+			jres.Body = b
+			jres.Status = res.Get("statusCode").Int()
+			jres.StatusText = res.Get("statusMessage").String()
+			jres.Headers = make(map[string]string)
+			if res.Get("headers").String() == "<undefined>" {
+				res.Set("headers", js.ValueOf(map[string]interface{}{}))
+			}
+			js.Global().Get("Object").Call("keys", res.Get("headers")).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+				jres.Headers[args[0].String()] = args[1].String()
+				return nil
+			}))
+			b, err = jres.ToJSON()
+			if err != nil {
+				println("error serializing json response:", err.Error())
+				res.Set("statusCode", 500)
+				res.Set("statusMessage", "Could not encode response")
+				return nil
+			}
+
+			//b, err = utils.Dep_SymmetricEncrypt(b, secret)
+			b, err := spSymmetricKey.SymmetricEncrypt(b)
+			//fmt.Println("b: ", b)
+			if err != nil {
+				println("error encrypting response:", err.Error())
+				res.Set("statusCode", 500)
+				res.Set("statusMessage", "Could not encrypt response")
+				return nil
+			}
+
+			resHeaders := make(map[string]interface{})
+			for k, v := range jres.Headers {
+				resHeaders[k] = v
+			}
+
+			// send response
+			res.Set("statusCode", jres.Status)
+			res.Set("statusMessage", jres.StatusText)
+			res.Call("set", js.ValueOf(resHeaders))
+			res.Call("end", js.Global().Get("JSON").Call("stringify", js.ValueOf(map[string]interface{}{
+				"data": base64.URLEncoding.EncodeToString(b),
+			})))
+			return nil
+		}))
+
+		// continue to next middleware/handler
+		next.Invoke()
+
+		return nil
+	}))
+
+	fmt.Println("Here XXX")
 	return nil
 }
+
+// func requestPreProcessor(request js.Value) interface{} {
+// 	request.Call("on", "data", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+// 		var uint8array []byte
+
+// 		js.Global().Get("Object").Call("values", args[0]).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+// 			theInt := args[0].Int()
+// 			uint8array = binary.AppendUvarint(uint8array, uint64(theInt))
+// 			return nil
+// 		}))
+
+// 		// CHOICE: set the body of the request to be a JSON string
+// 		request.Set("body", js.ValueOf(string(uint8array)))
+
+// 		// OR: process the request within the WASM module
+// 		myRequest := new(Request)
+// 		err := json.Unmarshal(uint8array, &myRequest)
+// 		if err != nil {
+// 			fmt.Println("damn")
+// 		}
+// 		fmt.Println("Method: ", string(myRequest.Method))
+// 		fmt.Println("Headers: ", myRequest.Headers)
+// 		fmt.Println("Body: ", string(myRequest.Body))
+// 		url := request.Get("baseUrl").String()
+// 		fmt.Println(url)
+// 		return nil
+// 	}))
+// 	return nil
+// }
 
 func async_test_WASM(this js.Value, args []js.Value) interface{} {
 	fmt.Println("Fisrt argument: ", args[0])

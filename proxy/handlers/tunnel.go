@@ -41,7 +41,14 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	// copy response back
 	for k, v := range res.Header {
 		w.Header()[k] = v
+		//fmt.Println("header pairs from SP: ", k, v)
 	}
-	w.WriteHeader(res.StatusCode)
+
+	w.Header()["setme"] = []string{"string"}
+	w.Header().Add("ME TOO?", "DO IT!")
+	fmt.Println("w.Headers: ", w.Header())
+	//w.WriteHeader(res.StatusCode)
 	io.Copy(w, res.Body)
+
+	fmt.Println("w.Headers 2: ", w.Header())
 }

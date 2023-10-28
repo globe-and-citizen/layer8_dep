@@ -27,6 +27,8 @@ var (
 	Layer8Host    string
 	Layer8Port    string
 	Layer8Version string
+	privJWK_ecdh  *utils.JWK
+	pubJWK_ecdh   *utils.JWK
 )
 
 var spoofedSymmetricKey *utils.JWK = &utils.JWK{
@@ -57,7 +59,11 @@ func main() {
 	}))
 
 	fmt.Println("WARNING: wasm_exec.js is versioned and has some breaking changes. Ensure you are using the correct version.")
-
+	if initializeECDHTunnel() {
+		fmt.Println("ECDH successfully inited")
+	} else {
+		fmt.Println("ECDH failed...")
+	}
 	// Wait indefinitely
 	<-c
 }
@@ -100,95 +106,60 @@ func testWASM(this js.Value, args []js.Value) interface{} {
 	return promise
 }
 
-func genericGetRequest(this js.Value, args []js.Value) interface{} {
-	url := args[0]
-	fmt.Println("HERE: ", url.String())
-	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
-		resolve := args[0]
-		reject := args[1]
-		go func() {
-			// Main function body
-			res, err := http.Get(url.String()) // http://localhost:5000/success
-			if err != nil {
-				fmt.Println("Failure to get ", url.String())
-				reject.Invoke(js.ValueOf(err.Error()))
-			}
-
-			if res == nil || res.Body == nil {
-				fmt.Println("res or res.body from proxy was nil.")
-			}
-
-			defer res.Body.Close()
-
-			if res.StatusCode != http.StatusOK {
-				fmt.Println("Server returned non-OK stauts: ", res.Status)
-				reject.Invoke(js.ValueOf(fmt.Sprintf("Server returned non-OK stauts: ", res.Status)))
-				return
-			}
-
-			res_byteSlice, err := io.ReadAll(res.Body)
-			if err != nil {
-				fmt.Println("Error reading backend public key: ", err)
-				reject.Invoke(js.ValueOf(err.Error()))
-				return
-			}
-
-			resolve.Invoke(js.ValueOf(string(res_byteSlice)))
-		}()
-		return nil
+func initializeECDHTunnel() bool {
+	fmt.Println("Top of Init")
+	var err error
+	privJWK_ecdh, pubJWK_ecdh, err = utils.GenerateKeyPair(utils.ECDH)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
 	}
-	promiseConstructor := js.Global().Get("Promise")
-	promise := promiseConstructor.New(js.FuncOf(resolve_reject_internals))
-	return promise
-}
 
-func genericPost(this js.Value, args []js.Value) interface{} {
-	url := args[0]
-	//stringifiedObject := `{"client_message": "hello, server!"}`
-	stringifiedObject := args[1].String()
-	fmt.Println(stringifiedObject)
-	jsonBody := []byte(stringifiedObject)
-	bodyReader := bytes.NewReader(jsonBody)
-	//	bodyReader := bytes.NewReader(byteObject)
-
-	fmt.Println("Interceptor will now POST to this url: ", url.String())
-	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
-		resolve := args[0]
-		reject := args[1]
-		go func() {
-			// Main function body
-			res, err := http.Post(url.String(), "application/json", bodyReader)
-			if err != nil {
-				fmt.Println("Failure to Post ", url.String())
-				reject.Invoke(js.ValueOf(err.Error()))
-			}
-
-			if res == nil || res.Body == nil {
-				fmt.Println("res or res.body from proxy was nil.")
-			}
-
-			defer res.Body.Close()
-
-			if res.StatusCode != http.StatusOK {
-				fmt.Println("Server returned non-OK stauts: ", res.Status)
-				reject.Invoke(js.ValueOf(fmt.Sprintf("Server returned non-OK stauts: ", res.Status)))
-				return
-			}
-
-			res_byteSlice, err := io.ReadAll(res.Body)
-			if err != nil {
-				fmt.Println("Server side error: ", err.Error())
-				reject.Invoke(js.ValueOf(err.Error()))
-				return
-			}
-
-			resolve.Invoke(js.ValueOf(string(res_byteSlice)))
-		}()
-		return nil
+	b64PubJWK, err := pubJWK_ecdh.ExportAsBase64()
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
 	}
-	promiseConstructor := js.Global().Get("Promise")
-	promise := promiseConstructor.New(js.FuncOf(resolve_reject_internals))
-	return promise
+	fmt.Println("b64PubJWK: ", b64PubJWK)
+	//URL will need to be defaulted from the page.
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", "http://localhost:5001", bytes.NewBuffer([]byte{}))
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	req.Header.Add("x-ecdh-init", b64PubJWK)
+	req.Header.Add("X-client-id", "1")
+
+	// send request
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err.Error())
+		return false
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == 401 {
+		fmt.Printf("User not authorized\n")
+		return false
+	}
+
+	//resHeaders := make(map[string]interface{})
+	for k, v := range resp.Header {
+		fmt.Println("header pairs from SP:", k, v)
+	}
+	fmt.Println("resp.Header: ", resp.Header.Get("Content-Length"))
+
+	Respbody := utils.ReadResponseBody(resp.Body)
+
+	fmt.Println("response body: ", string(Respbody))
+
+	server_pubKeyECDH, _ := utils.B64ToJWK(string(Respbody))
+
+	spoofedSymmetricKey, _ = privJWK_ecdh.GetECDHSharedSecret(server_pubKeyECDH)
+
+	fmt.Println("SS_User: ", spoofedSymmetricKey)
+	return true
 }
 
 func fetch(this js.Value, args []js.Value) interface{} {
@@ -220,7 +191,7 @@ func fetch(this js.Value, args []js.Value) interface{} {
 
 		method := options.Get("method").String()
 
-		if method == "" { // redundant. Already set by default above
+		if method == "" { // redundant? Already set by default above
 			method = "GET"
 		}
 
@@ -375,5 +346,96 @@ func Dep_fetch(this js.Value, args []js.Value) interface{} {
 		return args[0].String()
 	}))
 
+	return promise
+}
+
+func genericGetRequest(this js.Value, args []js.Value) interface{} {
+	url := args[0]
+	fmt.Println("HERE: ", url.String())
+	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		go func() {
+			// Main function body
+			res, err := http.Get(url.String()) // http://localhost:5000/success
+			if err != nil {
+				fmt.Println("Failure to get ", url.String())
+				reject.Invoke(js.ValueOf(err.Error()))
+			}
+
+			if res == nil || res.Body == nil {
+				fmt.Println("res or res.body from proxy was nil.")
+			}
+
+			defer res.Body.Close()
+
+			if res.StatusCode != http.StatusOK {
+				fmt.Println("Server returned non-OK stauts: ", res.Status)
+				reject.Invoke(js.ValueOf(fmt.Sprintf("Server returned non-OK stauts: ", res.Status)))
+				return
+			}
+
+			res_byteSlice, err := io.ReadAll(res.Body)
+			if err != nil {
+				fmt.Println("Error reading backend public key: ", err)
+				reject.Invoke(js.ValueOf(err.Error()))
+				return
+			}
+
+			resolve.Invoke(js.ValueOf(string(res_byteSlice)))
+		}()
+		return nil
+	}
+	promiseConstructor := js.Global().Get("Promise")
+	promise := promiseConstructor.New(js.FuncOf(resolve_reject_internals))
+	return promise
+}
+
+func genericPost(this js.Value, args []js.Value) interface{} {
+	url := args[0]
+	//stringifiedObject := `{"client_message": "hello, server!"}`
+	stringifiedObject := args[1].String()
+	fmt.Println(stringifiedObject)
+	jsonBody := []byte(stringifiedObject)
+	bodyReader := bytes.NewReader(jsonBody)
+	//	bodyReader := bytes.NewReader(byteObject)
+
+	fmt.Println("Interceptor will now POST to this url: ", url.String())
+	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		reject := args[1]
+		go func() {
+			// Main function body
+			res, err := http.Post(url.String(), "application/json", bodyReader)
+			if err != nil {
+				fmt.Println("Failure to Post ", url.String())
+				reject.Invoke(js.ValueOf(err.Error()))
+			}
+
+			if res == nil || res.Body == nil {
+				fmt.Println("res or res.body from proxy was nil.")
+			}
+
+			defer res.Body.Close()
+
+			if res.StatusCode != http.StatusOK {
+				fmt.Println("Server returned non-OK stauts: ", res.Status)
+				reject.Invoke(js.ValueOf(fmt.Sprintf("Server returned non-OK stauts: ", res.Status)))
+				return
+			}
+
+			res_byteSlice, err := io.ReadAll(res.Body)
+			if err != nil {
+				fmt.Println("Server side error: ", err.Error())
+				reject.Invoke(js.ValueOf(err.Error()))
+				return
+			}
+
+			resolve.Invoke(js.ValueOf(string(res_byteSlice)))
+		}()
+		return nil
+	}
+	promiseConstructor := js.Global().Get("Promise")
+	promise := promiseConstructor.New(js.FuncOf(resolve_reject_internals))
 	return promise
 }

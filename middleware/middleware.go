@@ -19,7 +19,9 @@ type KeyPair struct {
 var (
 	InstanceKey *KeyPair
 	//ServerJWKPair    *utils.JWK
-	ClientPublicKeys map[string]crypto.PublicKey = make(map[string]crypto.PublicKey)
+	//ClientPublicKeys map[string]crypto.PublicKey = make(map[string]crypto.PublicKey)
+	privKey_ECDH *utils.JWK
+	pubKey_ECDH  *utils.JWK
 )
 
 var spoofedSymmetricKey *utils.JWK = &utils.JWK{
@@ -33,14 +35,11 @@ var spoofedSymmetricKey *utils.JWK = &utils.JWK{
 }
 
 func init() {
+	var err error
 	// generate key pair
-	pri, pub, err := utils.GenerateKeyPair(utils.ECDH)
+	privKey_ECDH, pubKey_ECDH, err = utils.GenerateKeyPair(utils.ECDH)
 	if err != nil {
 		panic(err)
-	}
-	InstanceKey = &KeyPair{
-		PublicKey:  pub,
-		PrivateKey: pri,
 	}
 }
 
@@ -50,36 +49,79 @@ type Request struct {
 	Body    []byte            `json:"body"`
 }
 
-func async_test_WASM(this js.Value, args []js.Value) interface{} {
-	fmt.Println("Fisrt argument: ", args[0])
-	fmt.Println("Second argument: ", args[1])
-	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
-		resolve := args[0]
-		//reject := args[1]
-		go func() {
-			// Main function body
-			//fmt.Println(string(args[2]))
-			resolve.Invoke(js.ValueOf(fmt.Sprintf("WASM Middleware version %s successfully loaded.", VERSION)))
-			//reject.Invoke()
-		}()
-		return nil
-	}
-	promiseConstructor := js.Global().Get("Promise")
-	promise := promiseConstructor.New(js.FuncOf(resolve_reject_internals))
-	return promise
-}
-
-func TestWASM(this js.Value, args []js.Value) interface{} {
-	fmt.Println("TestWasm Ran")
-	return js.ValueOf("42")
-}
-
 func main() {
 	c := make(chan struct{}, 0)
 	fmt.Printf("L8 WASM Middleware version %s loaded.\n\n", VERSION)
 	js.Global().Set("WASMMiddleware", js.FuncOf(WASMMiddleware))
 	js.Global().Set("TestWASM", js.FuncOf(TestWASM))
 	<-c
+}
+
+func doECDHWithClient(request, response js.Value) {
+	fmt.Println("TOP: ", request)
+	headers := request.Get("headers")
+	userPubJWK := headers.Get("x-ecdh-init").String()
+	// fmt.Println("userPubJWK: ", userPubJWK)
+	userPubJWKConverted, err := utils.B64ToJWK(userPubJWK)
+	if err != nil {
+		fmt.Println("Failure to decode userPubJWK", err.Error())
+		// response set "statusCode", 50x
+		// response set "statusMessage", "err.Error()"
+		return
+	}
+
+	ss, err := privKey_ECDH.GetECDHSharedSecret(userPubJWKConverted)
+	if err != nil {
+		fmt.Println("Unable to get ECDH shared secret", err.Error())
+		// response set "statusCode", 50x
+		// response set "statusMessage", "err.Error()"
+		return
+	}
+
+	fmt.Println("shared secret: ", ss)
+	spoofedSymmetricKey = ss
+
+	ss_b64, err := ss.ExportAsBase64()
+	if err != nil {
+		fmt.Println("Unable to export shared secret as base64", err.Error())
+		// response set "statusCode", 50x
+		// response set "statusMessage", "err.Error()"
+		return
+	}
+
+	response.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// encrypt response
+		jres := utils.Response{}
+		jres.Body = []byte(ss_b64)
+		jres.Status = 200
+		jres.StatusText = "ECDH Successfully Completed!"
+		// jres.Headers = make(map[string]string)
+		// jres.Headers["x-shared-secret"] = ss_b64
+
+		if err != nil {
+			println("error serializing json response:", err.Error())
+			response.Set("statusCode", 500)
+			response.Set("statusMessage", "Failure to encode ECDH init response")
+			return nil
+		}
+
+		// send response
+		response.Set("statusCode", jres.Status)
+		response.Set("statusMessage", jres.StatusText)
+
+		server_pubKeyECDH, _ := pubKey_ECDH.ExportAsBase64()
+
+		response.Call("end", server_pubKeyECDH)
+		fmt.Println("SS_Server: ", spoofedSymmetricKey)
+		return nil
+	}))
+
+	// Send the response back to the user.
+	response.Call("setHeader", "x-shared-secret", ss_b64)
+	result := response.Call("hasHeader", "x-shared-secret")
+	fmt.Println("result: ", result)
+	response.Call("send")
+	return
 }
 
 func WASMMiddleware(this js.Value, args []js.Value) interface{} {
@@ -97,12 +139,11 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 		return nil
 	}
 
-	//isFromLayer8 := headers.Get("x-layer8-proxy").String()
-	// if isFromLayer8 == "<undefined>" {
-	// 	// continue for non-layer8 requests
-	// 	next.Invoke()
-	// 	return nil
-	// }
+	isECDHInit := headers.Get("x-ecdh-init").String()
+	if isECDHInit != "<undefined>" {
+		doECDHWithClient(req, res)
+		return nil
+	}
 
 	// get the body
 	jsBody := req.Get("body")
@@ -334,4 +375,28 @@ func Dep_Ravi_WASMMiddleware(this js.Value, args []js.Value) interface{} {
 	// }))
 	next.Invoke()
 	return nil
+}
+
+func async_test_WASM(this js.Value, args []js.Value) interface{} {
+	fmt.Println("Fisrt argument: ", args[0])
+	fmt.Println("Second argument: ", args[1])
+	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+		//reject := args[1]
+		go func() {
+			// Main function body
+			//fmt.Println(string(args[2]))
+			resolve.Invoke(js.ValueOf(fmt.Sprintf("WASM Middleware version %s successfully loaded.", VERSION)))
+			//reject.Invoke()
+		}()
+		return nil
+	}
+	promiseConstructor := js.Global().Get("Promise")
+	promise := promiseConstructor.New(js.FuncOf(resolve_reject_internals))
+	return promise
+}
+
+func TestWASM(this js.Value, args []js.Value) interface{} {
+	fmt.Println("TestWasm Ran")
+	return js.ValueOf("42")
 }

@@ -1,3 +1,6 @@
+// tmr's labour
+Use the fetch command to init the encrypted tunnel.
+
 ## GOTCHAS
 1. 
 The auth server runs on port 5001 and must me started by calling: $go run main.go --server auth 

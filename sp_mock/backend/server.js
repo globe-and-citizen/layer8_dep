@@ -23,6 +23,7 @@ app.use(cors())
 app.get("/", (req, res)=>{
     console.log("req.body: ", req.body)
     console.log("res.custom_test_prop: ", res.custom_test_prop)
+
     res.send("Bro, ur poems coming soon. Relax a little.")
 })
 
@@ -30,6 +31,8 @@ app.post("/", (req, res)=>{
     console.log("Beautiful. No Errors: ")
     console.log("headers:: ", req.headers)
     console.log("req.body: ", req.body)
+    res.setHeader("x-crypto-test", "11234")
+    console.log(res.hasHeader("x-crypto-test"))
     res.send("Server has registered a POST.")
 })
 

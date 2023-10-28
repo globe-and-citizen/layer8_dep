@@ -16,6 +16,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
@@ -440,6 +441,28 @@ func SignData(JWK *JWK, data []byte) ([]byte, error) {
 	}
 
 	return ASN1Signature, nil
+}
+
+func (JWK *JWK) ExportAsBase64() (string, error) {
+	marshalled, err := json.Marshal(JWK)
+	if err != nil {
+		return "", fmt.Errorf("Failure to export JWK as Base64 %w", err.Error())
+	}
+
+	return base64.URLEncoding.EncodeToString(marshalled), nil
+}
+
+func B64ToJWK(userPubJWK string) (*JWK, error) {
+	userPubJWK_BS, err := base64.URLEncoding.DecodeString(userPubJWK)
+	if err != nil {
+		return nil, fmt.Errorf("Failure to decode userPubJWK", err.Error())
+	}
+	userPubJWKConverted := &JWK{}
+	err = json.Unmarshal(userPubJWK_BS, userPubJWKConverted)
+	if err != nil {
+		return nil, fmt.Errorf("Failure to unmarshal userPubJWK: ", err.Error())
+	}
+	return userPubJWKConverted, nil
 }
 
 // PRIVATE FUNCTIONS FOR PKG UTILS

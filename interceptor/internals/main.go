@@ -8,7 +8,6 @@ import (
 	"globe-and-citizen/layer8/utils"
 	"net/http"
 	"net/url"
-	//utilities "github.com/globe-and-citizen/layer8-utils"
 )
 
 type Client struct {
@@ -28,15 +27,6 @@ func NewClient(scheme, host, port string) ClientImpl {
 
 // Do sends a request to through the layer8 proxy server and returns a response
 func (c *Client) Do(url string, req *utils.Request, sharedSecret *utils.JWK) *utils.Response {
-	// hardcoding a shared secret for now
-	//secret, err := base64.StdEncoding.DecodeString("KfbCmY2v83ptAZLLKffx0ve2Br8hkMhCkIo5RkFaNlk=")
-	// if err != nil {
-	// 	return &utils.Response{
-	// 		Status:     500,
-	// 		StatusText: err.Error(),
-	// 	}
-	// }
-
 	// Send request
 	res, err := c.transfer(sharedSecret, req, url)
 	if err != nil {
@@ -62,6 +52,12 @@ func (c *Client) transfer(sharedSecret *utils.JWK, req *utils.Request, url strin
 	if err != nil {
 		return nil, fmt.Errorf("could not decode response: %w", err)
 	}
+
+	// Perhaps it's here that you'll rehydrate the headers from the service provider?
+	resData.Headers["x-custom-header-1"] = "ONE"
+	resData.Headers["x-custom-header-2"] = "TWO"
+	resData.Headers["x-custom-header-3"] = "THREE"
+
 	return resData, nil
 }
 
@@ -137,18 +133,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string) (in
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(res.Body)
 
-	// decrypt response body if a secret is provided
 	bufByte := buf.Bytes()
-	//decrypted, err := sharedSecret.SymmetricDecrypt(bufByte)
-	//fmt.Println("error: ", decrypted)
-	// if err != nil {
-	// 	res := &utils.Response{
-	// 		Status:     500,
-	// 		StatusText: err.Error(),
-	// 	}
-	// 	resByte, _ := res.ToJSON()
-	// 	return 500, resByte
-	// }
 
 	mapB := make(map[string]interface{})
 	json.Unmarshal(bufByte, &mapB)
@@ -186,5 +171,6 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string) (in
 		return 500, resByte
 	}
 
+	// At this point the proxy's headers have been stripped and you have the SP's response as bufByte
 	return res.StatusCode, bufByte
 }

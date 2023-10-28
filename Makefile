@@ -4,7 +4,9 @@ npm_install_all:
 
 ## Interceptor Calls
 build_interceptor: ## must do from a bash terminal ..
+	## Put WASM file directly in the CDN of the auth server
 	## cd interceptor/ && GOARCH=wasm GOOS=js go build -o dist/interceptor.wasm && cp ./dist/interceptor.wasm ../proxy/assets/cdn/interceptor/interceptor__local.wasm && cp ./dist/wasm_exec.js ../proxy/assets/cdn/interceptor/wasm_exec.js
+	## Put WASM file directly in the sp_mock frontend
 	## cd interceptor/ && GOARCH=wasm GOOS=js go build -o dist/interceptor.wasm && cp ./dist/interceptor.wasm ../sp_mock/frontend/public/interceptor.wasm && cp ./dist/wasm_exec.js ../sp_mock/frontend/public/wasm_exec.js
 	@'$(MAKE)' -C ./interceptor build
 

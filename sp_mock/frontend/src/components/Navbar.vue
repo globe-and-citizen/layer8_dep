@@ -3,9 +3,8 @@ import {ref} from "vue"
 
 const counter = ref(0)
 
-async function testWASMLoadedHandler (){
-  let res = await layer8.testWASMLoaded()
-  console.log("Wasm Loaded")
+async function persistenceCheckHandler (){
+  let res = await layer8.persistenceCheck(">ARGUMENT PASSED IN<")
   counter.value = res
 }
 
@@ -22,13 +21,21 @@ async function ping8000 () {
           password: "registerPassword.value"
         })
       });
+      
+      let rawHeaderArray = {}
+      response.headers.forEach((val,key) => {
+        rawHeaderArray[key] = val
+      })
+
       console.log("Ping to 8000 succeeded from navbar: ", await response.text())
+      console.log("Ping to 8000 succeeded from navbar: ", response.status)
+      console.log("Ping to 8000 succeeded from navbar: ", rawHeaderArray)     
+
+
   } catch (error) {
     console.log("Ping to 8000 failed from navbar: ", error);
   }
 };
-
-
 
 </script>
 
@@ -37,7 +44,7 @@ async function ping8000 () {
     <RouterLink to="/">Home</RouterLink>
     <RouterLink to="/stress-test">Stress test</RouterLink>
     <button @click="ping8000">Ping 8000</button>
-    <button @click="testWASMLoadedHandler">TestWASM</button>
+    <button @click="persistenceCheckHandler">Check WASM Persistence</button>
     <span v-if="counter != 0 " >{{ counter }}</span >
     <br><hr><br>
 </div>

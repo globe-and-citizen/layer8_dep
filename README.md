@@ -7,7 +7,7 @@ The auth server runs on port 5001 and must me started by calling: $go run main.g
 In contrast, the proxy server runs on port 5000 and must be started by calling: $go run main.go --port 5000
 
 2. 
-All functions must be sync or async and CANNOT be both. This means that async functions that return a promise must be invoked in a stereotyped way. 
+All functions must be sync or async and CANNOT be both. This means that async functions that return a promise must be invoked in a stereotyped way. To ensure that even failure returns as a promise, the resolve_reject_internals must wrap the entire function logic.
  
 
 # Layer8

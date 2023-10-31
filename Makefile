@@ -29,3 +29,7 @@ run_proxy:
 # Serve auth server
 run_auth:
 	cd proxy && go run main.go --server=auth
+
+# Run Resource Server Backend
+run_rs_backend:
+	cd resource_server/backend && go run main.go

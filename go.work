@@ -5,4 +5,5 @@ use (
     ./middleware
     ./proxy
     ./utils
+    ./resource_server/backend
 )

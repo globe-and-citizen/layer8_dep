@@ -1,73 +1,77 @@
 package handlers
 
 import (
-	"globe-and-citizen/layer8/proxy/entities"
-	"globe-and-citizen/layer8/proxy/internals/usecases"
-	"html/template"
-	"net/http"
+	"globe-and-citizen/layer8/l8_oauth/entities"
+	"globe-and-citizen/layer8/l8_oauth/internals/usecases"
+
+	"globe-and-citizen/layer8/l8_oauth/utilities"
+
+	"github.com/valyala/fasthttp"
 )
 
-func Register(w http.ResponseWriter, r *http.Request) {
-	usecase := r.Context().Value("usecase").(*usecases.UseCase)
+func Register(ctx *fasthttp.RequestCtx) {
+	var usecase = ctx.UserValue("usecase").(*usecases.UseCase)
 
-	switch r.Method {
+	switch string(ctx.Method()) {
 	case "GET":
-		next := r.URL.Query().Get("next")
+		next := string(ctx.QueryArgs().Peek("next"))
 		if next == "" {
 			next = "/"
 		}
 		// check if the user is already logged in
-		token, err := r.Cookie("token")
-		if token != nil && err == nil {
-			user, err := usecase.GetUserByToken(token.Value)
-			if err == nil && user != nil {
-				http.Redirect(w, r, next, http.StatusSeeOther)
-				return
-			}
+		token := ctx.Request.Header.Cookie("token")
+		user, err := usecase.GetUserByToken(string(token))
+		if token != nil && err == nil && user != nil {
+			ctx.Redirect(next, fasthttp.StatusSeeOther)
+			return
 		}
 
 		// load the register page
-		t, err := template.ParseFiles("assets/templates/register.html")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		t.Execute(w, map[string]interface{}{
+		utilities.LoadTemplate(ctx, "assets/templates/register.html", map[string]interface{}{
 			"HasNext": next != "",
 			"Next":    next,
 		})
 		return
 	case "POST":
-		next := r.URL.Query().Get("next")
+		next := string(ctx.QueryArgs().Peek("next"))
 		if next == "" {
 			next = "/"
 		}
 		user := &entities.User{
 			AbstractUser: entities.AbstractUser{
-				Username: r.FormValue("username"),
-				Email:    r.FormValue("email"),
-				Fname:    r.FormValue("fname"),
-				Lname:    r.FormValue("lname"),
+				Username:                     string(ctx.FormValue("username")),
+				Email:                        string(ctx.FormValue("email")),
+				Fname:                        string(ctx.FormValue("fname")),
+				Lname:                        string(ctx.FormValue("lname")),
+				PhoneNumber:                  string(ctx.FormValue("phone_number")),
+				Address:                      string(ctx.FormValue("address")),
+				NationalIdentificationNumber: string(ctx.FormValue("national_identification_number")),
+				ShareEmailVer:                string(ctx.FormValue("share_email_ver")) == "true",
+				SharePhoneNumberVer:          string(ctx.FormValue("share_phone_number_ver")) == "true",
+				ShareAddressVer:              string(ctx.FormValue("share_address_ver")) == "true",
+				ShareIdVer:                   string(ctx.FormValue("share_id_ver")) == "true",
 			},
-			// due to using the same struct for the user and the pseudonymized data,
-			// the validation will fail if the pseudonymized data is not present
-			// so we set some dummy data here
 			PsedonymizedData: entities.AbstractUser{
-				Username: "dummy",
-				Email:    "dummy",
-				Fname:    "dummy",
-				Lname:    "dummy",
+				Username:                     "dummy",
+				Email:                        "dummy",
+				Fname:                        "dummy",
+				Lname:                        "dummy",
+				PhoneNumber:                  "dummy",
+				Address:                      "dummy",
+				NationalIdentificationNumber: "dummy",
+				ShareEmailVer:                false,
+				SharePhoneNumberVer:          false,
+				ShareAddressVer:              false,
+				ShareIdVer:                   false,
 			},
-			Password: r.FormValue("password"),
+			Password: string(ctx.FormValue("password")),
 		}
+		// fmt.Println("Shared email ver:", string(ctx.FormValue("share_email_ver")))
+		// fmt.Println("Shared phone number ver:", user.SharePhoneNumberVer)
+		// fmt.Println("Shared address ver:", user.AbstractUser.ShareAddressVer)
 		err := user.Validate()
 		if err != nil {
-			t, errT := template.ParseFiles("assets/templates/register.html")
-			if errT != nil {
-				http.Error(w, errT.Error(), http.StatusInternalServerError)
-				return
-			}
-			t.Execute(w, map[string]interface{}{
+			utilities.LoadTemplate(ctx, "assets/templates/register.html", map[string]interface{}{
 				"HasNext": next != "",
 				"Next":    next,
 				"Error":   err.Error(),
@@ -77,12 +81,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		// register the user
 		rUser, err := usecase.RegisterUser(user)
 		if err != nil {
-			t, errT := template.ParseFiles("assets/templates/register.html")
-			if errT != nil {
-				http.Error(w, errT.Error(), http.StatusInternalServerError)
-				return
-			}
-			t.Execute(w, map[string]interface{}{
+			utilities.LoadTemplate(ctx, "assets/templates/register.html", map[string]interface{}{
 				"HasNext": next != "",
 				"Next":    next,
 				"Error":   err.Error(),
@@ -92,80 +91,63 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		// set the token cookie
 		token, ok := rUser["token"].(string)
 		if !ok {
-			t, err := template.ParseFiles("assets/templates/register.html")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			t.Execute(w, map[string]interface{}{
+			utilities.LoadTemplate(ctx, "assets/templates/register.html", map[string]interface{}{
 				"HasNext": next != "",
 				"Next":    next,
 				"Error":   "could not get token",
 			})
 			return
 		}
-		http.SetCookie(w, &http.Cookie{
-			Name:  "token",
-			Value: token,
-			Path:  "/",
-		})
+		c := new(fasthttp.Cookie)
+		c.SetKey("token")
+		c.SetValue(token)
+		c.SetPath("/")
+		ctx.Response.Header.SetCookie(c)
 		// redirecting to home page instead of the next page so that users can see their
 		// pseudo profile that they'll be identified by
 		if next == "/" {
-			http.Redirect(w, r, "/", http.StatusSeeOther)
+			ctx.Redirect("/", fasthttp.StatusSeeOther)
 			return
 		}
-		http.Redirect(w, r, "/?next="+next, http.StatusSeeOther)
+		ctx.Redirect("/?next="+next, fasthttp.StatusSeeOther)
 		return
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		ctx.Error("Method not allowed", fasthttp.StatusMethodNotAllowed)
 		return
 	}
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
-	usecase := r.Context().Value("usecase").(*usecases.UseCase)
+func Login(ctx *fasthttp.RequestCtx) {
+	var usecase = ctx.UserValue("usecase").(*usecases.UseCase)
 
-	switch r.Method {
+	switch string(ctx.Method()) {
 	case "GET":
-		next := r.URL.Query().Get("next")
+		next := string(ctx.QueryArgs().Peek("next"))
 		if next == "" {
 			next = "/"
 		}
 		// check if the user is already logged in
-		token, err := r.Cookie("token")
-		if token != nil && err == nil {
-			user, err := usecase.GetUserByToken(token.Value)
-			if err == nil && user != nil {
-				http.Redirect(w, r, next, http.StatusSeeOther)
-				return
-			}
+		token := ctx.Request.Header.Cookie("token")
+		user, err := usecase.GetUserByToken(string(token))
+		if token != nil && err == nil && user != nil {
+			ctx.Redirect(next, fasthttp.StatusSeeOther)
+			return
 		}
 
 		// load the login page
-		t, err := template.ParseFiles("assets/templates/login.html")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		t.Execute(w, map[string]interface{}{
+		utilities.LoadTemplate(ctx, "assets/templates/login.html", map[string]interface{}{
 			"HasNext": next != "",
 			"Next":    next,
 		})
 		return
 	case "POST":
-		next := r.URL.Query().Get("next")
-		username := r.FormValue("username")
-		password := r.FormValue("password")
+		next := string(ctx.QueryArgs().Peek("next"))
+		username := string(ctx.FormValue("username"))
+		password := string(ctx.FormValue("password"))
 		// login the user
 		rUser, err := usecase.LoginUser(username, password)
 		if err != nil {
-			t, errT := template.ParseFiles("assets/templates/login.html")
-			if errT != nil {
-				http.Error(w, errT.Error(), http.StatusInternalServerError)
-				return
-			}
-			t.Execute(w, map[string]interface{}{
+			utilities.LoadTemplate(ctx, "assets/templates/login.html", map[string]interface{}{
 				"HasNext": next != "",
 				"Next":    next,
 				"Error":   err.Error(),
@@ -175,29 +157,24 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		// set the token cookie
 		token, ok := rUser["token"].(string)
 		if !ok {
-			t, err := template.ParseFiles("assets/templates/login.html")
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			t.Execute(w, map[string]interface{}{
+			utilities.LoadTemplate(ctx, "assets/templates/login.html", map[string]interface{}{
 				"HasNext": next != "",
 				"Next":    next,
 				"Error":   "could not get token",
 			})
 			return
 		}
-		http.SetCookie(w, &http.Cookie{
-			Name:  "token",
-			Value: token,
-			Path:  "/",
-		})
+		c := new(fasthttp.Cookie)
+		c.SetKey("token")
+		c.SetValue(token)
+		c.SetPath("/")
+		ctx.Response.Header.SetCookie(c)
 		// redirect to next page - here the user already knows their pseudo profile
 		// when they registered
-		http.Redirect(w, r, next, http.StatusSeeOther)
+		ctx.Redirect(next, fasthttp.StatusSeeOther)
 		return
 	default:
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		ctx.Error("Method not allowed", fasthttp.StatusMethodNotAllowed)
 		return
 	}
 }

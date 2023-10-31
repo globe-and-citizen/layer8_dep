@@ -1,6 +1,6 @@
 package usecases
 
-import "globe-and-citizen/layer8/proxy/internals/repository"
+import "globe-and-citizen/layer8/l8_oauth/internals/repository"
 
 type UseCase struct {
 	Repo repository.Repository

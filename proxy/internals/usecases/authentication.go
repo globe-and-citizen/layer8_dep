@@ -3,19 +3,20 @@ package usecases
 import (
 	"encoding/json"
 	"fmt"
-	"globe-and-citizen/layer8/proxy/config"
-	"globe-and-citizen/layer8/proxy/constants"
-	"globe-and-citizen/layer8/proxy/entities"
-	"globe-and-citizen/layer8/utils"
 
-	utilities "github.com/globe-and-citizen/layer8-utils"
+	"globe-and-citizen/layer8/l8_oauth/config"
+	"globe-and-citizen/layer8/l8_oauth/constants"
+	"globe-and-citizen/layer8/l8_oauth/entities"
+
+	"globe-and-citizen/layer8/l8_oauth/utilities"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
 // GetUserByToken returns the user associated with the given token
 func (u *UseCase) GetUserByToken(token string) (*entities.User, error) {
 	// verify token
-	userID, err := utils.VerifyUserToken(config.SECRET_KEY, token)
+	userID, err := utilities.VerifyUserToken(config.SECRET_KEY, token)
 	if err != nil {
 		return nil, err
 	}
@@ -101,12 +102,18 @@ func (u *UseCase) RegisterUser(user *entities.User) (map[string]interface{}, err
 	user.ID = id
 	user.Password = string(bypass)
 	// create pseudonymized data
-	pname, pmail, pfname, plname := utilities.GeneratePlaceholderUserData()
 	user.PsedonymizedData = entities.AbstractUser{
-		Username: pname,
-		Email:    pmail,
-		Fname:    pfname,
-		Lname:    plname,
+		Username:                     user.Username,
+		Email:                        user.Email,
+		Fname:                        user.Fname,
+		Lname:                        user.Lname,
+		PhoneNumber:                  user.PhoneNumber,
+		Address:                      user.Address,
+		NationalIdentificationNumber: user.NationalIdentificationNumber,
+		ShareEmailVer:                user.ShareEmailVer,
+		SharePhoneNumberVer:          user.SharePhoneNumberVer,
+		ShareAddressVer:              user.ShareAddressVer,
+		ShareIdVer:                   true,
 	}
 	// save user
 	buser, err := json.Marshal(user)
@@ -127,4 +134,23 @@ func (u *UseCase) RegisterUser(user *entities.User) (map[string]interface{}, err
 		"token": token,
 		"user":  user,
 	}, nil
+}
+
+// UpdateUser updates a user and returns the updated user
+func (u *UseCase) UpdateUser(user *entities.User) (*entities.User, error) {
+	// get user
+	_, err := u.GetUser(user.ID, false)
+	if err != nil {
+		return nil, err
+	}
+	// update user
+	buser, err := json.Marshal(user)
+	if err != nil {
+		return nil, err
+	}
+	err = u.Repo.Set(fmt.Sprintf("user:%d", user.ID), buser)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

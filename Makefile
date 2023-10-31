@@ -33,3 +33,7 @@ run_auth:
 # Run Resource Server Backend
 run_rs_backend:
 	cd resource_server/backend && go run main.go
+
+# Run Resource Server Frontend
+run_rs_frontend:
+	cd resource_server/frontend && npm run dev

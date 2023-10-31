@@ -151,3 +151,4 @@ out
 .wasm
 *.wasm
 
+.vscode

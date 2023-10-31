@@ -32,8 +32,14 @@ const registerUser = async () => {
 };
 
 const loginUser = async () => {
+  if (loginEmail.value == "" || loginPassword.value == ""){
+    console.log("login failed. Input needed")
+    throw new Error("input needed")
+    return 
+  }
+
   try {
-    const response_as_string = await layer8.fetch("http://localhost:5000/api/login", {
+    const response = await layer8.fetch("http://localhost:5000/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json"
@@ -44,13 +50,21 @@ const loginUser = async () => {
       })
     })      
 
-    token.value =  response_as_string
-    localStorage.setItem("token", response_as_string);
+
+    const data = await response.json()
+    token.value = data.token;
+    localStorage.setItem("token", data.token);
     alert("Login successful!");
   } catch (error) {
     console.error(error);
     alert("Login failed!");
   }
+
+  // if (token.value != null) {
+
+  // }
+
+
 };
 
 const logoutUser = () => {
@@ -58,13 +72,13 @@ const logoutUser = () => {
   localStorage.removeItem("token");
 };
 
-const userEmail = computed(() => {
-  // if (token.value) {
-  //   const payload = JSON.parse(atob(token.value.split(".")[1]));
-  //   return payload.email;
-  // }
-  return "";
-});
+// const userEmail = computed(() => {
+//   if (token.value) {
+//     //const payload = JSON.parse(atob(token.value.split(".")[1]));
+//     return payload.email;
+//   }
+//   return "";
+// });
 </script>
 
 <template>

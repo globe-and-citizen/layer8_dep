@@ -151,3 +151,5 @@ out
 .wasm
 *.wasm
 
+# Go workspace file
+go.work

@@ -1,9 +1,8 @@
 package usecases
 
 import (
+	"globe-and-citizen/layer8/proxy/internals/repository"
 	"testing"
-
-	"globe-and-citizen/layer8/l8_oauth/internals/repository"
 
 	"github.com/stretchr/testify/assert"
 )

@@ -1,29 +1,31 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"encoding/json"
+	"errors"
+	"globe-and-citizen/layer8/proxy/constants"
+	"globe-and-citizen/layer8/proxy/entities"
+	"globe-and-citizen/layer8/proxy/internals/usecases"
+	"html/template"
 	"log"
+	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
-	"globe-and-citizen/layer8/l8_oauth/constants"
-	"globe-and-citizen/layer8/l8_oauth/internals/usecases"
-
-	"globe-and-citizen/layer8/l8_oauth/utilities"
-
-	"github.com/valyala/fasthttp"
 	"golang.org/x/oauth2"
 )
 
-func Authorize(ctx *fasthttp.RequestCtx) {
-	usecase := ctx.UserValue("usecase").(*usecases.UseCase)
+func Authorize(w http.ResponseWriter, r *http.Request) {
+	usecase := r.Context().Value("usecase").(*usecases.UseCase)
 
-	switch string(ctx.Method()) {
+	switch r.Method {
 	case "GET":
 		var (
-			clientID          = string(ctx.QueryArgs().Peek("client_id"))
-			scopes            = string(ctx.QueryArgs().Peek("scope"))
-			redirectURI       = string(ctx.QueryArgs().Peek("redirect_uri"))
+			clientID          = r.URL.Query().Get("client_id")
+			scopes            = r.URL.Query().Get("scope")
+			redirectURI       = r.URL.Query().Get("redirect_uri")
 			scopeDescriptions = []string{}
 			next              string
 		)
@@ -40,14 +42,14 @@ func Authorize(ctx *fasthttp.RequestCtx) {
 		if err != nil {
 			log.Println(err)
 			// redirect to the redirect_uri with error
-			ctx.Redirect("/error?opt=invalid_client", fasthttp.StatusSeeOther)
+			http.Redirect(w, r, "/error?opt=invalid_client", http.StatusSeeOther)
 			return
 		}
 		// generate the next url
 		uri, err := url.Parse("/authorize")
 		if err != nil {
 			log.Println(err)
-			ctx.Redirect("/error?opt=server_error", fasthttp.StatusSeeOther)
+			http.Redirect(w, r, "/error?opt=server_error", http.StatusSeeOther)
 			return
 		}
 		q := uri.Query()
@@ -57,20 +59,30 @@ func Authorize(ctx *fasthttp.RequestCtx) {
 		next = uri.String()
 
 		// check that the user is logged in
-		token := ctx.Request.Header.Cookie("token")
-		user, err := usecase.GetUserByToken(string(token))
-		// redirect to login page if not logged in
-		if token == nil || err != nil || user == nil {
-			ctx.Redirect("/login?next="+next, fasthttp.StatusSeeOther)
+		token, err := r.Cookie("token")
+		if token != nil && err == nil {
+			user, err := usecase.GetUserByToken(token.Value)
+			if err != nil || user == nil {
+				http.Redirect(w, r, "/login?next="+next, http.StatusSeeOther)
+				return
+			}
+		} else {
+			http.Redirect(w, r, "/login?next="+next, http.StatusSeeOther)
 			return
 		}
+
 		// check that the redirect_uri is valid match the client's redirect_uri
 		if redirectURI != "" && client.RedirectURI != redirectURI {
-			ctx.Redirect("/error?opt=redirect_uri_mismatch", fasthttp.StatusSeeOther)
+			http.Redirect(w, r, "/error?opt=redirect_uri_mismatch", http.StatusSeeOther)
 			return
 		}
 		// load the authorize page
-		utilities.LoadTemplate(ctx, "assets/templates/authorize.html", map[string]interface{}{
+		t, err := template.ParseFiles("assets/templates/authorize.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		t.Execute(w, map[string]interface{}{
 			"ClientName": client.Name,
 			"Scopes":     scopeDescriptions,
 			"Next":       next,
@@ -78,14 +90,21 @@ func Authorize(ctx *fasthttp.RequestCtx) {
 		return
 	case "POST":
 		var (
-			clientID = string(ctx.QueryArgs().Peek("client_id"))
-			scopes   = string(ctx.QueryArgs().Peek("scope"))
+			clientID        = r.URL.Query().Get("client_id")
+			scopes          = r.URL.Query().Get("scope")
+			returnResult, _ = strconv.ParseBool(r.URL.Query().Get("return_result"))
 		)
 		// get authorization decision
-		decision := string(ctx.FormValue("decision"))
+		decision := r.FormValue("decision")
 		if decision != "allow" {
 			log.Println("User denied access")
-			ctx.Redirect("/error?opt=access_denied", fasthttp.StatusSeeOther)
+			if returnResult {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"redr": "/error?opt=access_denied"}`))
+				return
+			}
+			http.Redirect(w, r, "/error?opt=access_denied", http.StatusSeeOther)
 			return
 		}
 		// use the default scope if none is provided
@@ -96,28 +115,41 @@ func Authorize(ctx *fasthttp.RequestCtx) {
 		client, err := usecase.GetClient(clientID)
 		if err != nil {
 			log.Println(err)
-			// redirect to the redirect_uri with error
-			ctx.Redirect("/error?opt=invalid_client", fasthttp.StatusSeeOther)
+			if returnResult {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"redr": "/error?opt=invalid_client"}`))
+				return
+			}
+			http.Redirect(w, r, "/error?opt=invalid_client", http.StatusSeeOther)
 			return
 		}
 		// get user
-		token := ctx.Request.Header.Cookie("token")
-		user, err := usecase.GetUserByToken(string(token))
-		if err != nil || user == nil {
-			ctx.Redirect("/login?next="+string(ctx.RequestURI()), fasthttp.StatusSeeOther)
+		var user *entities.User
+		token, err := r.Cookie("token")
+		if token != nil && err == nil {
+			user, err = usecase.GetUserByToken(token.Value)
+			if err != nil || user == nil {
+				if returnResult {
+					w.Header().Set("Content-Type", "application/json")
+					w.WriteHeader(http.StatusOK)
+					w.Write([]byte(`{"redr": "/login?next=` + r.URL.String() + `"}`))
+					return
+				}
+				http.Redirect(w, r, "/login?next="+r.URL.String(), http.StatusSeeOther)
+				return
+			}
+		} else {
+			if returnResult {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"redr": "/login?next=` + r.URL.String() + `"}`))
+				return
+			}
+			http.Redirect(w, r, "/login?next="+r.URL.String(), http.StatusSeeOther)
 			return
 		}
-		user.AbstractUser.ShareEmailVer = string(ctx.FormValue("share_email_ver")) == "true"
-		user.AbstractUser.SharePhoneNumberVer = string(ctx.FormValue("share_phone_number_ver")) == "true"
-		user.AbstractUser.ShareAddressVer = string(ctx.FormValue("share_address_ver")) == "true"
-		user.AbstractUser.ShareIdVer = string(ctx.FormValue("share_id_ver")) == "true"
-		// update user
-		_, err = usecase.UpdateUser(user)
-		if err != nil {
-			log.Println(err)
-			ctx.Redirect("/error?opt=server_error", fasthttp.StatusSeeOther)
-			return
-		}
+
 		// generate authorization url
 		authURL, err := usecase.GenerateAuthorizationURL(&oauth2.Config{
 			ClientID:    client.ID,
@@ -126,43 +158,76 @@ func Authorize(ctx *fasthttp.RequestCtx) {
 		}, user.ID)
 		if err != nil {
 			log.Println("Server error: ", err)
-			ctx.Redirect("error?opt=server_error", fasthttp.StatusSeeOther)
+			if returnResult {
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				w.Write([]byte(`{"redr": "/error?opt=server_error"}`))
+				return
+			}
+			http.Redirect(w, r, "/error?opt=server_error", http.StatusSeeOther)
 			return
 		}
 		// redirect to the authorization url
-		ctx.Redirect(authURL.String(), fasthttp.StatusSeeOther)
+		if returnResult {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte(`{"redr": "` + authURL.String() + `"}`))
+			return
+		}
+		http.Redirect(w, r, authURL.String(), http.StatusSeeOther)
 		return
 	default:
-		ctx.Error("Method not allowed", fasthttp.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 }
 
-func OAuthToken(ctx *fasthttp.RequestCtx) {
-	usecase := ctx.UserValue("usecase").(*usecases.UseCase)
+func OAuthToken(w http.ResponseWriter, r *http.Request) {
+	usecase := r.Context().Value("usecase").(*usecases.UseCase)
 
 	// exchange code for token
-	switch string(ctx.Method()) {
+	switch r.Method {
 	case "POST":
 		var (
-			code         = string(ctx.FormValue("code"))
-			clientID     = string(ctx.FormValue("client_id"))
-			clientSecret = string(ctx.FormValue("client_secret"))
-			redirectURI  = string(ctx.FormValue("redirect_uri"))
+			code        = r.FormValue("code")
+			redirectURI = r.FormValue("redirect_uri")
 		)
+
+		// decode the basic auth header
+		fromBasicAuth := func(t string) (string, string, error) {
+			t = strings.TrimPrefix(t, "Basic ")
+			b, err := base64.StdEncoding.DecodeString(t)
+			if err != nil {
+				return "", "", err
+			}
+			// first remove the "Basic " prefix
+			s := strings.SplitN(string(b), ":", 2)
+			if len(s) != 2 {
+				return "", "", errors.New("invalid basic auth header")
+			}
+			return s[0], s[1], nil
+		}
+		clientID, clientSecret, err := fromBasicAuth(r.Header.Get("Authorization"))
+		if err != nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"error": "` + err.Error() + `"}`))
+			return
+		}
+
 		// get the client
 		client, err := usecase.GetClient(clientID)
 		if err != nil {
-			ctx.SetContentType("application/json")
-			ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-			ctx.SetBody([]byte(`{"error": "invalid client"}`))
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"error": "invalid client"}`))
 			return
 		}
 		// check that the client secret is correct
 		if client.Secret != clientSecret {
-			ctx.SetContentType("application/json")
-			ctx.SetStatusCode(fasthttp.StatusUnauthorized)
-			ctx.SetBody([]byte(`{"error": "invalid client secret"}`))
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(`{"error": "invalid client secret"}`))
 			return
 		}
 		// exchange code for token
@@ -174,9 +239,9 @@ func OAuthToken(ctx *fasthttp.RequestCtx) {
 		if err != nil {
 			res := map[string]string{"error": err.Error()}
 			resJSON, _ := json.Marshal(res)
-			ctx.SetContentType("application/json")
-			ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-			ctx.SetBody(resJSON)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(resJSON)
 			return
 		}
 		// return token
@@ -184,28 +249,28 @@ func OAuthToken(ctx *fasthttp.RequestCtx) {
 		if err != nil {
 			res := map[string]string{"error": err.Error()}
 			resJSON, _ := json.Marshal(res)
-			ctx.SetContentType("application/json")
-			ctx.SetStatusCode(fasthttp.StatusInternalServerError)
-			ctx.SetBody(resJSON)
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write(resJSON)
 			return
 		}
-		ctx.SetContentType("application/json")
-		ctx.SetStatusCode(fasthttp.StatusOK)
-		ctx.SetBody(bToken)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(bToken)
 		return
 	default:
-		ctx.SetContentType("application/json")
-		ctx.SetStatusCode(fasthttp.StatusMethodNotAllowed)
-		ctx.SetBody([]byte(`{"error": "method not allowed"}`))
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		w.Write([]byte(`{"error": "method not allowed"}`))
 		return
 	}
 }
 
-func Error(ctx *fasthttp.RequestCtx) {
-	switch string(ctx.Method()) {
+func Error(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
 	case "GET":
 		var (
-			opt    = string(ctx.QueryArgs().Peek("opt"))
+			opt    = r.URL.Query().Get("opt")
 			opts   = []string{}
 			errors = map[string]string{
 				"invalid_client":        "The client is invalid.",
@@ -219,12 +284,17 @@ func Error(ctx *fasthttp.RequestCtx) {
 			opts = append(opts, errors[v])
 		}
 		// load the error page
-		utilities.LoadTemplate(ctx, "assets/templates/error.html", map[string]interface{}{
+		t, err := template.ParseFiles("assets/templates/error.html")
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		t.Execute(w, map[string]interface{}{
 			"Errors": opts,
 		})
 		return
 	default:
-		ctx.Error("Method not allowed", fasthttp.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 }

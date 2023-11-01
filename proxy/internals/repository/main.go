@@ -21,9 +21,8 @@
 package repository
 
 import (
+	"globe-and-citizen/layer8/proxy/constants"
 	"time"
-
-	"globe-and-citizen/layer8/l8_oauth/constants"
 )
 
 type (

@@ -3,11 +3,8 @@ package usecases
 import (
 	"encoding/json"
 	"fmt"
-
-	"globe-and-citizen/layer8/l8_oauth/constants"
-	"globe-and-citizen/layer8/l8_oauth/entities"
-
-	"globe-and-citizen/layer8/l8_oauth/utilities"
+	"globe-and-citizen/layer8/proxy/constants"
+	"globe-and-citizen/layer8/proxy/entities"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -28,33 +25,11 @@ func (u *UseCase) GetUser(id int64, pseudonymized bool) (*entities.User, error) 
 	return &entities.User{
 		ID: user.ID,
 		AbstractUser: entities.AbstractUser{
-			Username:                     user.PsedonymizedData.Username,
-			Email:                        user.PsedonymizedData.Email,
-			Fname:                        user.PsedonymizedData.Fname,
-			Lname:                        user.PsedonymizedData.Lname,
-			PhoneNumber:                  user.PsedonymizedData.PhoneNumber,
-			Address:                      user.PsedonymizedData.Address,
-			NationalIdentificationNumber: user.PsedonymizedData.NationalIdentificationNumber,
+			Username: user.PsedonymizedData.Username,
+			Email:    user.PsedonymizedData.Email,
+			Fname:    user.PsedonymizedData.Fname,
+			Lname:    user.PsedonymizedData.Lname,
 		},
-	}, nil
-}
-
-func (u *UseCase) GetReqUser(id int64, pseudonymized bool) (*entities.ReqUserData, error) {
-	var user entities.User
-	res := u.Repo.Get(fmt.Sprintf("user:%d", id))
-	if res == nil {
-		return nil, constants.ErrNotFound
-	}
-	err := json.Unmarshal(res, &user)
-	if err != nil {
-		return nil, err
-	}
-	return &entities.ReqUserData{
-		Username:            user.Username,
-		ShareEmailVer:       user.ShareEmailVer,
-		SharePhoneNumberVer: user.SharePhoneNumberVer,
-		ShareAddressVer:     user.ShareAddressVer,
-		ShareIdVer:          user.ShareIdVer,
 	}, nil
 }
 
@@ -87,12 +62,12 @@ func (u *UseCase) AddUser(user *entities.User) (*entities.User, error) {
 	}
 	user.ID = id
 	user.Password = string(bypass)
-	// create pseudonymized data
-	pname, pmail, pfname, plname := utilities.GeneratePlaceholderUserData()
-	user.PsedonymizedData.Username = pname
-	user.PsedonymizedData.Email = pmail
-	user.PsedonymizedData.Fname = pfname
-	user.PsedonymizedData.Lname = plname
+	// Previously create pseudonymized data
+	// Now, that pseudoanonymized data hase been replaced by the variable names
+	user.PsedonymizedData.Username = "pname"
+	user.PsedonymizedData.Email = "pmail"
+	user.PsedonymizedData.Fname = "pfname"
+	user.PsedonymizedData.Lname = "plname"
 	// save user
 	b, err := json.Marshal(user)
 	if err != nil {

@@ -10,6 +10,7 @@ const isRegister = ref(false);
 const token = ref(localStorage.getItem("token") || null);
 
 const isLoggedIn = computed(() => token.value !== null);
+const isContinueAnonymously = ref(false);
 
 const registerUser = async () => {
   try {
@@ -111,8 +112,20 @@ const logoutUser = () => {
     </div>
 
     <div v-if="isLoggedIn" class="welcome-container">
-      <h2>Welcome, {{ userEmail }}</h2>
-      <button class="btn-primary" @click="logoutUser">Logout</button>
+      <h1 style="color: rgb(136, 136, 136); font-weight: 600; padding-bottom: 2%;">Welcome, {{ userEmail }}</h1>
+      <div class="new-container" v-if="!isContinueAnonymously">
+        <button class="btn-secondary" @click="continueAnonymously">Login Anonymously</button>
+        <button class="btn-secondary" @click="l8Login">Login with Layer8</button>
+        <button class="btn-secondary" @click="logoutUser">Logout</button>
+      </div>
+      <div class="poems-container" v-if="isContinueAnonymously">
+        <button class="btn-secondary" style="margin-left: 23%;" @click="getPoems">Get Poems</button>
+        <button class="btn-secondary" @click="logoutUser">Logout</button>
+      </div>
+      <div class="poems-container-2" id="poems-container-2" v-if="isContinueAnonymously">
+        <div id="newPoem">
+          {{ newPoem }}</div>
+      </div>
     </div>
   </div>
   <div>

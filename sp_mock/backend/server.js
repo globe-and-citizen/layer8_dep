@@ -2,6 +2,7 @@
 const express = require('express')
 const cors = require('cors')
 const Layer8 = require("../../middleware/dist/loadWASM.js")
+const ClientOAuth2 = require('client-oauth2')
 require('dotenv').config()
 
 const jwt = require('jsonwebtoken');
@@ -14,6 +15,16 @@ const app = express()
 const users = []; // Store users in memory
 
 const SECRET_KEY = 'my_very_secret_key'
+
+const LAYER8_CALLBACK_URL = "http://localhost:5010/oauth2/callback" // defined in the frontend
+const layer8Auth = new ClientOAuth2({
+    clientId: "notanid",
+    clientSecret: "absolutelynotasecret!",
+    accessTokenUri: "http://localhost:5000/api/oauth",
+    authorizationUri: "http://localhost:5000/authorize",
+    redirectUri: LAYER8_CALLBACK_URL,
+    scopes: ["read:user"],
+})
 
 // MIDDLEWARE
 //app.use(express.json()) // Using express.json() is necessary depending on which version of the middleware you use.

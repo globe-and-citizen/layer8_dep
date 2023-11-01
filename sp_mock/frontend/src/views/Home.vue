@@ -110,6 +110,7 @@ const showPoem = (poemText) => {
 const logoutUser = () => {
   token.value = null;
   localStorage.removeItem("token");
+  isContinueAnonymously.value = false;
 };
 
 // const userEmail = computed(() => {
@@ -177,10 +178,8 @@ const logoutUser = () => {
         </button>
         <button class="btn-secondary" @click="logoutUser">Logout</button>
       </div>
-      <div class="poems-container" v-if="isContinueAnonymously">
+      <div class="new-container" v-if="isContinueAnonymously">
         <button
-          class="btn-secondary"
-          style="margin-left: 23%"
           @click="getPoems"
         >
           Get Poems
@@ -188,9 +187,8 @@ const logoutUser = () => {
         <button class="btn-secondary" @click="logoutUser">Logout</button>
       </div>
       <div
-        class="poems-container-2"
         id="poems-container-2"
-        style="color: black;"
+        style="color: black"
         v-if="isContinueAnonymously"
       >
         <div id="newPoem">
@@ -225,13 +223,6 @@ const logoutUser = () => {
 
 .form-container {
   width: 100%;
-}
-
-.poems-container {
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .input-group {

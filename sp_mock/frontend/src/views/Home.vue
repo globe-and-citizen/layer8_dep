@@ -113,6 +113,18 @@ const logoutUser = () => {
   isContinueAnonymously.value = false;
 };
 
+const loginWithLayer8Popup = async () => {
+  const response = await layer8.fetch("http://localhost:8000/api/login/layer8/auth")
+  const data = await response.json()
+
+  // create opener window
+  const popup = window.open(data.authURL, "Login with Layer8", "width=600,height=600");
+  window.addEventListener("message", async (event) => {
+    popup.close();
+    window.location.href = event.data.url;
+  });
+}
+
 // const userEmail = computed(() => {
 //   if (token.value) {
 //     //const payload = JSON.parse(atob(token.value.split(".")[1]));
@@ -173,7 +185,7 @@ const logoutUser = () => {
         <button class="btn-secondary" @click="continueAnonymously">
           Login Anonymously
         </button>
-        <button class="btn-secondary" @click="l8Login">
+        <button class="btn-secondary" @click="loginWithLayer8Popup">
           Login with Layer8
         </button>
         <button class="btn-secondary" @click="logoutUser">Logout</button>

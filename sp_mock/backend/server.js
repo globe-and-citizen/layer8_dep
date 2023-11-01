@@ -63,6 +63,33 @@ app.post('/api/login', async (req, res) => {
     }
 })
 
+app.get('/api/login/layer8/auth', async (req, res) => {
+    res.status(200).json({ authURL: layer8Auth.code.getUri() })
+})
+
+app.post('/api/login/layer8/auth', async (req, res) => {
+    const { callback_url } = req.body;
+    const user = await layer8Auth.code.getToken(callback_url)
+        .then(async (user) => {
+            // get the user data from the resource server
+            return await popsicle.request(user.sign({
+                method: 'GET',
+                url: LAYER8_RESOURCE_URL,
+            }))
+                .then((res) => {
+                    return JSON.parse(res.body)
+                })
+        })
+        .catch((err) => {
+            console.log("err: ", err)
+        })
+    
+    const email = user.profile.email;
+    const token = jwt.sign({ email }, SECRET_KEY);
+    res.status(200).json({ token });
+})
+
+
 app.listen(port, () => {
     console.log(`\nA mock Service Provider backend is now listening on port ${port}.`)
 })

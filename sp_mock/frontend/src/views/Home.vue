@@ -11,48 +11,49 @@ const token = ref(localStorage.getItem("token") || null);
 
 const isLoggedIn = computed(() => token.value !== null);
 const isContinueAnonymously = ref(false);
+const gotAPoem = ref(false);
+let newPoem = ref("");
 
 const registerUser = async () => {
   try {
     await layer8.fetch("http://localhost:5000/api/register", {
-        method: "POST",  
-        headers: {
-          "Content-Type": "Application/Json"
-        },
-        body: JSON.stringify({
-          email: registerEmail.value,
-          password: registerPassword.value
-        })
-      });
+      method: "POST",
+      headers: {
+        "Content-Type": "Application/Json",
+      },
+      body: JSON.stringify({
+        email: registerEmail.value,
+        password: registerPassword.value,
+      }),
+    });
     alert("Registration successful!");
   } catch (error) {
     console.log(error);
     alert("Registration failed!");
-    isRegister.value = true
+    isRegister.value = true;
   }
 };
 
 const loginUser = async () => {
-  if (loginEmail.value == "" || loginPassword.value == ""){
-    console.log("login failed. Input needed")
-    throw new Error("input needed")
-    return 
+  if (loginEmail.value == "" || loginPassword.value == "") {
+    console.log("login failed. Input needed");
+    throw new Error("input needed");
+    return;
   }
 
   try {
     const response = await layer8.fetch("http://localhost:5000/api/login", {
       method: "POST",
       headers: {
-        "Content-Type": "Application/Json"
+        "Content-Type": "Application/Json",
       },
       body: JSON.stringify({
         email: loginEmail.value,
-        password: loginPassword.value
-      })
-    })      
+        password: loginPassword.value,
+      }),
+    });
 
-
-    const data = await response.json()
+    const data = await response.json();
     token.value = data.token;
     localStorage.setItem("token", data.token);
     alert("Login successful!");
@@ -64,8 +65,46 @@ const loginUser = async () => {
   // if (token.value != null) {
 
   // }
+};
 
+const continueAnonymously = () => {
+  isContinueAnonymously.value = true;
+  alert("You are now logged in anonymously!");
+};
 
+const getPoems = async () => {
+  // try {
+  //   const poem = await layer8.getPoem({
+  //     method: "GET",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       "Authorization": `${token.value}`,
+  //     }
+  //   });
+  //   if (poem) {
+  //     showPoem(poem);
+  //     gotAPoem.value = true;
+  //   } else {
+  //     console.error("No poem content received.");
+  //   }
+  // } catch (error) {
+  //   console.error(error);
+  //   alert("Poems failed!");
+  // }
+
+  // Since poems are not implemented in the new mock, just using a placeholder here
+  const poem =
+    "Roses are red, violets are blue, I'm a placeholder, and so are you.";
+  showPoem(poem);
+  gotAPoem.value = true;
+};
+
+const showPoem = (poemText) => {
+  const poemContainer = document.getElementById("poems-container-2");
+  const newPoem = document.createElement("div");
+  newPoem.id = "newPoem";
+  newPoem.textContent = poemText;
+  poemContainer.appendChild(newPoem);
 };
 
 const logoutUser = () => {
@@ -92,10 +131,16 @@ const logoutUser = () => {
           <input v-model="registerEmail" placeholder="Email" />
         </div>
         <div class="input-group">
-          <input v-model="registerPassword" type="password" placeholder="Password" />
+          <input
+            v-model="registerPassword"
+            type="password"
+            placeholder="Password"
+          />
         </div>
         <button class="btn-primary" @click="registerUser">Register</button>
-        <a style="display: block" @click="isRegister = false">Already registered? Login</a>
+        <a style="display: block" @click="isRegister = false"
+          >Already registered? Login</a
+        >
       </div>
 
       <div v-if="!isRegister" class="form-container">
@@ -104,33 +149,57 @@ const logoutUser = () => {
           <input v-model="loginEmail" placeholder="Email" />
         </div>
         <div class="input-group">
-          <input v-model="loginPassword" type="password" placeholder="Password" />
+          <input
+            v-model="loginPassword"
+            type="password"
+            placeholder="Password"
+          />
         </div>
         <button class="btn-primary" @click="loginUser">Login</button>
-        <a style="display: block" @click="isRegister = true">Don't have an account? Register</a>
+        <a style="display: block" @click="isRegister = true"
+          >Don't have an account? Register</a
+        >
       </div>
     </div>
 
     <div v-if="isLoggedIn" class="welcome-container">
-      <h1 style="color: rgb(136, 136, 136); font-weight: 600; padding-bottom: 2%;">Welcome, {{ userEmail }}</h1>
+      <h1
+        style="color: rgb(136, 136, 136); font-weight: 600; padding-bottom: 2%"
+      >
+        Welcome User!
+      </h1>
       <div class="new-container" v-if="!isContinueAnonymously">
-        <button class="btn-secondary" @click="continueAnonymously">Login Anonymously</button>
-        <button class="btn-secondary" @click="l8Login">Login with Layer8</button>
+        <button class="btn-secondary" @click="continueAnonymously">
+          Login Anonymously
+        </button>
+        <button class="btn-secondary" @click="l8Login">
+          Login with Layer8
+        </button>
         <button class="btn-secondary" @click="logoutUser">Logout</button>
       </div>
       <div class="poems-container" v-if="isContinueAnonymously">
-        <button class="btn-secondary" style="margin-left: 23%;" @click="getPoems">Get Poems</button>
+        <button
+          class="btn-secondary"
+          style="margin-left: 23%"
+          @click="getPoems"
+        >
+          Get Poems
+        </button>
         <button class="btn-secondary" @click="logoutUser">Logout</button>
       </div>
-      <div class="poems-container-2" id="poems-container-2" v-if="isContinueAnonymously">
+      <div
+        class="poems-container-2"
+        id="poems-container-2"
+        style="color: black;"
+        v-if="isContinueAnonymously"
+      >
         <div id="newPoem">
-          {{ newPoem }}</div>
+          {{ newPoem }}
+        </div>
       </div>
     </div>
   </div>
-  <div>
-    
-  </div>
+  <div></div>
 </template>
 
 <style scoped>
@@ -156,6 +225,13 @@ const logoutUser = () => {
 
 .form-container {
   width: 100%;
+}
+
+.poems-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .input-group {

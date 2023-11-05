@@ -1,5 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import Home from "../views/Home.vue";
+import Callback from "../views/CallBack.vue";
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -13,6 +15,11 @@ const router = createRouter({
       path: "/stress-test",
       name: "stress-test",
       component: () => import("../views/StressTest.vue"),
+    },
+    {
+      path: '/oauth2/callback',
+      name: 'oauth2-callback',
+      component: Callback,
     },
     // {
     //   path: "/login",

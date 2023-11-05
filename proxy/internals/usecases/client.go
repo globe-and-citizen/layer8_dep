@@ -45,7 +45,7 @@ func (u *UseCase) AddTestClient() (*entities.Client, error) {
 		ID:          "notanid",
 		Secret:      "absolutelynotasecret!",
 		Name:        "Ex-C",
-		RedirectURI: "http://localhost:5010/oauth2/callback",
+		RedirectURI: "http://localhost:5173/oauth2/callback",
 	}
 	b, err := json.Marshal(client)
 	if err != nil {

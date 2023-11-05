@@ -1,6 +1,6 @@
 ## NPM install
 npm_install_all:
-	cd sp_mock/frontend && npm install && cd ../backend && npm install 
+	cd sp_mock/frontend && npm install && cd ../backend && npm install  && cd ../../resource_server/frontend && npm install
 
 ## Interceptor Calls
 build_interceptor: ## must do from a bash terminal ..

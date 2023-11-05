@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 
 	"globe-and-citizen/layer8/resource_server/backend/middleware"
 	router "globe-and-citizen/layer8/resource_server/backend/router"
@@ -19,7 +18,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	serverPort := os.Getenv("SERVER_PORT")
+	serverPort := "3000"
 
 	// Register the routes using the RegisterRoutes() function with logger middleware
 	http.HandleFunc("/api/v1/", middleware.LogRequest(middleware.Cors(router.RegisterRoutes())))

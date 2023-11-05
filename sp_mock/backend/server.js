@@ -17,6 +17,8 @@ const users = []; // Store users in memory
 const SECRET_KEY = 'my_very_secret_key'
 
 const LAYER8_CALLBACK_URL = "http://localhost:5173/oauth2/callback" // defined in the frontend
+const LAYER8_RESOURCE_URL = "http://localhost:5000/api/user"
+
 const layer8Auth = new ClientOAuth2({
     clientId: "notanid",
     clientSecret: "absolutelynotasecret!",

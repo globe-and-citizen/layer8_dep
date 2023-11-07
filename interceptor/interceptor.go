@@ -172,7 +172,6 @@ func initializeECDHTunnel() {
 			}
 
 			body := bytes.NewBuffer(encryptedMessage)
-			ProxyURL := fmt.Sprintf("%s://%s:%s", Layer8Scheme, Layer8Host, Layer8Port)
 			req, err := http.NewRequest("POST", ProxyURL, body)
 			if err != nil {
 				fmt.Println("Error creating request:", err)
@@ -207,7 +206,7 @@ func initializeECDHTunnel() {
 			// Print the response body
 			fmt.Println("Response from the server:", string(responseBody))
 
-		} else {
+		} else if isTCP {
 			serverAddr := "localhost:5001"
 			conn, err := net.Dial("tcp", serverAddr)
 			if err != nil {
@@ -236,30 +235,31 @@ func initializeECDHTunnel() {
 
 			// Print server response
 			fmt.Println("Server Response:", string(buffer))
+		} else {
 			// Encrypt the message using userSymmetricKey
-			// message := "Encrypted tunnel successfully established."
-			// encryptedMessage, err := userSymmetricKey.SymmetricEncrypt([]byte(message))
-			// if err != nil {
-			// 	fmt.Println("Error encrypting message:", err)
-			// 	ETunnelFlag = false
-			// 	return
-			// }
+			message := "Encrypted tunnel successfully established."
+			encryptedMessage, err := userSymmetricKey.SymmetricEncrypt([]byte(message))
+			if err != nil {
+				fmt.Println("Error encrypting message:", err)
+				ETunnelFlag = false
+				return
+			}
 
-			// // Send the encrypted message to the server
-			// url := "http://localhost:8000/api/message"
-			// fmt.Println("ENCRYPTED MESSAGE: ", encryptedMessage)
-			// response, err := http.Post(url, "application/json", bytes.NewReader(encryptedMessage))
-			// if err != nil {
-			// 	fmt.Println("Error sending encrypted message:", err)
-			// 	ETunnelFlag = false
-			// 	return
-			// }
-			// defer response.Body.Close()
-			// responseBody, err := ioutil.ReadAll(response.Body)
-			// if err != nil {
-			// 	fmt.Println("Error reading response body:", err)
-			// }
-			// fmt.Println("Response Body:", string(responseBody))
+			// Send the encrypted message to the server
+			url := "http://localhost:8000/api/message"
+			fmt.Println("ENCRYPTED MESSAGE: ", encryptedMessage)
+			response, err := http.Post(url, "application/json", bytes.NewReader(encryptedMessage))
+			if err != nil {
+				fmt.Println("Error sending encrypted message:", err)
+				ETunnelFlag = false
+				return
+			}
+			defer response.Body.Close()
+			responseBody, err := io.ReadAll(response.Body)
+			if err != nil {
+				fmt.Println("Error reading response body:", err)
+			}
+			fmt.Println("Response Body:", string(responseBody))
 		}
 
 		ETunnelFlag = true

@@ -22,13 +22,27 @@ package repository
 
 import (
 	"globe-and-citizen/layer8/proxy/constants"
+	"globe-and-citizen/layer8/proxy/models"
 )
 
 type (
 	// Repository is a simple key-value store.
 	Repository interface {
+
 		// Get the salt from db using the username
 		LoginUserPrecheck(username string) (string, error)
+
+		// Get user from db by username
+		GetUser(username string) (*models.User, error)
+
+		// GetUserByID gets a user by ID.
+		GetUserByID(id int64) (*models.User, error)
+
+		// Set a client for testing purposes
+		SetClient(client *models.Client) error
+
+		// Get a client by ID.
+		GetClient(id string) (*models.Client, error)
 	}
 
 	// RepositoryFactory is a factory for creating repositories.

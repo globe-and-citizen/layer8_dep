@@ -1,4 +1,4 @@
-## NPM install
+## NPM Install
 npm_install_all:
 	cd sp_mock/frontend && npm install && cd ../backend && npm install  && cd ../../resource_server/frontend && npm install
 
@@ -15,7 +15,6 @@ build_middleware:
 	cd ./middleware/ && GOARCH=wasm GOOS=js go build -o ./dist/middleware.wasm
 
 ## Run Mock
-
 run_frontend: # Port 5173
 	cd sp_mock/frontend && npm run dev
 	

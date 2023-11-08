@@ -20,7 +20,7 @@ let user = ref({
 
 const getUserDetails = async () => {
   try {
-    const resp = await window.fetch("http://localhost:3000/api/v1/profile", {
+    const resp = await window.fetch("http://localhost:3050/api/v1/profile", {
       method: "GET",
       headers: {
         "Content-Type": "Application/Json",
@@ -43,6 +43,10 @@ const logoutUser = () => {
   token.value = null;
   localStorage.removeItem("token");
   router.push("/");
+};
+
+const verifyEmail = async () => {
+  user.value.email_verified = true;
 };
 </script>
 
@@ -71,46 +75,14 @@ const logoutUser = () => {
         <hr class="line" />
         <p class="box">Email: {{ user.email }}</p>
         <hr class="line" />
-        <p class="box">Phone Number: {{ user.phone_number }}</p>
-        <hr class="line" />
-        <p class="box">Address: {{ user.address }}</p>
-        <hr class="line" />
         <p class="box">Email Verified: {{ user.email_verified }}</p>
         <button
           class="btn-primary"
           style="margin-left: 28%"
           v-if="!user.email_verified"
+          @click="verifyEmail"
         >
           Verify Email
-        </button>
-        <hr class="line" />
-        <p class="box">
-          Phone Number Verified: {{ user.phone_number_verified }}
-        </p>
-        <button
-          class="btn-primary"
-          style="margin-left: 22%"
-          v-if="!user.phone_number_verified"
-        >
-          Verify Phone Number
-        </button>
-        <hr class="line" />
-        <p class="box">Location Verified: {{ user.location_verified }}</p>
-        <button
-          class="btn-primary"
-          style="margin-left: 26%"
-          v-if="!user.location_verified"
-        >
-          Verify Location
-        </button>
-        <hr class="line" />
-        <p class="box">National ID Verified: {{ user.national_id_verified }}</p>
-        <button
-          class="btn-primary"
-          style="margin-left: 24%"
-          v-if="!user.national_id_verified"
-        >
-          Verify National ID
         </button>
         <hr class="line" />
         <button class="btn-primary-2" style="margin-top: 4%;"  @click="logoutUser">Logout</button>

@@ -85,7 +85,7 @@ func (u *UseCase) ExchangeCodeForToken(config *oauth2.Config, code string) (*oau
 	return &oauth2.Token{
 		AccessToken: token,
 		TokenType:   "Bearer",
-		Expiry:      time.Now().Add(time.Minute * 5),
+		Expiry:      time.Now().Add(time.Minute * 10),
 	}, nil
 }
 

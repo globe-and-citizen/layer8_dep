@@ -23,7 +23,7 @@ const registerUser = async () => {
       alert("Please enter a username and password!");
       return;
     }
-    await window.fetch("http://localhost:3000/api/v1/register-user", {
+    await window.fetch("http://localhost:3050/api/v1/register-user", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",
@@ -31,9 +31,9 @@ const registerUser = async () => {
       body: JSON.stringify({
         email: registerEmail.value,
         username: registerUsername.value,
-        password: registerPassword.value,
         first_name: registerFirstName.value,
         last_name: registerLastName.value,
+        password: registerPassword.value,
         // phone_number: registerPhoneNumber.value,
         // address: registerAddress.value,
       }),
@@ -53,7 +53,7 @@ const loginUser = async () => {
       return;
     }
     const respOne = await window.fetch(
-      "http://localhost:3000/api/v1/login-precheck",
+      "http://localhost:3050/api/v1/login-precheck",
       {
         method: "POST",
         headers: {
@@ -67,7 +67,7 @@ const loginUser = async () => {
     const responseOne = await respOne.json();
     console.log(responseOne.salt);
     const respTwo = await window.fetch(
-      "http://localhost:3000/api/v1/login-user",
+      "http://localhost:3050/api/v1/login-user",
       {
         method: "POST",
         headers: {
@@ -104,29 +104,52 @@ const loginUser = async () => {
   <div id="app">
     <div class="container" v-if="!isLoggedIn">
       <div v-if="isRegister" class="form-container">
-        <h2 style="
-              margin-left: 22%;
-              margin-bottom: 8%;
-              font-weight: normal;
-              color: black;
-              font-family: monospace;
-            ">
+        <h2
+          style="
+            margin-left: 22%;
+            margin-bottom: 8%;
+            font-weight: normal;
+            color: black;
+            font-family: monospace;
+          "
+        >
           Register
         </h2>
         <div class="input-group">
-          <input v-model="registerEmail" placeholder="Email" class="input-button" />
+          <input
+            v-model="registerEmail"
+            placeholder="Email"
+            class="input-button"
+          />
         </div>
         <div class="input-group">
-          <input v-model="registerUsername" placeholder="Username" class="input-button" />
+          <input
+            v-model="registerUsername"
+            placeholder="Username"
+            class="input-button"
+          />
         </div>
         <div class="input-group">
-          <input v-model="registerPassword" type="password" placeholder="Password" class="input-button" />
+          <input
+            v-model="registerFirstName"
+            placeholder="First Name"
+            class="input-button"
+          />
         </div>
         <div class="input-group">
-          <input v-model="registerFirstName" placeholder="First Name" class="input-button" />
+          <input
+            v-model="registerLastName"
+            placeholder="Last Name"
+            class="input-button"
+          />
         </div>
         <div class="input-group">
-          <input v-model="registerLastName" placeholder="Last Name" class="input-button" />
+          <input
+            v-model="registerPassword"
+            type="password"
+            placeholder="Password"
+            class="input-button"
+          />
         </div>
         <!-- <div class="input-group">
             <input
@@ -143,28 +166,48 @@ const loginUser = async () => {
             />
           </div> -->
         <button class="btn-primary" @click="registerUser">Register</button>
-        <a class="text" style="display: block; cursor: pointer" @click="isRegister = false">Already registered? Login</a>
+        <a
+          class="text"
+          style="display: block; cursor: pointer"
+          @click="isRegister = false"
+          >Already registered? Login</a
+        >
       </div>
 
       <div v-if="!isRegister" class="form-container">
-        <h2 style="
-              margin-left: 34%;
-              margin-bottom: 8%;
-              font-weight: normal;
-              color: black;
-              font-family: monospace;
-            ">
+        <h2
+          style="
+            margin-left: 34%;
+            margin-bottom: 8%;
+            font-weight: normal;
+            color: black;
+            font-family: monospace;
+          "
+        >
           Login
         </h2>
         <div class="input-group">
-          <input v-model="loginUsername" placeholder="Username" class="input-button" />
+          <input
+            v-model="loginUsername"
+            placeholder="Username"
+            class="input-button"
+          />
         </div>
         <div class="input-group">
-          <input v-model="loginPassword" type="password" placeholder="Password" class="input-button" />
+          <input
+            v-model="loginPassword"
+            type="password"
+            placeholder="Password"
+            class="input-button"
+          />
         </div>
         <button class="btn-primary-2" @click="loginUser">Login</button>
-        <a class="text" style="display: block; cursor: pointer" @click="isRegister = true">Don't have an account?
-          Register</a>
+        <a
+          class="text"
+          style="display: block; cursor: pointer"
+          @click="isRegister = true"
+          >Don't have an account? Register</a
+        >
       </div>
     </div>
   </div>

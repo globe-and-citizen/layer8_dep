@@ -61,10 +61,6 @@ const loginUser = async () => {
     console.error(error);
     alert("Login failed!");
   }
-
-  // if (token.value != null) {
-
-  // }
 };
 
 const continueAnonymously = () => {
@@ -127,13 +123,6 @@ const loginWithLayer8Popup = async () => {
   });
 }
 
-// const userEmail = computed(() => {
-//   if (token.value) {
-//     //const payload = JSON.parse(atob(token.value.split(".")[1]));
-//     return payload.email;
-//   }
-//   return "";
-// });
 </script>
 
 <template>

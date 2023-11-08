@@ -114,12 +114,10 @@ const loginWithLayer8Popup = async () => {
   const data = await response.json()
 
   // create opener window
-  console.log("Data: ", data.authURL);
   const popup = window.open(data.authURL, "Login with Layer8", "width=600,height=600");
   window.addEventListener("message", async (event) => {
     popup.close();
     window.location.href = event.data.url;
-    console.log("Data URL", event.data.url);
   });
 }
 

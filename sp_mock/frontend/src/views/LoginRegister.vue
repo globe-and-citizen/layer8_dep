@@ -85,7 +85,6 @@ const loginWithLayer8Popup = async () => {
     window.location.href = event.data.url;
   });
 }
-
 </script>
 
 <template>

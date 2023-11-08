@@ -8,8 +8,8 @@ const registerUsername = ref("");
 const registerPassword = ref("");
 const registerFirstName = ref("");
 const registerLastName = ref("");
-const registerPhoneNumber = ref("");
-const registerAddress = ref("");
+// const registerPhoneNumber = ref("");
+// const registerAddress = ref("");
 const loginUsername = ref("");
 const loginPassword = ref("");
 const isRegister = ref(false);
@@ -34,8 +34,8 @@ const registerUser = async () => {
         password: registerPassword.value,
         first_name: registerFirstName.value,
         last_name: registerLastName.value,
-        phone_number: registerPhoneNumber.value,
-        address: registerAddress.value,
+        // phone_number: registerPhoneNumber.value,
+        // address: registerAddress.value,
       }),
     });
     alert("Registration successful!");
@@ -104,110 +104,67 @@ const loginUser = async () => {
   <div id="app">
     <div class="container" v-if="!isLoggedIn">
       <div v-if="isRegister" class="form-container">
-        <h2
-          style="
-            margin-left: 22%;
-            margin-bottom: 8%;
-            font-weight: normal;
-            color: black;
-            font-family: monospace;
-          "
-        >
+        <h2 style="
+              margin-left: 22%;
+              margin-bottom: 8%;
+              font-weight: normal;
+              color: black;
+              font-family: monospace;
+            ">
           Register
         </h2>
         <div class="input-group">
-          <input
-            v-model="registerEmail"
-            placeholder="Email"
-            class="input-button"
-          />
+          <input v-model="registerEmail" placeholder="Email" class="input-button" />
         </div>
         <div class="input-group">
-          <input
-            v-model="registerUsername"
-            placeholder="Username"
-            class="input-button"
-          />
+          <input v-model="registerUsername" placeholder="Username" class="input-button" />
         </div>
         <div class="input-group">
-          <input
-            v-model="registerPassword"
-            type="password"
-            placeholder="Password"
-            class="input-button"
-          />
+          <input v-model="registerPassword" type="password" placeholder="Password" class="input-button" />
         </div>
         <div class="input-group">
-          <input
-            v-model="registerFirstName"
-            placeholder="First Name"
-            class="input-button"
-          />
+          <input v-model="registerFirstName" placeholder="First Name" class="input-button" />
         </div>
         <div class="input-group">
-          <input
-            v-model="registerLastName"
-            placeholder="Last Name"
-            class="input-button"
-          />
+          <input v-model="registerLastName" placeholder="Last Name" class="input-button" />
         </div>
-        <div class="input-group">
-          <input
-            v-model="registerPhoneNumber"
-            placeholder="Phone Number"
-            class="input-button"
-          />
-        </div>
-        <div class="input-group">
-          <input
-            v-model="registerAddress"
-            placeholder="Address"
-            class="input-button"
-          />
-        </div>
+        <!-- <div class="input-group">
+            <input
+              v-model="registerPhoneNumber"
+              placeholder="Phone Number"
+              class="input-button"
+            />
+          </div>
+          <div class="input-group">
+            <input
+              v-model="registerAddress"
+              placeholder="Address"
+              class="input-button"
+            />
+          </div> -->
         <button class="btn-primary" @click="registerUser">Register</button>
-        <a
-          class="text"
-          style="display: block; cursor: pointer"
-          @click="isRegister = false"
-          >Already registered? Login</a
-        >
+        <a class="text" style="display: block; cursor: pointer" @click="isRegister = false">Already registered? Login</a>
       </div>
 
       <div v-if="!isRegister" class="form-container">
-        <h2
-          style="
-            margin-left: 34%;
-            margin-bottom: 8%;
-            font-weight: normal;
-            color: black;
-            font-family: monospace;
-          "
-        >
+        <h2 style="
+              margin-left: 34%;
+              margin-bottom: 8%;
+              font-weight: normal;
+              color: black;
+              font-family: monospace;
+            ">
           Login
         </h2>
         <div class="input-group">
-          <input
-            v-model="loginUsername"
-            placeholder="Username"
-            class="input-button"
-          />
+          <input v-model="loginUsername" placeholder="Username" class="input-button" />
         </div>
         <div class="input-group">
-          <input
-            v-model="loginPassword"
-            type="password"
-            placeholder="Password"
-            class="input-button"
-          />
+          <input v-model="loginPassword" type="password" placeholder="Password" class="input-button" />
         </div>
         <button class="btn-primary-2" @click="loginUser">Login</button>
-        <a
-          class="text"
-          style="display: block; cursor: pointer"
-          @click="isRegister = true"
-          >Don't have an account? Register</a
-        >
+        <a class="text" style="display: block; cursor: pointer" @click="isRegister = true">Don't have an account?
+          Register</a>
       </div>
     </div>
   </div>

@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"globe-and-citizen/layer8/proxy/config"
 	"globe-and-citizen/layer8/proxy/handlers"
 	"globe-and-citizen/layer8/proxy/internals/repository"
 	"globe-and-citizen/layer8/proxy/internals/usecases"
@@ -18,6 +19,8 @@ var (
 )
 
 func main() {
+	config.InitDB()
+
 	flag.Parse()
 
 	switch *server {
@@ -33,18 +36,18 @@ func main() {
 func AuthServer(port int) {
 	log.Printf("Starting auth server on port %d...", port)
 
-	// intialize a memory repository and usecase
-	repo, err := repository.CreateRepository("memory")
+	// intialize a postgres connection and a usecase
+	repo, err := repository.CreateRepository("postgres")
 	if err != nil {
 		log.Fatal(err)
 	}
 	usecase := &usecases.UseCase{Repo: repo}
 
 	// for testing purposes, we'll create a test client for the example service provider
-	_, err = usecase.AddTestClient()
-	if err != nil {
-		log.Fatal(err)
-	}
+	// _, err = usecase.AddTestClient()
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	server := http.Server{
 		Addr: fmt.Sprintf(":%d", port),
@@ -57,20 +60,20 @@ func AuthServer(port int) {
 			r = r.WithContext(context.WithValue(r.Context(), "usecase", usecase))
 			// routing
 			switch path := r.URL.Path; {
-			case path == "" || path == "/":
-				handlers.Welcome(w, r)
+			// case path == "" || path == "/":
+			// 	handlers.Welcome(w, r)
 			case path == "/login":
 				handlers.Login(w, r)
-			case path == "/register":
-				handlers.Register(w, r)
-			case path == "/authorize":
-				handlers.Authorize(w, r)
-			case path == "/error":
-				handlers.Error(w, r)
-			case path == "/api/oauth":
-				handlers.OAuthToken(w, r)
-			case path == "/api/user":
-				handlers.UserInfo(w, r)
+			// case path == "/register":
+			// 	handlers.Register(w, r)
+			// case path == "/authorize":
+			// 	handlers.Authorize(w, r)
+			// case path == "/error":
+			// 	handlers.Error(w, r)
+			// case path == "/api/oauth":
+			// 	handlers.OAuthToken(w, r)
+			// case path == "/api/user":
+			// 	handlers.UserInfo(w, r)
 			case strings.HasPrefix(path, "/assets"):
 				// serve static files
 				http.StripPrefix("/assets", http.FileServer(http.Dir("./assets"))).ServeHTTP(w, r)

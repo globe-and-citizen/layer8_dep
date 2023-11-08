@@ -49,14 +49,14 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 	defer config.CloseDatabaseConnection(db)
 	// Save user to database
 	user := models.User{
-		Email:       req.Email,
-		Username:    req.Username,
-		Password:    HashedAndSaltedPass,
-		FirstName:   req.FirstName,
-		LastName:    req.LastName,
-		PhoneNumber: req.PhoneNumber,
-		Address:     req.Address,
-		Salt:        rmSalt,
+		Email:     req.Email,
+		Username:  req.Username,
+		Password:  HashedAndSaltedPass,
+		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		// PhoneNumber: req.PhoneNumber,
+		// Address:     req.Address,
+		Salt: rmSalt,
 	}
 	if err := db.Create(&user).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -248,16 +248,16 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := models.ProfileResponseOutput{
-		Email:               user.Email,
-		Username:            user.Username,
-		FirstName:           user.FirstName,
-		LastName:            user.LastName,
-		PhoneNumber:         user.PhoneNumber,
-		Address:             user.Address,
-		EmailVerified:       user.EmailVerified,
-		PhoneNumberVerified: user.PhoneNumberVerified,
-		LocationVerified:    user.LocationVerified,
-		NationalIdVerified:  user.NationalIdVerified,
+		Email:     user.Email,
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		// PhoneNumber:         user.PhoneNumber,
+		// Address:             user.Address,
+		// EmailVerified:       user.EmailVerified,
+		// PhoneNumberVerified: user.PhoneNumberVerified,
+		// LocationVerified:    user.LocationVerified,
+		// NationalIdVerified:  user.NationalIdVerified,
 	}
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

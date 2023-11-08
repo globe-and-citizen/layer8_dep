@@ -9,7 +9,6 @@ const isLoggedIn = computed(() => token.value !== null);
 let newPoem = ref("");
 const gotAPoem = ref(false);
 
-
 const userEmail = computed(() => {
     if (token.value && token.value.split(".").length > 1) {
         const payload = JSON.parse(atob(token.value.split(".")[1]));

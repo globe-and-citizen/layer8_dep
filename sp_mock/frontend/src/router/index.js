@@ -1,41 +1,32 @@
 import { createRouter, createWebHistory } from "vue-router";
-import Home from "../views/Home.vue";
+import LoginRegister from "../views/LoginRegister.vue";
 import Callback from "../views/CallBack.vue";
-
+import StressTest from "../views/StressTest.vue";
+import Home from "../views/Home.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: "/",
-      name: "home",
-      component: Home,
+      name: "Login&Register",
+      component: LoginRegister,
     },
     {
       path: "/stress-test",
       name: "stress-test",
-      component: () => import("../views/StressTest.vue"),
+      component: StressTest,
     },
     {
-      path: '/oauth2/callback',
-      name: 'oauth2-callback',
+      path: "/oauth2/callback",
+      name: "oauth2-callback",
       component: Callback,
     },
-    // {
-    //   path: "/login",
-    //   name: "login",
-    //   component: () => import("../views/LoginView.vue"),
-    // },
-    // {
-    //   path: '/oauth2/callback',
-    //   name: 'oauth2-callback',
-    //   component: () => import('../views/CallbackView.vue')
-    // },
-    // {
-    //   path: '/poems/:id',
-    //   name: 'poem',
-    //   component: () => import('../views/PoemView.vue')
-    // }
+    {
+      path: "/home",
+      name: "home",
+      component: Home,
+    },
   ],
 });
 

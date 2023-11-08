@@ -118,10 +118,12 @@ const loginWithLayer8Popup = async () => {
   const data = await response.json()
 
   // create opener window
+  console.log("Data: ", data.authURL);
   const popup = window.open(data.authURL, "Login with Layer8", "width=600,height=600");
   window.addEventListener("message", async (event) => {
     popup.close();
     window.location.href = event.data.url;
+    console.log("Data URL", event.data.url);
   });
 }
 
@@ -144,16 +146,10 @@ const loginWithLayer8Popup = async () => {
           <input v-model="registerEmail" placeholder="Email" />
         </div>
         <div class="input-group">
-          <input
-            v-model="registerPassword"
-            type="password"
-            placeholder="Password"
-          />
+          <input v-model="registerPassword" type="password" placeholder="Password" />
         </div>
         <button class="btn-primary" @click="registerUser">Register</button>
-        <a style="display: block" @click="isRegister = false"
-          >Already registered? Login</a
-        >
+        <a style="display: block" @click="isRegister = false">Already registered? Login</a>
       </div>
 
       <div v-if="!isRegister" class="form-container">
@@ -162,23 +158,15 @@ const loginWithLayer8Popup = async () => {
           <input v-model="loginEmail" placeholder="Email" />
         </div>
         <div class="input-group">
-          <input
-            v-model="loginPassword"
-            type="password"
-            placeholder="Password"
-          />
+          <input v-model="loginPassword" type="password" placeholder="Password" />
         </div>
         <button class="btn-primary" @click="loginUser">Login</button>
-        <a style="display: block" @click="isRegister = true"
-          >Don't have an account? Register</a
-        >
+        <a style="display: block" @click="isRegister = true">Don't have an account? Register</a>
       </div>
     </div>
 
     <div v-if="isLoggedIn" class="welcome-container">
-      <h1
-        style="color: rgb(136, 136, 136); font-weight: 600; padding-bottom: 2%"
-      >
+      <h1 style="color: rgb(136, 136, 136); font-weight: 600; padding-bottom: 2%">
         Welcome User!
       </h1>
       <div class="new-container" v-if="!isContinueAnonymously">
@@ -191,18 +179,12 @@ const loginWithLayer8Popup = async () => {
         <button class="btn-secondary" @click="logoutUser">Logout</button>
       </div>
       <div class="new-container" v-if="isContinueAnonymously">
-        <button
-          @click="getPoems"
-        >
+        <button @click="getPoems">
           Get Poems
         </button>
         <button class="btn-secondary" @click="logoutUser">Logout</button>
       </div>
-      <div
-        id="poems-container-2"
-        style="color: black"
-        v-if="isContinueAnonymously"
-      >
+      <div id="poems-container-2" style="color: black" v-if="isContinueAnonymously">
         <div id="newPoem">
           {{ newPoem }}
         </div>

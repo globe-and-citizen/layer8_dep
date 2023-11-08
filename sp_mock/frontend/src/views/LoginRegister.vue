@@ -1,18 +1,17 @@
 <script setup>
 import { computed, ref } from "vue";
 import Navbar from "../components/Navbar.vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const registerEmail = ref("");
 const registerPassword = ref("");
 const loginEmail = ref("");
 const loginPassword = ref("");
 const isRegister = ref(false);
-const token = ref(localStorage.getItem("token") || null);
-
 const isLoggedIn = computed(() => token.value !== null);
 const isContinueAnonymously = ref(false);
-const gotAPoem = ref(false);
-let newPoem = ref("");
+const token = ref(localStorage.getItem("token") || null);
 
 const registerUser = async () => {
   try {
@@ -66,41 +65,7 @@ const loginUser = async () => {
 const continueAnonymously = () => {
   isContinueAnonymously.value = true;
   alert("You are now logged in anonymously!");
-};
-
-const getPoems = async () => {
-  // try {
-  //   const poem = await layer8.getPoem({
-  //     method: "GET",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       "Authorization": `${token.value}`,
-  //     }
-  //   });
-  //   if (poem) {
-  //     showPoem(poem);
-  //     gotAPoem.value = true;
-  //   } else {
-  //     console.error("No poem content received.");
-  //   }
-  // } catch (error) {
-  //   console.error(error);
-  //   alert("Poems failed!");
-  // }
-
-  // Since poems are not implemented in the new mock, just using a placeholder here
-  const poem =
-    "Roses are red, violets are blue, I'm a placeholder, and so are you.";
-  showPoem(poem);
-  gotAPoem.value = true;
-};
-
-const showPoem = (poemText) => {
-  const poemContainer = document.getElementById("poems-container-2");
-  const newPoem = document.createElement("div");
-  newPoem.id = "newPoem";
-  newPoem.textContent = poemText;
-  poemContainer.appendChild(newPoem);
+  router.push({ name: "home" });
 };
 
 const logoutUser = () => {
@@ -164,17 +129,6 @@ const loginWithLayer8Popup = async () => {
           Login with Layer8
         </button>
         <button class="btn-secondary" @click="logoutUser">Logout</button>
-      </div>
-      <div class="new-container" v-if="isContinueAnonymously">
-        <button @click="getPoems">
-          Get Poems
-        </button>
-        <button class="btn-secondary" @click="logoutUser">Logout</button>
-      </div>
-      <div id="poems-container-2" style="color: black" v-if="isContinueAnonymously">
-        <div id="newPoem">
-          {{ newPoem }}
-        </div>
       </div>
     </div>
   </div>

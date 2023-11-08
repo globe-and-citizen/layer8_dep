@@ -56,7 +56,7 @@ const showPoem = (poemText) => {
 const logoutUser = () => {
     token.value = null;
     localStorage.removeItem("token");
-    router.push({ name: "LoginRegister" });
+    router.push({ name: "loginRegister" });
 };
 
 </script>

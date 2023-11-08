@@ -23,6 +23,7 @@ package repository
 import (
 	"globe-and-citizen/layer8/proxy/constants"
 	"globe-and-citizen/layer8/proxy/models"
+	"time"
 )
 
 type (
@@ -43,6 +44,12 @@ type (
 
 		// Get a client by ID.
 		GetClient(id string) (*models.Client, error)
+
+		// SetTTL sets the value for the given key with a short TTL.
+		SetTTL(key string, value []byte, ttl time.Duration) error
+
+		// GetTTL gets the value for the given key which has a short TTL.
+		GetTTL(key string) ([]byte, error)
 	}
 
 	// RepositoryFactory is a factory for creating repositories.

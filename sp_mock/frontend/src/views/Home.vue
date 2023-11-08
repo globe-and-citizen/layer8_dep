@@ -9,13 +9,15 @@ const isLoggedIn = computed(() => token.value !== null);
 let newPoem = ref("");
 const gotAPoem = ref(false);
 
-const userEmail = computed(() => {
+const userName = computed(() => {
     if (token.value && token.value.split(".").length > 1) {
         const payload = JSON.parse(atob(token.value.split(".")[1]));
-        return payload.email;
+        return payload.username;
     }
     return "";
 });
+
+console.log("payload", JSON.parse(atob(token.value.split(".")[1])));
 
 const getPoems = async () => {
     // try {
@@ -65,7 +67,7 @@ const logoutUser = () => {
     <div id="app">
         <div v-if="isLoggedIn" class="welcome-container">
             <h1 style="color: rgb(136, 136, 136); font-weight: 600; padding-bottom: 2%">
-                Welcome {{ userEmail }}!
+                Welcome {{ userName }}!
             </h1>
             <div class="new-container">
                 <button @click="getPoems">

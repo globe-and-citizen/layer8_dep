@@ -100,8 +100,8 @@ app.post("/api/login/layer8/auth", async (req, res) => {
       console.log("err: ", err);
     });
 
-  const email = user.profile.email;
-  const token = jwt.sign({ email }, SECRET_KEY);
+  const username = user.profile.username;
+  const token = jwt.sign({ username }, SECRET_KEY);
   res.status(200).json({ token });
 });
 

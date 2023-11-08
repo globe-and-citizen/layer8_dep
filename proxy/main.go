@@ -60,8 +60,6 @@ func AuthServer(port int) {
 			r = r.WithContext(context.WithValue(r.Context(), "usecase", usecase))
 			// routing
 			switch path := r.URL.Path; {
-			// case path == "" || path == "/":
-			// 	handlers.Welcome(w, r)
 			case path == "/login":
 				handlers.Login(w, r)
 			case path == "/authorize":

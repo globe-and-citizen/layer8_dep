@@ -44,8 +44,8 @@ CREATE TABLE users (
 );
 
 CREATE TABLE clients (
-	id VARCHAR(8) PRIMARY KEY,
-	secret VARCHAR(8) NOT NULL,
+	id VARCHAR(36) PRIMARY KEY,
+	secret VARCHAR NOT NULL,
 	name VARCHAR(255) NOT NULL,
 	redirect_uri VARCHAR(255) NOT NULL
 );

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/interceptor/internals"
 	"globe-and-citizen/layer8/utils"
-	"io"
-	"net"
+
+	// "io"
+	// "net"
 	"net/http"
 	"syscall/js"
 )
@@ -25,7 +26,6 @@ var (
 	privJWK_ecdh     *utils.JWK
 	pubJWK_ecdh      *utils.JWK
 	userSymmetricKey *utils.JWK
-	isTCP            bool
 )
 
 func main() {
@@ -38,7 +38,6 @@ func main() {
 	Layer8Host = "localhost"
 	Layer8Port = "5001" // 5001 is Proxy & 5000 is Auth server.
 	ETunnelFlag = false
-	isTCP = false
 
 	// Expose layer8 functionality to the front end Javascript
 	js.Global().Set("layer8", js.ValueOf(map[string]interface{}{
@@ -135,6 +134,7 @@ func initializeECDHTunnel() {
 			ETunnelFlag = false
 			return
 		}
+		fmt.Println("RESP.HEADER", resp.Header)
 
 		// TODO: For some reason I am unable to put (or access?) custom response headers coming from
 		// either the backend OR the proxy... Therefore, I've sent along the backend's public key in the
@@ -162,105 +162,67 @@ func initializeECDHTunnel() {
 
 		// TODO: Send an encrypted ping / confirmation to the server using the shared secret
 		// just like the 1. Syn 2. Syn/Ack 3. Ack flow in a TCP handshake
-		if !isTCP {
-			// Encrypt the message (replace this with your encryption logic)
-			message := "Encrypted tunnel successfully established."
-			encryptedMessage, err := userSymmetricKey.SymmetricEncrypt([]byte(message))
-			if err != nil {
-				fmt.Println("Error encrypting message:", err)
-				return
-			}
 
-			body := bytes.NewBuffer(encryptedMessage)
-			req, err := http.NewRequest("POST", ProxyURL, body)
-			if err != nil {
-				fmt.Println("Error creating request:", err)
-				return
-			}
-			req.Header.Add("x-ecdh-init", b64PubJWK)
-			req.Header.Add("X-client-id", "1")
-
-			// Send the request
-			client := &http.Client{}
-			resp, err := client.Do(req)
-			if err != nil {
-				fmt.Println("Error sending encrypted message:", err)
-				return
-			}
-			defer resp.Body.Close()
-
-			if resp.StatusCode == 401 {
-				fmt.Printf("User not authorized\n")
-				return
-			}
-
-			fmt.Println("Encrypted message sent to the server")
-
-			// Read the response body
-			responseBody, err := io.ReadAll(resp.Body)
-			if err != nil {
-				fmt.Println("Error reading response body:", err)
-				return
-			}
-
-			// Print the response body
-			fmt.Println("Response from the server:", string(responseBody))
-
-		} else if isTCP {
-			serverAddr := "localhost:5001"
-			conn, err := net.Dial("tcp", serverAddr)
-			if err != nil {
-				fmt.Println("Error connecting the server: ", err)
-				return
-			}
-			defer conn.Close()
-			message := "Encrypted tunnel successfully established."
-			encryptedMessage, err := userSymmetricKey.SymmetricEncrypt([]byte(message))
-
-			_, err = conn.Write(encryptedMessage)
-			if err != nil {
-				fmt.Println("Error sending encrypted message to the server: ", err)
-				return
-			}
-
-			fmt.Println("Encrypted message sent to the server")
-
-			// Read response from the server
-			buffer := make([]byte, 1024)
-			_, err = conn.Read(buffer)
-			if err != nil {
-				fmt.Println("Error reading from the server:", err)
-				return
-			}
-
-			// Print server response
-			fmt.Println("Server Response:", string(buffer))
-		} else {
-			// Encrypt the message using userSymmetricKey
-			message := "Encrypted tunnel successfully established."
-			encryptedMessage, err := userSymmetricKey.SymmetricEncrypt([]byte(message))
-			if err != nil {
-				fmt.Println("Error encrypting message:", err)
-				ETunnelFlag = false
-				return
-			}
-
-			// Send the encrypted message to the server
-			url := "http://localhost:8000/api/message"
-			fmt.Println("ENCRYPTED MESSAGE: ", encryptedMessage)
-			response, err := http.Post(url, "application/json", bytes.NewReader(encryptedMessage))
-			if err != nil {
-				fmt.Println("Error sending encrypted message:", err)
-				ETunnelFlag = false
-				return
-			}
-			defer response.Body.Close()
-			responseBody, err := io.ReadAll(response.Body)
-			if err != nil {
-				fmt.Println("Error reading response body:", err)
-			}
-			fmt.Println("Response Body:", string(responseBody))
+		message := "Encrypted tunnel successfully established."
+		encryptedMessage, err := userSymmetricKey.SymmetricEncrypt([]byte(message))
+		if err != nil {
+			fmt.Println("Error encrypting message:", err)
+			return
 		}
+
+		jsPublicKey := js.Global().Get("Uint8Array").New(len([]byte(b64PubJWK)))
+		js.CopyBytesToJS(jsPublicKey, []byte(b64PubJWK))
+
+		jsEncryptedMessage := js.Global().Get("Uint8Array").New(len(encryptedMessage))
+		js.CopyBytesToJS(jsEncryptedMessage, encryptedMessage)
+
+		// decryptedMessage := make([]byte, jsEncryptedMessage.Length())
+		// js.CopyBytesToGo(decryptedMessage, jsEncryptedMessage)
+
+		requestData := map[string]interface{}{
+			"body": jsEncryptedMessage,
+			"headers": map[string]interface{}{
+				"x-ecdh-init":  jsPublicKey,
+				"X-client-id":  "2",
+				"Content-Type": "application/json",
+			},
+			"method": "POST",
+		}
+		fetchOptions := js.ValueOf(requestData)
+
+		// headers := js.Global().Get("Object").New()
+		// headers.Set("x-ecdh-init", jsPublicKey)
+		// headers.Set("Content-Type", "application/json")
+
+		// // Create the fetch options object
+		// fetchOptions := js.Global().Get("Object").New()
+		// fetchOptions.Set("method", "POST")
+		// fetchOptions.Set("body", jsEncryptedMessage)
+		// fetchOptions.Set("headers", headers)
+
+		messageProxyURL := fmt.Sprintf("%s://%s:%s/api/message", Layer8Scheme, Layer8Host, Layer8Port)
+		fetchPromise := js.Global().Call("fetch", js.ValueOf(messageProxyURL), fetchOptions)
+		fetchPromise.Call("then", js.FuncOf(func(this js.Value, p []js.Value) interface{} {
+			if len(p) < 1 {
+				fmt.Println("Error: Fetch response is empty.")
+				return nil
+			}
+			response := p[0]
+			if response.Get("ok").Bool() {
+				bodyPromise := response.Call("json")
+				bodyPromise.Call("then", js.FuncOf(func(this js.Value, p []js.Value) interface{} {
+					fmt.Println("Response Body:", p[0])
+					return nil
+				}))
+
+			} else {
+				// Request failed
+				status := response.Get("status").Int()
+				statusText := response.Get("statusText").String()
+				fmt.Println("Request failed with status:", status, "Status Text:", statusText)
+			}
+			return nil
+		}))
 
 		ETunnelFlag = true
 		fmt.Println("Encrypted tunnel successfully established.")

@@ -44,9 +44,13 @@ func main() {
 func doECDHWithClient(request, response js.Value) {
 	fmt.Println("TOP: ", request)
 	headers := request.Get("headers")
-	userPubJWK := headers.Get("x-ecdh-init").String()
-	// fmt.Println("userPubJWK: ", userPubJWK)
-	userPubJWKConverted, err := utils.B64ToJWK(userPubJWK)
+	userPubJWK := headers.Get("x-ecdh-init")
+	
+	fmt.Println("userPubJWK: ", userPubJWK.String())
+	fmt.Printf("Value: %v, Type: %T\n", userPubJWK.String(), userPubJWK.String())
+
+	userPubJWKString := userPubJWK.String()
+	userPubJWKConverted, err := utils.B64ToJWK(userPubJWKString)
 	if err != nil {
 		fmt.Println("Failure to decode userPubJWK", err.Error())
 		// response set "statusCode", 50x

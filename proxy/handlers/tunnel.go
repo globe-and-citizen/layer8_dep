@@ -11,6 +11,8 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("\n\n*************")
 	fmt.Println(r.Method) // > GET  | > POST
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
+	fmt.Println(r.Body)
+	fmt.Println(r.Header)
 
 	backendURL := fmt.Sprintf("http://localhost:8000%s", r.URL)
 

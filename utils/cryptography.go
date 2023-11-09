@@ -1,10 +1,5 @@
 package utils
 
-// Tomorrow's Labour:
-// 1) Benchmarking?
-// 2) Coverage?
-// 3) Reflection / type introspection?
-
 import (
 	"crypto/aes"
 	"crypto/cipher"

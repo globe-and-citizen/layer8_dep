@@ -1,8 +1,9 @@
 go 1.21.1
 
 use (
-    ./interceptor
-    ./middleware
-    ./proxy
-    ./utils
+	./interceptor
+	./middleware
+	./proxy
+	./resource_server/backend
+	./utils
 )

@@ -151,5 +151,7 @@ out
 .wasm
 *.wasm
 
+.vscode
+=======
 # Go workspace file
 go.work

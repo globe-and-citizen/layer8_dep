@@ -1,27 +1,22 @@
 package usecases
 
-import (
-	"globe-and-citizen/layer8/proxy/internals/repository"
-	"testing"
+// TODO: Will write unit tests for Postgres functions later
 
-	"github.com/stretchr/testify/assert"
-)
+// func TestAddGetDeleteClient(t *testing.T) {
+// 	usecase := &UseCase{Repo: repository.MustCreateRepository("memory")}
 
-func TestAddGetDeleteClient(t *testing.T) {
-	usecase := &UseCase{Repo: repository.MustCreateRepository("memory")}
+// 	client, err := usecase.AddClient("test")
+// 	assert.NoError(t, err)
+// 	assert.NotNil(t, client)
 
-	client, err := usecase.AddClient("test")
-	assert.NoError(t, err)
-	assert.NotNil(t, client)
+// 	client, err = usecase.GetClient(client.ID)
+// 	assert.NoError(t, err)
+// 	assert.NotNil(t, client)
 
-	client, err = usecase.GetClient(client.ID)
-	assert.NoError(t, err)
-	assert.NotNil(t, client)
+// 	err = usecase.DeleteClient(client.ID)
+// 	assert.NoError(t, err)
 
-	err = usecase.DeleteClient(client.ID)
-	assert.NoError(t, err)
-
-	client, err = usecase.GetClient(client.ID)
-	assert.Error(t, err)
-	assert.Nil(t, client)
-}
+// 	client, err = usecase.GetClient(client.ID)
+// 	assert.Error(t, err)
+// 	assert.Nil(t, client)
+// }

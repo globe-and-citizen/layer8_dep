@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"globe-and-citizen/layer8/proxy/constants"
-	"globe-and-citizen/layer8/proxy/entities"
 	"globe-and-citizen/layer8/proxy/internals/usecases"
+	"globe-and-citizen/layer8/proxy/models"
 	"html/template"
 	"log"
 	"net/http"
@@ -125,7 +125,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// get user
-		var user *entities.User
+		var user *models.User
 		token, err := r.Cookie("token")
 		if token != nil && err == nil {
 			user, err = usecase.GetUserByToken(token.Value)
@@ -155,7 +155,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			ClientID:    client.ID,
 			RedirectURL: client.RedirectURI,
 			Scopes:      strings.Split(scopes, ","),
-		}, user.ID)
+		}, int64(user.ID))
 		if err != nil {
 			log.Println("Server error: ", err)
 			if returnResult {

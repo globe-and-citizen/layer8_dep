@@ -20,7 +20,7 @@ func (u *UseCase) GenerateAuthorizationURL(config *oauth2.Config, userID int64) 
 	if err != nil {
 		return nil, fmt.Errorf("could not get client: %v", err)
 	}
-	user, err := u.GetUser(userID, true)
+	user, err := u.Repo.GetUserByID(userID)
 	if err != nil {
 		return nil, fmt.Errorf("could not get user: %v", err)
 	}
@@ -37,7 +37,7 @@ func (u *UseCase) GenerateAuthorizationURL(config *oauth2.Config, userID int64) 
 	}
 	code, err := utils.GenerateAuthCode(client.Secret, &utils.AuthCodeClaims{
 		ClientID:    config.ClientID,
-		UserID:      user.ID,
+		UserID:      int64(user.ID),
 		RedirectURI: config.RedirectURL,
 		Scopes:      scopes,
 		ExpiresAt:   time.Now().Add(time.Minute * 5).Unix(),
@@ -77,7 +77,7 @@ func (u *UseCase) ExchangeCodeForToken(config *oauth2.Config, code string) (*oau
 	if err != nil {
 		return nil, err
 	}
-	err = u.Repo.SetTTL("token:"+token, b, time.Minute*5)
+	err = u.Repo.SetTTL("token:"+token, b, time.Minute*10)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (u *UseCase) ExchangeCodeForToken(config *oauth2.Config, code string) (*oau
 	return &oauth2.Token{
 		AccessToken: token,
 		TokenType:   "Bearer",
-		Expiry:      time.Now().Add(time.Minute * 5),
+		Expiry:      time.Now().Add(time.Minute * 10),
 	}, nil
 }
 
@@ -93,12 +93,15 @@ func (u *UseCase) ExchangeCodeForToken(config *oauth2.Config, code string) (*oau
 // with the given token.
 func (u *UseCase) AccessResourcesWithToken(token string) (map[string]interface{}, error) {
 	// get the claims
-	res := u.Repo.Get("token:" + token)
+	res, err := u.Repo.GetTTL("token:" + token)
+	if err != nil {
+		return nil, err
+	}
 	if res == nil {
 		return nil, fmt.Errorf("could not get token")
 	}
 	var claims utils.AuthCodeClaims
-	err := json.Unmarshal(res, &claims)
+	err = json.Unmarshal(res, &claims)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +111,7 @@ func (u *UseCase) AccessResourcesWithToken(token string) (map[string]interface{}
 	for _, scope := range scopes {
 		switch scope {
 		case constants.READ_USER_SCOPE:
-			user, err := u.GetUser(claims.UserID, true)
+			user, err := u.Repo.GetUserByID(claims.UserID)
 			if err != nil {
 				return nil, err
 			}

@@ -22,29 +22,34 @@ package repository
 
 import (
 	"globe-and-citizen/layer8/proxy/constants"
+	"globe-and-citizen/layer8/proxy/models"
 	"time"
 )
 
 type (
 	// Repository is a simple key-value store.
 	Repository interface {
-		// Get returns the value for the given key, or nil if it does not exist.
-		Get(key string) []byte
-		// Pop gets the value for the given key and deletes it. Returns nil if the
-		// key does not exist.
-		Pop(key string) []byte
-		// Set sets the value for the given key.
-		Set(key string, value []byte) error
+
+		// Get the salt from db using the username
+		LoginUserPrecheck(username string) (string, error)
+
+		// Get user from db by username
+		GetUser(username string) (*models.User, error)
+
+		// GetUserByID gets a user by ID.
+		GetUserByID(id int64) (*models.User, error)
+
+		// Set a client for testing purposes
+		SetClient(client *models.Client) error
+
+		// Get a client by ID.
+		GetClient(id string) (*models.Client, error)
+
 		// SetTTL sets the value for the given key with a short TTL.
 		SetTTL(key string, value []byte, ttl time.Duration) error
-		// Delete deletes the value for the given key.
-		Delete(key string) error
-		// Incr increments the value for the given key.
-		// 	Note: It is good practice to begin the key with an underscore to avoid
-		// 		  conflicts with other keys.
-		Incr(key string) (int64, error)
-		// Keys returns all keys matching the given pattern.
-		Keys(pattern string) ([]string, error)
+
+		// GetTTL gets the value for the given key which has a short TTL.
+		GetTTL(key string) ([]byte, error)
 	}
 
 	// RepositoryFactory is a factory for creating repositories.
@@ -113,7 +118,8 @@ func MustCreateRepository(name string) Repository {
 
 func init() {
 	// Register the memory repository factory
-	RegisterRepositoryFactory("memory", RepositoryFactoryFunc(func() (Repository, error) {
-		return NewMemoryRepository(), nil
+	RegisterRepositoryFactory("postgres", RepositoryFactoryFunc(func() (Repository, error) {
+		return NewPostgresRepository(), nil
 	}))
+
 }

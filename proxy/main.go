@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"globe-and-citizen/layer8/proxy/config"
 	"globe-and-citizen/layer8/proxy/handlers"
 	"globe-and-citizen/layer8/proxy/internals/repository"
 	"globe-and-citizen/layer8/proxy/internals/usecases"
@@ -18,6 +19,8 @@ var (
 )
 
 func main() {
+	config.InitDB()
+
 	flag.Parse()
 
 	switch *server {
@@ -33,8 +36,8 @@ func main() {
 func AuthServer(port int) {
 	log.Printf("Starting auth server on port %d...", port)
 
-	// intialize a memory repository and usecase
-	repo, err := repository.CreateRepository("memory")
+	// intialize a postgres connection and a usecase
+	repo, err := repository.CreateRepository("postgres")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -57,12 +60,8 @@ func AuthServer(port int) {
 			r = r.WithContext(context.WithValue(r.Context(), "usecase", usecase))
 			// routing
 			switch path := r.URL.Path; {
-			case path == "" || path == "/":
-				handlers.Welcome(w, r)
 			case path == "/login":
 				handlers.Login(w, r)
-			case path == "/register":
-				handlers.Register(w, r)
 			case path == "/authorize":
 				handlers.Authorize(w, r)
 			case path == "/error":

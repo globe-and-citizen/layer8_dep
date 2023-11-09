@@ -4,6 +4,7 @@ const popsicle = require('popsicle')
 const Layer8 = require("../../middleware/dist/loadWASM.js");
 const ClientOAuth2 = require("client-oauth2");
 require("dotenv").config();
+const POEMS = require("./poems.json")
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -17,7 +18,7 @@ const users = []; // Store users in memory
 const SECRET_KEY = "my_very_secret_key";
 
 const LAYER8_CALLBACK_URL = "http://localhost:5173/oauth2/callback"; // defined in the frontend
-const LAYER8_RESOURCE_URL = "http://localhost:5000/api/user";
+const LAYER8_RESOURCE_URL = "http://localhost:5000/api/user"; //problem?
 
 const layer8Auth = new ClientOAuth2({
   clientId: "notanid",
@@ -34,20 +35,26 @@ app.use(Layer8);
 app.use(cors());
 
 app.get("/", (req, res) => {
+  console.log("Enpoint for testing");
   console.log("req.body: ", req.body);
-  console.log("res.custom_test_prop: ", res.custom_test_prop);
-
   res.send("Bro, ur poems coming soon. Relax a little.");
 });
 
 app.post("/", (req, res) => {
-  console.log("Beautiful. No Errors: ");
+  console.log("Enpoint for testing");
   console.log("headers:: ", req.headers);
   console.log("req.body: ", req.body);
-  res.setHeader("x-crypto-test", "1234");
-  console.log(res.hasHeader("x-crypto-test"));
+  res.setHeader("x-header-test", "1234");
   res.send("Server has registered a POST.");
 });
+
+let counter = 0
+app.get("/nextpoem", (req, res) => {
+  counter++
+  let marker = (counter%3)
+  console.log("Served: ",POEMS.data[marker].title)
+  res.status(200).json(POEMS.data[marker])
+})
 
 app.post("/api/register", async (req, res) => {
   console.log("req.body: ", req.body);
@@ -93,6 +100,7 @@ app.post("/api/login/layer8/auth", async (req, res) => {
           })
         )
         .then((res) => {
+          console.log("response: ", res)
           return JSON.parse(res.body);
         });
     })
@@ -104,6 +112,7 @@ app.post("/api/login/layer8/auth", async (req, res) => {
   const token = jwt.sign({ username }, SECRET_KEY);
   res.status(200).json({ token });
 });
+
 
 app.listen(port, () => {
   console.log(

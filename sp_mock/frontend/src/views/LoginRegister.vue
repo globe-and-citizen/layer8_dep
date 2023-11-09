@@ -78,11 +78,32 @@ const loginWithLayer8Popup = async () => {
   const response = await layer8.fetch("http://localhost:8000/api/login/layer8/auth")
   const data = await response.json()
 
+  //alert(data.authURL)
   // create opener window
   const popup = window.open(data.authURL, "Login with Layer8", "width=600,height=600");
+ 
   window.addEventListener("message", async (event) => {
-    popup.close();
-    window.location.href = event.data.url;
+    if(event.data.redr){
+      console.log("event.data.redr: ", event.data.redr)
+      setTimeout(() => {
+        layer8.fetch("http://localhost:8000/api/login/layer8/auth", {
+            method: "POST",
+            headers: {
+                "Content-Type": "Application/Json"
+            },
+            body: JSON.stringify({
+                callback_url: event.data.redr,
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+          localStorage.setItem("token", data.token)
+          router.push({ name: 'home' })
+          popup.close();
+        })
+        .catch(err => console.log(err))
+      }, 1000);
+    }
   });
 }
 </script>

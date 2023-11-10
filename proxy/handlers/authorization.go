@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"globe-and-citizen/layer8/proxy/constants"
 	"globe-and-citizen/layer8/proxy/internals/usecases"
 	"globe-and-citizen/layer8/proxy/models"
@@ -89,6 +90,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	case "POST":
+		fmt.Println("L93")
 		var (
 			clientID        = r.URL.Query().Get("client_id")
 			scopes          = r.URL.Query().Get("scope")
@@ -126,7 +128,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 		}
 		// get user
 		var user *models.User
-		token, err := r.Cookie("token")
+		token, err := r.Cookie("token") // Ravi you may need to renag....
 		if token != nil && err == nil {
 			user, err = usecase.GetUserByToken(token.Value)
 			if err != nil || user == nil {
@@ -137,6 +139,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				http.Redirect(w, r, "/login?next="+r.URL.String(), http.StatusSeeOther)
+				fmt.Println("line 141: ")
 				return
 			}
 		} else {
@@ -149,7 +152,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/login?next="+r.URL.String(), http.StatusSeeOther)
 			return
 		}
-
+		fmt.Println("L155")
 		// generate authorization url
 		authURL, err := usecase.GenerateAuthorizationURL(&oauth2.Config{
 			ClientID:    client.ID,
@@ -172,9 +175,11 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write([]byte(`{"redr": "` + authURL.String() + `"}`))
+			fmt.Println("Normal exit...")
 			return
 		}
 		http.Redirect(w, r, authURL.String(), http.StatusSeeOther)
+		fmt.Println("line 182")
 		return
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

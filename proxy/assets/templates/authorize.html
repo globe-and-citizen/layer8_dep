@@ -66,8 +66,10 @@
                 .then(data => {
                     // if there is a "redr" in the data, then redirect the opener to that url
                     if (data.redr) {
-                        window.opener.location.href = data.redr;
+                        //window.opener.location.href = data.redr;
+                        window.opener.postMessage(data, '*'); // <===================== add this line
                     } else {
+                        alert("has no redr: ")
                         // else, send the data to the opener
                         window.opener.postMessage(data, '*');
                     }

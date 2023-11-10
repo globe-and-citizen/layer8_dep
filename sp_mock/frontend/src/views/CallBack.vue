@@ -21,7 +21,7 @@ onMounted(() => {
             .then(res => res.json())
             .then(data => {
                 localStorage.setItem("token", data.token)
-                router.push({ name: 'home' })
+                router.push({ name: 'stress-test' })
             })
             .catch(err => console.log(err))
     }, 1000);

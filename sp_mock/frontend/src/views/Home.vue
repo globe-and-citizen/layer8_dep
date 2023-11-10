@@ -6,8 +6,7 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const token = ref(localStorage.getItem("token") || null);
 const isLoggedIn = computed(() => token.value !== null);
-let newPoem = ref("");
-const gotAPoem = ref(false);
+let nextPoem = ref({});
 
 const userName = computed(() => {
     if (token.value && token.value.split(".").length > 1) {
@@ -17,42 +16,26 @@ const userName = computed(() => {
     return "";
 });
 
-console.log("payload", JSON.parse(atob(token.value.split(".")[1])));
+//console.log("payload", JSON.parse(atob(token.value.split(".")[1])));
 
-const getPoems = async () => {
-    // try {
-    //   const poem = await layer8.getPoem({
-    //     method: "GET",
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //       "Authorization": `${token.value}`,
-    //     }
-    //   });
-    //   if (poem) {
-    //     showPoem(poem);
-    //     gotAPoem.value = true;
-    //   } else {
-    //     console.error("No poem content received.");
-    //   }
-    // } catch (error) {
-    //   console.error(error);
-    //   alert("Poems failed!");
-    // }
-
-    // Since poems are not implemented in the new mock, just using a placeholder here
-    const poem =
-        "Roses are red, violets are blue, I'm a placeholder, and so are you.";
-    showPoem(poem);
-    gotAPoem.value = true;
+const getPoem = async () => {
+    try {
+        console.log("going to try now 1...")   
+        const resp = await layer8.fetch("http://localhost:8000/nextpoem");
+        console.log("going to try now 2...")  
+        
+        let poemObj = await resp.json()
+        
+        if (poemObj.title) {
+            nextPoem.value = poemObj
+        } else {
+            console.error("The poemObj is malformed or other error....");
+        }
+    } catch (error) {
+      console.error("error:", error);
+    }
 };
 
-const showPoem = (poemText) => {
-    const poemContainer = document.getElementById("poems-container-2");
-    const newPoem = document.createElement("div");
-    newPoem.id = "newPoem";
-    newPoem.textContent = poemText;
-    poemContainer.appendChild(newPoem);
-};
 
 const logoutUser = () => {
     token.value = null;
@@ -70,14 +53,21 @@ const logoutUser = () => {
                 Welcome {{ userName }}!
             </h1>
             <div class="new-container">
-                <button @click="getPoems">
-                    Get Poems
+                <button @click="getPoem">
+                    Get Next Poem
                 </button>
                 <button class="btn-secondary" @click="logoutUser">Logout</button>
             </div>
             <div id="poems-container-2" style="color: black">
+                <br>
                 <div id="newPoem">
-                    {{ newPoem }}
+                    <h3>Next Poem goes here: </h3>
+                    <div>Title:</div>
+                    <p style="font-weight: bold;">{{ nextPoem.title }}</p>
+                    <div>Author:</div>
+                    <p style="font-weight: bold;">{{ nextPoem.author }}</p>
+                    <div>Body:</div>
+                    <p style="font-weight: bold;">{{ nextPoem.body }}</p>
                 </div>
             </div>
         </div>

@@ -2,8 +2,10 @@ package handlers
 
 import (
 	"fmt"
+	"globe-and-citizen/layer8/utils"
 	"io"
 	"net/http"
+	"os"
 )
 
 // Tunnel forwards the request to the service provider's backend
@@ -11,6 +13,17 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("\n\n*************")
 	fmt.Println(r.Method) // > GET  | > POST
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
+
+	// Get the up_JWT (999) from the request header
+	upJWT := r.Header.Get("up_JWT")
+
+	// Verify the up_JWT (999)
+	_, err := utils.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 
 	backendURL := fmt.Sprintf("http://localhost:8000%s", r.URL)
 

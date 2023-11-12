@@ -107,7 +107,7 @@ func initializeECDHTunnel() {
 			return
 		}
 
-		upJWT, err := utils.GenerateStandardToken(os.Getenv("UP_999_SECRET_KEY"))
+		upJWT, err := utils.GenerateStandardToken(os.Getenv("secret"))
 		if err != nil {
 			fmt.Println(err.Error())
 			ETunnelFlag = false

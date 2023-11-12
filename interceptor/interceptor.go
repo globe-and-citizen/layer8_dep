@@ -6,6 +6,7 @@ import (
 	"globe-and-citizen/layer8/interceptor/internals"
 	"globe-and-citizen/layer8/utils"
 	"net/http"
+	"os"
 	"syscall/js"
 )
 
@@ -106,6 +107,13 @@ func initializeECDHTunnel() {
 			return
 		}
 
+		upJWT, err := utils.GenerateStandardToken(os.Getenv("UP_999_SECRET_KEY"))
+		if err != nil {
+			fmt.Println(err.Error())
+			ETunnelFlag = false
+			return
+		}
+
 		ProxyURL := fmt.Sprintf("%s://%s:%s", Layer8Scheme, Layer8Host, Layer8Port)
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", ProxyURL, bytes.NewBuffer([]byte{}))
@@ -116,6 +124,7 @@ func initializeECDHTunnel() {
 		}
 		req.Header.Add("x-ecdh-init", b64PubJWK)
 		req.Header.Add("X-client-id", "1")
+		req.Header.Add("up_JWT", upJWT)
 
 		// send request
 		resp, err := client.Do(req)

@@ -82,6 +82,23 @@ func GenerateUserToken(secret string, userID int64) (string, error) {
 	return tokenString, nil
 }
 
+func GenerateStandardToken(secretKey string) (string, error) {
+	token := jwt.New(jwt.SigningMethodHS256)
+
+	claims := &jwt.StandardClaims{
+		ExpiresAt: time.Now().Add(time.Hour * 24 * 7).Unix(),
+	}
+
+	token.Claims = claims
+
+	tokenString, err := token.SignedString([]byte(secretKey))
+	if err != nil {
+		return "", fmt.Errorf("could not generate standard token: %s", err)
+	}
+
+	return tokenString, nil
+}
+
 // VerifyUserToken verifies a JWT token for a user and returns the user ID
 func VerifyUserToken(secret, token string) (int64, error) {
 	claims := &jwt.StandardClaims{}
@@ -99,4 +116,20 @@ func VerifyUserToken(secret, token string) (int64, error) {
 		return 0, fmt.Errorf("could not verify user token: %s", err)
 	}
 	return id, nil
+}
+
+func VerifyStandardToken(tokenString string, secretKey string) (*jwt.StandardClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secretKey), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(*jwt.StandardClaims); ok && token.Valid {
+		return claims, nil
+	}
+
+	return nil, fmt.Errorf("invalid token")
 }

@@ -2,6 +2,9 @@
 npm_install_all:
 	cd sp_mock/frontend && npm install && cd ../backend && npm install  && cd ../../resource_server/frontend && npm install
 
+go_mod_tidy_all:
+	cd interceptor && go mod tidy && cd ../middleware && go mod tidy && cd ../proxy && go mod tidy && cd ../resource_server/backend && go mod tidy && cd ../../utils && go mod tidy
+
 ## Interceptor Calls
 build_interceptor: ## must do from a bash terminal ..
 	## Put WASM file directly in the CDN of the auth server

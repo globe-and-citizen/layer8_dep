@@ -15,7 +15,7 @@ type Client struct {
 }
 
 type ClientImpl interface {
-	Do(url string, req *utils.Request, sharedSecret *utils.JWK) *utils.Response
+	Do(url string, req *utils.Request, sharedSecret *utils.JWK, upJWT string) *utils.Response
 }
 
 // NewClient creates a new client with the given proxy server url
@@ -26,9 +26,9 @@ func NewClient(scheme, host, port string) ClientImpl {
 }
 
 // Do sends a request to through the layer8 proxy server and returns a response
-func (c *Client) Do(url string, req *utils.Request, sharedSecret *utils.JWK) *utils.Response {
+func (c *Client) Do(url string, req *utils.Request, sharedSecret *utils.JWK, upJWT string) *utils.Response {
 	// Send request
-	res, err := c.transfer(sharedSecret, req, url)
+	res, err := c.transfer(sharedSecret, upJWT, req, url)
 	if err != nil {
 		return &utils.Response{
 			Status:     500,
@@ -39,14 +39,14 @@ func (c *Client) Do(url string, req *utils.Request, sharedSecret *utils.JWK) *ut
 }
 
 // transfer sends the request to the remote server through the layer8 proxy server
-func (c *Client) transfer(sharedSecret *utils.JWK, req *utils.Request, url string) (*utils.Response, error) {
+func (c *Client) transfer(sharedSecret *utils.JWK, upJWT string, req *utils.Request, url string) (*utils.Response, error) {
 	// encode request body
 	b, err := req.ToJSON()
 	if err != nil {
 		return nil, fmt.Errorf("Could not encode request: %w", err)
 	}
 	// send the request
-	_, res := c.do(b, sharedSecret, url)
+	_, res := c.do(b, sharedSecret, upJWT, url)
 	// decode response body
 	resData, err := utils.FromJSONResponse(res)
 	if err != nil {
@@ -63,7 +63,7 @@ func (c *Client) transfer(sharedSecret *utils.JWK, req *utils.Request, url strin
 
 // do sends the request to the remote server through the layer8 proxy server
 // returns a status code and response body
-func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string) (int, []byte) {
+func (c *Client) do(data []byte, sharedSecret *utils.JWK, upJWT string, backendUrl string) (int, []byte) {
 	// encrypt request body if a secret is provided
 	// if secret != nil {
 	// 	data, err = utils.Dep_SymmetricEncrypt(data, secret)
@@ -117,7 +117,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string) (in
 	r.Header.Add("X-Forwarded-Host", parsedURL.Host)
 	r.Header.Add("X-Forwarded-Proto", parsedURL.Scheme)
 	r.Header.Add("Content-Type", "application/json")
-	r.Header.Add("up_JWT", "TESTING")
+	r.Header.Add("up_JWT", upJWT)
 	// send request
 	res, err := client.Do(r)
 	if err != nil {

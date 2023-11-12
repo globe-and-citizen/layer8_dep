@@ -6,7 +6,6 @@ import (
 	"globe-and-citizen/layer8/interceptor/internals"
 	"globe-and-citizen/layer8/utils"
 	"net/http"
-	"os"
 	"syscall/js"
 )
 
@@ -24,6 +23,7 @@ var (
 	privJWK_ecdh     *utils.JWK
 	pubJWK_ecdh      *utils.JWK
 	userSymmetricKey *utils.JWK
+	UpJWT            string
 )
 
 func main() {
@@ -107,7 +107,7 @@ func initializeECDHTunnel() {
 			return
 		}
 
-		upJWT, err := utils.GenerateStandardToken(os.Getenv("secret"))
+		UpJWT, err = utils.GenerateStandardToken("secret")
 		if err != nil {
 			fmt.Println(err.Error())
 			ETunnelFlag = false
@@ -124,7 +124,7 @@ func initializeECDHTunnel() {
 		}
 		req.Header.Add("x-ecdh-init", b64PubJWK)
 		req.Header.Add("X-client-id", "1")
-		req.Header.Add("up_JWT", upJWT)
+		req.Header.Add("up_JWT", UpJWT)
 
 		// send request
 		resp, err := client.Do(req)
@@ -215,6 +215,7 @@ func fetch(this js.Value, args []js.Value) interface{} {
 		if headers.String() == "<undefined>" || headers.String() == "null" {
 			headers = js.ValueOf(map[string]interface{}{})
 		}
+		// headers.Set("up_JWT", upJWT)
 
 		// setting the body to an empty string if it's undefined
 		body := options.Get("body").String()
@@ -227,6 +228,11 @@ func fetch(this js.Value, args []js.Value) interface{} {
 			headersMap[args[0].Index(0).String()] = args[0].Index(1).String()
 			return nil
 		}))
+
+		// Print the headersMap for debugging purposes
+		for k, v := range headersMap {
+			fmt.Println("Encrypted Headers from the SP: ", k, v)
+		}
 
 		go func() {
 			// forward request to the layer8 proxy server

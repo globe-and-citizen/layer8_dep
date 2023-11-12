@@ -117,7 +117,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string) (in
 	r.Header.Add("X-Forwarded-Host", parsedURL.Host)
 	r.Header.Add("X-Forwarded-Proto", parsedURL.Scheme)
 	r.Header.Add("Content-Type", "application/json")
-
+	r.Header.Add("up_JWT", "TESTING")
 	// send request
 	res, err := client.Do(r)
 	if err != nil {

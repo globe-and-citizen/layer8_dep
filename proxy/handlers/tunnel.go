@@ -14,8 +14,10 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Method) // > GET  | > POST
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
 
+	fmt.Println("r.Header: ", r.Header)
 	// Get the up_JWT (999) from the request header
 	upJWT := r.Header.Get("up_JWT")
+	fmt.Println("upJWT: ", upJWT)
 
 	// Verify the up_JWT (999)
 	_, err := utils.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))

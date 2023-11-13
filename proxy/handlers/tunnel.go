@@ -58,6 +58,8 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 
 	mpJWT := res.Header.Get("mp_JWT")
 
+	fmt.Println("mp_JWT FROM SP: ", mpJWT)
+
 	// Verify the mp_JWT (123)
 	_, err = utils.VerifyStandardToken(mpJWT, os.Getenv("MP_123_SECRET_KEY"))
 	if err != nil {

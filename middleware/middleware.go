@@ -22,6 +22,7 @@ var (
 	spSymmetricKey *utils.JWK
 	privKey_ECDH   *utils.JWK
 	pubKey_ECDH    *utils.JWK
+	MpJWT          string
 )
 
 func init() {
@@ -73,6 +74,14 @@ func doECDHWithClient(request, response js.Value) {
 		return
 	}
 
+	MpJWT, err := utils.GenerateStandardToken("secret123")
+	if err != nil {
+		fmt.Println("Failure to generate MpJWT", err.Error())
+		return
+	}
+
+	// headers.Set("mp_JWT", MpJWT)
+
 	response.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		// encrypt response
 		jres := utils.Response{}
@@ -102,6 +111,7 @@ func doECDHWithClient(request, response js.Value) {
 
 	// Send the response back to the user.
 	response.Call("setHeader", "x-shared-secret", ss_b64)
+	response.Call("setHeader", "mp_JWT", MpJWT)
 	result := response.Call("hasHeader", "x-shared-secret")
 	fmt.Println("result: ", result)
 	response.Call("send")
@@ -319,6 +329,7 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 		for k, v := range jreq.Headers {
 			headers.Set(k, v)
 		}
+
 		var reqBody map[string]interface{}
 		json.Unmarshal(jreq.Body, &reqBody)
 		req.Set("body", reqBody)

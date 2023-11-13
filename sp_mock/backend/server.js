@@ -13,12 +13,6 @@ const bcrypt = require("bcrypt");
 const port = 8000;
 const app = express();
 
-const MP_SECRET = "mp_secret";
-
-const generate_mp_JWT = (Secret) => {
-  return jwt.sign({}, Secret);
-};
-
 const users = []; // Store users in memory
 
 const SECRET_KEY = "my_very_secret_key";
@@ -43,7 +37,6 @@ app.use(cors());
 app.get("/", (req, res) => {
   console.log("Enpoint for testing");
   console.log("req.body: ", req.body);
-  res.setHeader("mp_JWT", generate_mp_JWT(MP_SECRET));
   res.send("Bro, ur poems coming soon. Relax a little.");
 });
 
@@ -51,7 +44,6 @@ app.post("/", (req, res) => {
   console.log("Enpoint for testing");
   console.log("headers:: ", req.headers);
   console.log("req.body: ", req.body);
-  res.setHeader("mp_JWT", generate_mp_JWT(MP_SECRET));
   res.setHeader("x-header-test", "1234");
   res.send("Server has registered a POST.");
 });

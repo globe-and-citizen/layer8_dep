@@ -22,6 +22,8 @@ var (
 	spSymmetricKey *utils.JWK
 	privKey_ECDH   *utils.JWK
 	pubKey_ECDH    *utils.JWK
+	// A map of tokens
+	MpJWT string
 )
 
 func init() {
@@ -73,6 +75,12 @@ func doECDHWithClient(request, response js.Value) {
 		return
 	}
 
+	MpJWT, err := utils.GenerateStandardToken("secret123")
+	if err != nil {
+		fmt.Println("Failure to generate MpJWT", err.Error())
+		return
+	}
+
 	response.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		// encrypt response
 		jres := utils.Response{}
@@ -102,6 +110,7 @@ func doECDHWithClient(request, response js.Value) {
 
 	// Send the response back to the user.
 	response.Call("setHeader", "x-shared-secret", ss_b64)
+	response.Call("setHeader", "mp_JWT", MpJWT)
 	result := response.Call("hasHeader", "x-shared-secret")
 	fmt.Println("result: ", result)
 	response.Call("send")
@@ -128,6 +137,8 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 		doECDHWithClient(req, res)
 		return nil
 	}
+
+	// headers.Set("mp_JWT", MpJWT)
 
 	// get the body. This depends on the express.json
 
@@ -323,6 +334,8 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 		var reqBody map[string]interface{}
 		json.Unmarshal(jreq.Body, &reqBody)
 		req.Set("body", reqBody)
+
+		// Headers not working
 
 		// OVERWRITE THE SEND FUNCTION
 		res.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {

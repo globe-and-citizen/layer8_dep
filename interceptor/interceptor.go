@@ -23,7 +23,7 @@ var (
 	privJWK_ecdh     *utils.JWK
 	pubJWK_ecdh      *utils.JWK
 	userSymmetricKey *utils.JWK
-	upJWT            string
+	// upJWT            string
 )
 
 func main() {
@@ -107,12 +107,12 @@ func initializeECDHTunnel() {
 			return
 		}
 
-		upJWT, err = utils.GenerateStandardToken("secret999")
-		if err != nil {
-			fmt.Println(err.Error())
-			ETunnelFlag = false
-			return
-		}
+		// upJWT, err = utils.GenerateStandardToken("secret999")
+		// if err != nil {
+		// 	fmt.Println(err.Error())
+		// 	ETunnelFlag = false
+		// 	return
+		// }
 
 		ProxyURL := fmt.Sprintf("%s://%s:%s", Layer8Scheme, Layer8Host, Layer8Port)
 		client := &http.Client{}
@@ -124,7 +124,7 @@ func initializeECDHTunnel() {
 		}
 		req.Header.Add("x-ecdh-init", b64PubJWK)
 		req.Header.Add("X-client-id", "1")
-		req.Header.Add("up_JWT", upJWT)
+		// req.Header.Add("up_JWT", upJWT)
 
 		// send request
 		resp, err := client.Do(req)
@@ -237,7 +237,7 @@ func fetch(this js.Value, args []js.Value) interface{} {
 		go func() {
 			// forward request to the layer8 proxy server
 			res := internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port).
-				Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey, upJWT)
+				Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
 
 			if res.Status >= 100 || res.Status < 300 { // Handle Success & Default Rejection
 				resHeaders := js.Global().Get("Headers").New()

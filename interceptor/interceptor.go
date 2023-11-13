@@ -107,7 +107,7 @@ func initializeECDHTunnel() {
 			return
 		}
 
-		upJWT, err = utils.GenerateStandardToken("secret")
+		upJWT, err = utils.GenerateStandardToken("secret999")
 		if err != nil {
 			fmt.Println(err.Error())
 			ETunnelFlag = false

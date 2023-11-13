@@ -56,10 +56,15 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("header pairs from SP: ", k, v)
 	}
 
-	// Print the response headers
-	fmt.Println("res.Headers: ", res.Header)
+	mpJWT := res.Header.Get("mp_JWT")
 
-	fmt.Println("##Content Length:", res.Header.Get("Content-Length"))
+	// Verify the mp_JWT (123)
+	_, err = utils.VerifyStandardToken(mpJWT, os.Getenv("MP_123_SECRET_KEY"))
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 
 	w.Header()["setme"] = []string{"string"}
 	w.Header().Add("ME TOO?", "DO IT!")

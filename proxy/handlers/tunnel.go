@@ -55,18 +55,16 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("header pairs from SP: ", k, v)
 	}
 
-	// upJWT, err := utils.GenerateStandardToken(os.Getenv("UP_999_SECRET_KEY"))
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// 	http.Error(w, err.Error(), http.StatusUnauthorized)
-	// 	return
-	// }
+	upJWT, err := utils.GenerateStandardToken(os.Getenv("UP_999_SECRET_KEY"))
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 
-	w.Header()["setme"] = []string{"string"}
-	w.Header().Add("ME TOO?", "DO IT!")
-	fmt.Println("w.Headers: ", w.Header())
-	//w.WriteHeader(res.StatusCode)
+	w.Header()["up_JWT"] = []string{upJWT}
+	fmt.Println("w.Headers (Going back to client): ", w.Header())
+	// Headers not being sent back to client for some reason...
+
 	io.Copy(w, res.Body)
-
-	fmt.Println("w.Headers 2: ", w.Header())
 }

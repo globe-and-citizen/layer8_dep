@@ -134,13 +134,15 @@ func initializeECDHTunnel() {
 			return
 		}
 
+		upJWT := resp.Header.Get("up_jwt")
+		fmt.Println("up_JWT: ", upJWT)
+
 		// TODO: For some reason I am unable to put (or access?) custom response headers coming from
 		// either the backend OR the proxy... Therefore, I've sent along the backend's public key in the
 		// response's body.
 		// for k, v := range resp.Header {
 		// 	fmt.Println("header pairs from SP:", k, v)
 		// }
-		// fmt.Println("resp.Header: ", resp.Header.Get("Content-Length"))
 
 		Respbody := utils.ReadResponseBody(resp.Body)
 		//fmt.Println("response body: ", string(Respbody))

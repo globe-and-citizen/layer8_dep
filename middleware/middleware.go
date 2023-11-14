@@ -22,8 +22,7 @@ var (
 	spSymmetricKey *utils.JWK
 	privKey_ECDH   *utils.JWK
 	pubKey_ECDH    *utils.JWK
-	// A map of tokens
-	MpJWT string
+	MpJWT          string
 )
 
 func init() {
@@ -46,6 +45,7 @@ func main() {
 func doECDHWithClient(request, response js.Value) {
 	fmt.Println("TOP: ", request)
 	headers := request.Get("headers")
+	fmt.Println("headers: ", headers)
 	userPubJWK := headers.Get("x-ecdh-init").String()
 	// fmt.Println("userPubJWK: ", userPubJWK)
 	userPubJWKConverted, err := utils.B64ToJWK(userPubJWK)
@@ -75,11 +75,9 @@ func doECDHWithClient(request, response js.Value) {
 		return
 	}
 
-	MpJWT, err := utils.GenerateStandardToken("secret123")
-	if err != nil {
-		fmt.Println("Failure to generate MpJWT", err.Error())
-		return
-	}
+	// Get mp_JWT from headers
+	MpJWT = headers.Get("mp_jwt").String()
+	fmt.Println("MpJWT at SP BE (Middleware): ", MpJWT)
 
 	response.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		// encrypt response
@@ -110,7 +108,7 @@ func doECDHWithClient(request, response js.Value) {
 
 	// Send the response back to the user.
 	response.Call("setHeader", "x-shared-secret", ss_b64)
-	response.Call("setHeader", "mp_JWT", MpJWT)
+	// response.Call("setHeader", "mp_JWT", MpJWT)
 	result := response.Call("hasHeader", "x-shared-secret")
 	fmt.Println("result: ", result)
 	response.Call("send")
@@ -138,10 +136,7 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 		return nil
 	}
 
-	// headers.Set("mp_JWT", MpJWT)
-
 	// get the body. This depends on the express.json
-
 	jsBody := req.Get("body")
 	if jsBody.String() == "<undefined>" {
 		println("body not defined")

@@ -107,13 +107,6 @@ func initializeECDHTunnel() {
 			return
 		}
 
-		// upJWT, err = utils.GenerateStandardToken("secret999")
-		// if err != nil {
-		// 	fmt.Println(err.Error())
-		// 	ETunnelFlag = false
-		// 	return
-		// }
-
 		ProxyURL := fmt.Sprintf("%s://%s:%s", Layer8Scheme, Layer8Host, Layer8Port)
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", ProxyURL, bytes.NewBuffer([]byte{}))

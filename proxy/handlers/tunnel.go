@@ -14,10 +14,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Method) // > GET  | > POST
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
 
-	upJWT := r.Header.Get("up_JWT")
-
-	// Verify the up_JWT (999)
-	_, err := utils.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
+	mpJWT, err := utils.GenerateStandardToken(os.Getenv("MP_123_SECRET_KEY"))
 	if err != nil {
 		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -39,6 +36,8 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 		req.Header[k] = v
 	}
 
+	req.Header["mp_JWT"] = []string{mpJWT}
+
 	// send the request
 	res, err := http.DefaultClient.Do(req)
 
@@ -56,17 +55,12 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("header pairs from SP: ", k, v)
 	}
 
-	mpJWT := res.Header.Get("mp_JWT")
-
-	fmt.Println("mp_JWT FROM SP: ", mpJWT)
-
-	// Verify the mp_JWT (123)
-	_, err = utils.VerifyStandardToken(mpJWT, os.Getenv("MP_123_SECRET_KEY"))
-	if err != nil {
-		fmt.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusUnauthorized)
-		return
-	}
+	// upJWT, err := utils.GenerateStandardToken(os.Getenv("UP_999_SECRET_KEY"))
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// 	http.Error(w, err.Error(), http.StatusUnauthorized)
+	// 	return
+	// }
 
 	w.Header()["setme"] = []string{"string"}
 	w.Header().Add("ME TOO?", "DO IT!")

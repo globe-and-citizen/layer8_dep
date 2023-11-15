@@ -23,7 +23,7 @@ var (
 	privJWK_ecdh     *utils.JWK
 	pubJWK_ecdh      *utils.JWK
 	userSymmetricKey *utils.JWK
-	// upJWT            string
+	UpJWT            string
 )
 
 func main() {
@@ -117,7 +117,6 @@ func initializeECDHTunnel() {
 		}
 		req.Header.Add("x-ecdh-init", b64PubJWK)
 		req.Header.Add("X-client-id", "1")
-		// req.Header.Add("up_JWT", upJWT)
 
 		// send request
 		resp, err := client.Do(req)
@@ -144,14 +143,46 @@ func initializeECDHTunnel() {
 		// 	fmt.Println("header pairs from SP:", k, v)
 		// }
 
+		fmt.Println("Checkpoint 1")
+
 		Respbody := utils.ReadResponseBody(resp.Body)
-		//fmt.Println("response body: ", string(Respbody))
+
+		fmt.Println("response body: ", string(Respbody))
+
 		server_pubKeyECDH, err := utils.B64ToJWK(string(Respbody))
 		if err != nil {
 			fmt.Println(err.Error())
 			ETunnelFlag = false
 			return
 		}
+
+		fmt.Println("Checkpoint 2")
+
+		// respBodyConverted, err := base64.URLEncoding.DecodeString(string(Respbody))
+		// if err != nil {
+		// 	fmt.Println(err.Error())
+		// 	ETunnelFlag = false
+		// 	return
+		// }
+
+		// data := map[string]interface{}{}
+
+		// err = json.Unmarshal(respBodyConverted, &data)
+		// if err != nil {
+		// 	fmt.Println(err.Error())
+		// 	ETunnelFlag = false
+		// 	return
+		// }
+
+		// fmt.Println("data: ", data)
+		// fmt.Println("server_pubKeyECDH: ", data["server_pubKeyECDH"].(string))
+
+		// server_pubKeyECDH, err := utils.B64ToJWK(data["server_pubKeyECDH"].(string))
+		// if err != nil {
+		// 	fmt.Println(err.Error())
+		// 	ETunnelFlag = false
+		// 	return
+		// }
 
 		userSymmetricKey, err = privJWK_ecdh.GetECDHSharedSecret(server_pubKeyECDH)
 		if err != nil {

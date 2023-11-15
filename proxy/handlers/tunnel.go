@@ -66,5 +66,33 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("w.Headers (Going back to client): ", w.Header())
 	// Headers not being sent back to client for some reason...
 
+	// newResBody := &res.Body
+
+	server_pubKeyECDH, err := utils.B64ToJWK(string(utils.ReadResponseBody(res.Body)))
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	fmt.Println("server_pubKeyECDH: ", server_pubKeyECDH)
+
+	// // Make a json response of server_pubKeyECDH and up_JWT and send it back to client
+	// data := map[string]interface{}{
+	// 	"server_pubKeyECDH": server_pubKeyECDH,
+	// 	"up_JWT":            upJWT,
+	// }
+
+	// datatoSend, err := json.Marshal(&data)
+	// if err != nil {
+	// 	fmt.Println(err.Error())
+	// 	http.Error(w, err.Error(), http.StatusInternalServerError)
+	// 	return
+	// }
+
+	// dataToSendB64 := base64.URLEncoding.EncodeToString(datatoSend)
+
+	// fmt.Println("dataToSendB64: ", dataToSendB64)
+
 	io.Copy(w, res.Body)
 }

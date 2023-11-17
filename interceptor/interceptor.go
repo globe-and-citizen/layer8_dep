@@ -125,7 +125,6 @@ func initializeECDHTunnel() {
 			ETunnelFlag = false
 			return
 		}
-		defer resp.Body.Close()
 
 		if resp.StatusCode == 401 {
 			fmt.Printf("User not authorized\n")
@@ -133,15 +132,15 @@ func initializeECDHTunnel() {
 			return
 		}
 
-		upJWT := resp.Header.Get("up_jwt")
+		upJWT := resp.Header.Get("up_JWT")
 		fmt.Println("up_JWT: ", upJWT)
 
 		// TODO: For some reason I am unable to put (or access?) custom response headers coming from
 		// either the backend OR the proxy... Therefore, I've sent along the backend's public key in the
 		// response's body.
-		// for k, v := range resp.Header {
-		// 	fmt.Println("header pairs from SP:", k, v)
-		// }
+		for k, v := range resp.Header {
+			fmt.Println("header pairs from SP:", k, v)
+		}
 
 		fmt.Println("Checkpoint 1")
 

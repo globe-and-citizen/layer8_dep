@@ -2,10 +2,13 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"globe-and-citizen/layer8/interceptor/internals"
 	"globe-and-citizen/layer8/utils"
 	"net/http"
+	"strings"
 	"syscall/js"
 )
 
@@ -132,56 +135,79 @@ func initializeECDHTunnel() {
 			return
 		}
 
-		upJWT := resp.Header.Get("up_JWT")
-		fmt.Println("up_JWT: ", upJWT)
+		// upJWT := resp.Header.Get("up_JWT")
+		// fmt.Println("up_JWT: ", upJWT)
 
 		// TODO: For some reason I am unable to put (or access?) custom response headers coming from
 		// either the backend OR the proxy... Therefore, I've sent along the backend's public key in the
 		// response's body.
-		for k, v := range resp.Header {
-			fmt.Println("header pairs from SP:", k, v)
-		}
+		// for k, v := range resp.Header {
+		// 	fmt.Println("header pairs from SP:", k, v)
+		// }
 
 		fmt.Println("Checkpoint 1")
+
+		// Make a buffer to hold response body
+		// var resBodyTemp bytes.Buffer
+
+		// Copy the response body to buffer
+		// resBodyTemp.ReadFrom(resp.Body)
+
+		// Convert resBodyTemp to []byte
+
+		// resBodyTempBytes := []byte(resBodyTemp.String())
+
+		// fmt.Println("resBodyTempBytes: ", string(resBodyTempBytes))
+
+		// Make a copy of the response body to send back to client
+		// resp.Body = io.NopCloser(bytes.NewBuffer(resBodyTemp.Bytes()))
 
 		Respbody := utils.ReadResponseBody(resp.Body)
 
 		fmt.Println("response body: ", string(Respbody))
 
-		server_pubKeyECDH, err := utils.B64ToJWK(string(Respbody))
+		// server_pubKeyECDH, err := utils.B64ToJWK(string(Respbody))
+		// if err != nil {
+		// 	fmt.Println(err.Error())
+		// 	ETunnelFlag = false
+		// 	return
+		// }
+
+		fmt.Println("Checkpoint 2")
+
+		respBodyConverted, err := base64.URLEncoding.DecodeString(string(Respbody))
 		if err != nil {
 			fmt.Println(err.Error())
 			ETunnelFlag = false
 			return
 		}
 
-		fmt.Println("Checkpoint 2")
+		fmt.Println("Checkpoint 3")
 
-		// respBodyConverted, err := base64.URLEncoding.DecodeString(string(Respbody))
-		// if err != nil {
-		// 	fmt.Println(err.Error())
-		// 	ETunnelFlag = false
-		// 	return
-		// }
+		fmt.Println("respBodyConverted: ", string(respBodyConverted))
 
-		// data := map[string]interface{}{}
+		data := map[string]interface{}{}
 
-		// err = json.Unmarshal(respBodyConverted, &data)
-		// if err != nil {
-		// 	fmt.Println(err.Error())
-		// 	ETunnelFlag = false
-		// 	return
-		// }
+		err = json.Unmarshal(respBodyConverted, &data)
+		if err != nil {
+			if strings.Contains(err.Error(), "unexpected end of JSON input") {
+				fmt.Println("JSON data might be incomplete or improperly formatted.")
+			} else {
+				fmt.Println(err.Error())
+			}
+			ETunnelFlag = false
+			return
+		}
 
-		// fmt.Println("data: ", data)
-		// fmt.Println("server_pubKeyECDH: ", data["server_pubKeyECDH"].(string))
+		fmt.Println("data: ", data)
+		fmt.Println("server_pubKeyECDH: ", data["server_pubKeyECDH"].(string))
 
-		// server_pubKeyECDH, err := utils.B64ToJWK(data["server_pubKeyECDH"].(string))
-		// if err != nil {
-		// 	fmt.Println(err.Error())
-		// 	ETunnelFlag = false
-		// 	return
-		// }
+		server_pubKeyECDH, err := utils.B64ToJWK(data["server_pubKeyECDH"].(string))
+		if err != nil {
+			fmt.Println(err.Error())
+			ETunnelFlag = false
+			return
+		}
 
 		userSymmetricKey, err = privJWK_ecdh.GetECDHSharedSecret(server_pubKeyECDH)
 		if err != nil {

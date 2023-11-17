@@ -60,16 +60,18 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 
 	resBodyTempBytes := []byte(resBodyTemp.String())
 
+	fmt.Println("resBodyTempBytes: ", string(resBodyTempBytes))
+
 	// Make a copy of the response body to send back to client
 	res.Body = io.NopCloser(bytes.NewBuffer(resBodyTemp.Bytes()))
 
 	fmt.Println("\nReceived response from 8000:", backendURL, " of code: ", res.StatusCode)
 
 	// copy response back
-	for k, v := range res.Header {
-		w.Header()[k] = v
-		fmt.Println("header pairs from SP: ", k, v)
-	}
+	// for k, v := range res.Header {
+	// 	w.Header()[k] = v
+	// 	fmt.Println("header pairs from SP: ", k, v)
+	// }
 
 	upJWT, err := utils.GenerateStandardToken(os.Getenv("UP_999_SECRET_KEY"))
 	if err != nil {
@@ -80,7 +82,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 
 	w.Header()["up_JWT"] = []string{upJWT}
 	w.Header().Set("up_JWT", upJWT)
-	fmt.Println("w.Headers (Going back to client): ", w.Header())
+	// fmt.Println("w.Headers (Going back to client): ", w.Header())
 	// Headers not being sent back to client for some reason...
 
 	// newResBody := &res.Body
@@ -100,6 +102,8 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 		"up_JWT":            upJWT,
 	}
 
+	fmt.Println("data (Going back to client): ", data)
+
 	datatoSend, err := json.Marshal(&data)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -109,7 +113,21 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 
 	dataToSendB64 := base64.URLEncoding.EncodeToString(datatoSend)
 
+	// dataIoReader := bytes.NewReader([]byte(dataToSendB64))
+
 	fmt.Println("dataToSendB64: ", dataToSendB64)
 
+	// io.Copy(w, bytes.NewBufferString(dataToSendB64))
+
+	// io.Copy(w, strings.NewReader(dataToSendB64))
+
+	// io.Copy(w, dataIoReader)
+
+	// io.CopyBuffer(w, bytes.NewBufferString(dataToSendB64), []byte(dataToSendB64))
+
 	w.Write([]byte(dataToSendB64))
+
+	// w.Write([]byte("This is a test data"))
 }
+
+// {"server_pubKeyECDH":{"use":["deriveKey"],"kty":"EC","kid":"pub_BLg6G512dxcykQzbgzEkFw==","crv":"P-256","x":"e90Hx7r0A9M3N3MCI92NGW4FFawY1BtVXl2GGXxzXco=","y":"mjF2c3xqEauAMi2qiTGiI5BTdIMd3K2XImaErUGOhDc="},"up_JWT":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDA4NDE4MjB9.vZ72zcctLDolM-TIPK3LdQ2nIEWDaKuw35tYNrFzilw"}

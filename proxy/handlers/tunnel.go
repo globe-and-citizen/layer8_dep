@@ -12,7 +12,7 @@ import (
 )
 
 // Tunnel forwards the request to the service provider's backend
-func Tunnel(w http.ResponseWriter, r *http.Request) {
+func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("\n\n*************")
 	fmt.Println(r.Method) // > GET  | > POST
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
@@ -85,8 +85,6 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println("w.Headers (Going back to client): ", w.Header())
 	// Headers not being sent back to client for some reason...
 
-	// newResBody := &res.Body
-
 	server_pubKeyECDH, err := utils.B64ToJWK(string(resBodyTempBytes))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -129,5 +127,3 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 
 	// w.Write([]byte("This is a test data"))
 }
-
-// {"server_pubKeyECDH":{"use":["deriveKey"],"kty":"EC","kid":"pub_BLg6G512dxcykQzbgzEkFw==","crv":"P-256","x":"e90Hx7r0A9M3N3MCI92NGW4FFawY1BtVXl2GGXxzXco=","y":"mjF2c3xqEauAMi2qiTGiI5BTdIMd3K2XImaErUGOhDc="},"up_JWT":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDA4NDE4MjB9.vZ72zcctLDolM-TIPK3LdQ2nIEWDaKuw35tYNrFzilw"}

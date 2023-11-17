@@ -145,26 +145,7 @@ func initializeECDHTunnel() {
 		// 	fmt.Println("header pairs from SP:", k, v)
 		// }
 
-		fmt.Println("Checkpoint 1")
-
-		// Make a buffer to hold response body
-		// var resBodyTemp bytes.Buffer
-
-		// Copy the response body to buffer
-		// resBodyTemp.ReadFrom(resp.Body)
-
-		// Convert resBodyTemp to []byte
-
-		// resBodyTempBytes := []byte(resBodyTemp.String())
-
-		// fmt.Println("resBodyTempBytes: ", string(resBodyTempBytes))
-
-		// Make a copy of the response body to send back to client
-		// resp.Body = io.NopCloser(bytes.NewBuffer(resBodyTemp.Bytes()))
-
 		Respbody := utils.ReadResponseBody(resp.Body)
-
-		fmt.Println("response body: ", string(Respbody))
 
 		// server_pubKeyECDH, err := utils.B64ToJWK(string(Respbody))
 		// if err != nil {
@@ -173,18 +154,12 @@ func initializeECDHTunnel() {
 		// 	return
 		// }
 
-		fmt.Println("Checkpoint 2")
-
 		respBodyConverted, err := base64.URLEncoding.DecodeString(string(Respbody))
 		if err != nil {
 			fmt.Println(err.Error())
 			ETunnelFlag = false
 			return
 		}
-
-		fmt.Println("Checkpoint 3")
-
-		fmt.Println("respBodyConverted: ", string(respBodyConverted))
 
 		data := map[string]interface{}{}
 
@@ -200,8 +175,9 @@ func initializeECDHTunnel() {
 		}
 
 		fmt.Println("data: ", data)
-		fmt.Println("server_pubKeyECDH: ", data["server_pubKeyECDH"].(string))
+		// fmt.Println("server_pubKeyECDH: ", data["server_pubKeyECDH"].(string))
 
+		// TODO: Modify from here
 		server_pubKeyECDH, err := utils.B64ToJWK(data["server_pubKeyECDH"].(string))
 		if err != nil {
 			fmt.Println(err.Error())

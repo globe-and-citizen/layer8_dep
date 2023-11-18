@@ -51,7 +51,6 @@ func LogRequest(next http.Handler) http.HandlerFunc {
 	}
 }
 
-
 // statusCapturingResponseWriter.Write()
 // crw.ResponseWriter.Write()
 // if you do't include a key

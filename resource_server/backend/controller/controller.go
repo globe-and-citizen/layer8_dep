@@ -1,10 +1,13 @@
 package controller
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -13,13 +16,13 @@ import (
 	"globe-and-citizen/layer8/resource_server/backend/dto"
 	"globe-and-citizen/layer8/resource_server/backend/models"
 	"globe-and-citizen/layer8/resource_server/backend/utils"
+	std_utils "globe-and-citizen/layer8/utils"
 
 	"github.com/go-playground/validator/v10"
 )
 
 // RegisterUserHandler handles user registration requests
 func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
-
 	var req dto.RegisterUserDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -41,7 +44,21 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rmSalt := utils.GenerateRandomSalt(utils.SaltSize)
-	HashedAndSaltedPass := utils.SaltAndHashPassword(req.Password, rmSalt)
+
+	// generating key information for SCRAM authentication
+	saltedPassword := std_utils.HI(req.Password, rmSalt, 4096)
+	clientKey := std_utils.HmacSha256(saltedPassword, []byte("Client Key"))
+	storedKey := std_utils.H(clientKey)
+	serverKey := std_utils.HmacSha256(saltedPassword, []byte("Server Key"))
+
+	// storing a message sequence of the stored key, server key, salt and iteration count
+	// as password in the database
+	seq := std_utils.ConcatenateScramAttributes(map[string]string{
+		"stk": base64.StdEncoding.EncodeToString(storedKey),
+		"svk": base64.StdEncoding.EncodeToString(serverKey),
+		"slt": base64.StdEncoding.EncodeToString([]byte(rmSalt)),
+		"itc": "4096",
+	})
 
 	// Make connection to database
 	db := config.SetupDatabaseConnection()
@@ -51,7 +68,7 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := models.User{
 		Email:     req.Email,
 		Username:  req.Username,
-		Password:  HashedAndSaltedPass,
+		Password:  seq,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
 		// PhoneNumber: req.PhoneNumber,
@@ -111,9 +128,36 @@ func LoginPrecheckHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	// decoding the password using base64 and parsing the message sequence
+	seq := std_utils.ParseScramAttributes(user.Password)
+	// ensure that all the required attributes are present
+	var (
+		attrs = []string{"stk", "svk", "slt", "itc"}
+		na    = []string{} // not available
+	)
+	for _, attr := range attrs {
+		if _, ok := seq[attr]; !ok {
+			na = append(na, attr)
+		}
+	}
+
+	if len(na) > 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		res := utils.BuildErrorResponse(
+			"failed to perform login precheck",
+			"missing attributes: "+strings.Join(na, ", "),
+			utils.EmptyObj{})
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			log.Printf("Error sending response: %v", err)
+		}
+	}
+
+	itc, _ := strconv.Atoi(seq["itc"])
 	resp := models.LoginPrecheckResponseOutput{
-		Username: user.Username,
-		Salt:     user.Salt,
+		Salt:           seq["slt"],
+		IterationCount: itc,
+		CombinedNonce:  req.Nonce + utils.GenerateRandomSalt(utils.SaltSize),
 	}
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -124,7 +168,6 @@ func LoginPrecheckHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
-
 	var req dto.LoginUserDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -159,17 +202,46 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	HashedAndSaltedPass := utils.SaltAndHashPassword(req.Password, user.Salt)
+	// decoding the password using base64 and parsing the message sequence
+	seq := std_utils.ParseScramAttributes(user.Password)
+	// ensure that all the required attributes are present
+	var (
+		attrs = []string{"stk", "svk", "slt", "itc"}
+		na    = []string{} // not available
+	)
+	for _, attr := range attrs {
+		if _, ok := seq[attr]; !ok {
+			na = append(na, attr)
+		}
+	}
 
-	// Compare the password with the password in the database
-	if user.Password != HashedAndSaltedPass {
+	if len(na) > 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		res := utils.BuildErrorResponse(
+			"failed to perform login precheck",
+			"missing attributes: "+strings.Join(na, ", "),
+			utils.EmptyObj{})
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			log.Printf("Error sending response: %v", err)
+		}
+	}
+
+	stk, _ := base64.StdEncoding.DecodeString(seq["stk"])
+	svk, _ := base64.StdEncoding.DecodeString(seq["svk"])
+
+	// verifying the proof
+	proofBytes, _ := base64.StdEncoding.DecodeString(req.Proof)
+	if !std_utils.ServerVerifyClientProof(req.Username, req.CombinedNonce, stk, proofBytes) {
 		w.WriteHeader(http.StatusUnauthorized)
-		res := utils.BuildErrorResponse("Error", "Invalid credentials", utils.EmptyObj{})
+		res := utils.BuildErrorResponse("Failed to login user", "invalid proof", utils.EmptyObj{})
 		if err := json.NewEncoder(w).Encode(res); err != nil {
 			log.Printf("Error sending response: %v", err)
 		}
 		return
 	}
+
+	// generating the server signature
+	serverSignature := std_utils.ServerGenerateServerSignature(req.Username, req.CombinedNonce, svk)
 
 	JWT_SECRET_STR := os.Getenv("JWT_SECRET")
 	JWT_SECRET_BYTE := []byte(JWT_SECRET_STR)
@@ -195,6 +267,7 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	resp := models.LoginUserResponseOutput{
 		Token: tokenString,
+		Proof: serverSignature,
 	}
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -207,7 +280,6 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ProfileHandler(w http.ResponseWriter, r *http.Request) {
-
 	// Get the token from the request header
 	tokenString := r.Header.Get("Authorization")
 	tokenString = tokenString[7:] // Remove the "Bearer " prefix

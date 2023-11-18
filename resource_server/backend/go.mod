@@ -1,6 +1,6 @@
 module globe-and-citizen/layer8/resource_server/backend
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/go-playground/validator/v10 v10.15.5

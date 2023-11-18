@@ -1,12 +1,14 @@
 package models
 
 type LoginPrecheckResponseOutput struct {
-	Username string `json:"username"`
-	Salt     string `json:"salt"`
+	Salt           string `json:"salt"`
+	IterationCount int    `json:"iteration_count"`
+	CombinedNonce  string `json:"combined_nonce"`
 }
 
 type LoginUserResponseOutput struct {
 	Token string `json:"token"`
+	Proof string `json:"proof"`
 }
 
 type ProfileResponseOutput struct {

@@ -1,6 +1,9 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import CryptoJS from "crypto-js";
+import Buffer from "buffer";
+import base64 from "base64-js";
 
 const router = useRouter();
 const registerEmail = ref("");
@@ -16,6 +19,12 @@ const isRegister = ref(false);
 const token = ref(localStorage.getItem("token") || null);
 
 const isLoggedIn = computed(() => token.value !== null);
+
+async function generateNonce() {
+  const nonce = new Uint8Array(32);
+  window.crypto.getRandomValues(nonce);
+  return base64.fromByteArray(nonce);
+}
 
 const registerUser = async () => {
   try {
@@ -48,6 +57,7 @@ const registerUser = async () => {
 
 const loginUser = async () => {
   try {
+    const nonce = await generateNonce();
     if (loginUsername.value == "" || loginPassword.value == "") {
       alert("Please enter a username and password!");
       return;
@@ -61,11 +71,25 @@ const loginUser = async () => {
         },
         body: JSON.stringify({
           username: loginUsername.value,
+          nonce: nonce,
         }),
       }
     );
     const responseOne = await respOne.json();
-    console.log(responseOne.salt);
+
+    if (responseOne.status == false) {
+      alert(responseOne.message);
+      return;
+    }
+    
+
+    var {proof, signature} = scram.first(
+      loginPassword.value,
+      responseOne.iteration_count,
+      responseOne.salt,
+      responseOne.combined_nonce,
+    );
+
     const respTwo = await window.fetch(
       "http://localhost:3050/api/v1/login-user",
       {
@@ -75,13 +99,20 @@ const loginUser = async () => {
         },
         body: JSON.stringify({
           username: loginUsername.value,
-          password: loginPassword.value,
-          salt: responseOne.salt,
+          proof: proof,
+          combined_nonce: responseOne.combined_nonce,
         }),
       }
     );
     const responseTwo = await respTwo.json();
-    console.log(responseTwo);
+
+    // authenticate the server with the signature
+    if (!scram.final(signature, responseTwo.proof)) {
+      alert("Login failed. Signatures didn't match");
+      return;
+    }
+
+    // then check if the token is received
     if (responseTwo.token) {
       token.value = responseTwo.token;
       localStorage.setItem("token", responseTwo.token);

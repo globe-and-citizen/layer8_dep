@@ -9,11 +9,12 @@ type RegisterUserDTO struct {
 }
 
 type LoginUserDTO struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-	Salt     string `json:"salt"`
+	Username      string `json:"username"`
+	Proof         string `json:"proof"`
+	CombinedNonce string `json:"combined_nonce"`
 }
 
 type LoginPrecheckDTO struct {
 	Username string `json:"username"`
+	Nonce    string `json:"nonce"`
 }

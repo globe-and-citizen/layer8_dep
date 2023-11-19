@@ -147,14 +147,12 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	// Get up_JWT from request header and verify it
 	upJWT := r.Header.Get("up_JWT")
 
-	fmt.Println("up_JWT Check 1: ", upJWT)
-
-	// _, err = utils.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// 	http.Error(w, err.Error(), http.StatusUnauthorized)
-	// 	return
-	// }
+	_, err = utils.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 
 	// send the request
 	res, err := http.DefaultClient.Do(req)

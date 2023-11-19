@@ -93,8 +93,12 @@ func ProxyServer(port int) {
 				w.WriteHeader(http.StatusOK)
 				return
 			}
-			handlers.InitTunnel(w, r)
-			// TODO: add standard tunneling logic here
+			switch path := r.URL.Path; {
+			case path == "/":
+				handlers.InitTunnel(w, r)
+			default:
+				handlers.Tunnel(w, r)
+			}
 		}),
 	}
 	log.Printf("Starting proxy server on port %d...", port)

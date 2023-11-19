@@ -147,13 +147,6 @@ func initializeECDHTunnel() {
 
 		Respbody := utils.ReadResponseBody(resp.Body)
 
-		// server_pubKeyECDH, err := utils.B64ToJWK(string(Respbody))
-		// if err != nil {
-		// 	fmt.Println(err.Error())
-		// 	ETunnelFlag = false
-		// 	return
-		// }
-
 		respBodyConverted, err := base64.URLEncoding.DecodeString(string(Respbody))
 		if err != nil {
 			fmt.Println(err.Error())
@@ -174,30 +167,7 @@ func initializeECDHTunnel() {
 			return
 		}
 
-		fmt.Println("data: ", data)
-		// fmt.Println("up_JWT: ", data["up_JWT"].(string))
-		// fmt.Println("server_pubKeyECDH: ", data["server_pubKeyECDH"].(string))
-
-		// for k, v := range data {
-		// 	fmt.Println("data pairs (modified) from Proxy:", k, v)
-		// }
-
-		upJWT, ok := data["up_JWT"].(string)
-		if !ok {
-			fmt.Println("up_JWT not found in response body.")
-			ETunnelFlag = false
-			return
-		}
-
-		server_pubKeyECDHFromResp, ok := data["server_pubKeyECDH"].(map[string]interface{})
-		if !ok {
-			fmt.Println("server_pubKeyECDH not found in response body.")
-			ETunnelFlag = false
-			return
-		}
-
-		fmt.Println("up_JWT: ", upJWT)
-		fmt.Println("server_pubKeyECDH: ", server_pubKeyECDHFromResp)
+		UpJWT = data["up_JWT"].(string)
 
 		server_pubKeyECDH, err := utils.JWKFromMap(data)
 		if err != nil {
@@ -205,13 +175,6 @@ func initializeECDHTunnel() {
 			ETunnelFlag = false
 			return
 		}
-
-		// server_pubKeyECDH, err := utils.B64ToJWK(string(data["server_pubKeyECDH"].(string)))
-		// if err != nil {
-		// 	fmt.Println(err.Error())
-		// 	ETunnelFlag = false
-		// 	return
-		// }
 
 		userSymmetricKey, err = privJWK_ecdh.GetECDHSharedSecret(server_pubKeyECDH)
 		if err != nil {

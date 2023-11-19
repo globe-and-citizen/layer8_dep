@@ -175,9 +175,13 @@ func initializeECDHTunnel() {
 		}
 
 		fmt.Println("data: ", data)
-		// fmt.Println("server_pubKeyECDH: ", data["server_pubKeyECDH"].(string))
+		fmt.Println("server_pubKeyECDH: ", data["server_pubKeyECDH"].(string))
+		fmt.Println("up_JWT: ", data["up_JWT"].(string))
 
-		// TODO: Modify from here
+		for k, v := range data {
+			fmt.Println("data pairs (modified) from Proxy:", k, v)
+		}
+
 		server_pubKeyECDH, err := utils.B64ToJWK(data["server_pubKeyECDH"].(string))
 		if err != nil {
 			fmt.Println(err.Error())

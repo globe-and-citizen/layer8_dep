@@ -233,7 +233,9 @@ func fetch(this js.Value, args []js.Value) interface{} {
 		if headers.String() == "<undefined>" || headers.String() == "null" {
 			headers = js.ValueOf(map[string]interface{}{})
 		}
-		// headers.Set("up_JWT", upJWT)
+
+		// set the UpJWT to the headers
+		headers.Set("up_JWT", UpJWT)
 
 		// setting the body to an empty string if it's undefined
 		body := options.Get("body").String()

@@ -163,66 +163,23 @@ func initializeECDHTunnel() {
 		// TODO: Send an encrypted ping / confirmation to the server using the shared secret
 		// just like the 1. Syn 2. Syn/Ack 3. Ack flow in a TCP handshake
 
-		message := "Encrypted tunnel successfully established."
-		encryptedMessage, err := userSymmetricKey.SymmetricEncrypt([]byte(message))
-		if err != nil {
-			fmt.Println("Error encrypting message:", err)
-			return
-		}
+		message := "I am sending Ack using shared secret!"
 
-		jsPublicKey := js.Global().Get("Uint8Array").New(len([]byte(b64PubJWK)))
-		js.CopyBytesToJS(jsPublicKey, []byte(b64PubJWK))
-
-		jsEncryptedMessage := js.Global().Get("Uint8Array").New(len(encryptedMessage))
-		js.CopyBytesToJS(jsEncryptedMessage, encryptedMessage)
-
-		// decryptedMessage := make([]byte, jsEncryptedMessage.Length())
-		// js.CopyBytesToGo(decryptedMessage, jsEncryptedMessage)
+		headers := make(map[string]interface{})
 
 		requestData := map[string]interface{}{
-			"body": jsEncryptedMessage,
-			"headers": map[string]interface{}{
-				"x-ecdh-init":  jsPublicKey,
-				"X-client-id":  "2",
-				"Content-Type": "application/json",
-			},
-			"method": "POST",
+			"body":    message,
+			"headers": headers,
+			"method":  "POST",
 		}
-		fetchOptions := js.ValueOf(requestData)
-
-		// headers := js.Global().Get("Object").New()
-		// headers.Set("x-ecdh-init", jsPublicKey)
-		// headers.Set("Content-Type", "application/json")
-
-		// // Create the fetch options object
-		// fetchOptions := js.Global().Get("Object").New()
-		// fetchOptions.Set("method", "POST")
-		// fetchOptions.Set("body", jsEncryptedMessage)
-		// fetchOptions.Set("headers", headers)
 
 		messageProxyURL := fmt.Sprintf("%s://%s:%s/api/message", Layer8Scheme, Layer8Host, Layer8Port)
-		fetchPromise := js.Global().Call("fetch", js.ValueOf(messageProxyURL), fetchOptions)
-		fetchPromise.Call("then", js.FuncOf(func(this js.Value, p []js.Value) interface{} {
-			if len(p) < 1 {
-				fmt.Println("Error: Fetch response is empty.")
-				return nil
-			}
-			response := p[0]
-			if response.Get("ok").Bool() {
-				bodyPromise := response.Call("json")
-				bodyPromise.Call("then", js.FuncOf(func(this js.Value, p []js.Value) interface{} {
-					fmt.Println("Response Body:", p[0])
-					return nil
-				}))
+		response, err := InternalFetch(messageProxyURL, requestData)
+		if err != nil {
+			fmt.Println("Error fetching data: ", err)
+		}
 
-			} else {
-				// Request failed
-				status := response.Get("status").Int()
-				statusText := response.Get("statusText").String()
-				fmt.Println("Request failed with status:", status, "Status Text:", statusText)
-			}
-			return nil
-		}))
+		fmt.Println("response", response.Status, response.StatusText, response.Headers, string(response.Body))
 
 		ETunnelFlag = true
 		fmt.Println("Encrypted tunnel successfully established.")
@@ -315,4 +272,33 @@ func fetch(this js.Value, args []js.Value) interface{} {
 	promiseConstructor := js.Global().Get("Promise")
 	promise := promiseConstructor.New(js.FuncOf(promise_logic))
 	return promise
+}
+
+func InternalFetch(url string, options map[string]interface{}) (*utils.Response, error) {
+	method := "GET"
+	if val, ok := options["method"]; ok {
+		method = val.(string)
+	}
+
+	headersMap := make(map[string]string)
+	if val, ok := options["headers"]; ok {
+		headers := val.(map[string]interface{})
+		for k, v := range headers {
+			headersMap[k] = v.(string)
+		}
+	}
+
+	body := ""
+	if val, ok := options["body"]; ok {
+		body = val.(string)
+	}
+
+	res := internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port).
+		Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
+
+	if res.Status >= 100 && res.Status < 300 {
+		return res, nil
+	}
+
+	return res, fmt.Errorf("Error: %s", res.StatusText)
 }

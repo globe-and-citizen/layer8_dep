@@ -20,9 +20,6 @@ import (
 	"io"
 	"math/big"
 	"slices"
-	"time"
-
-	"github.com/golang-jwt/jwt/v4"
 )
 
 type KeyUse int
@@ -468,19 +465,4 @@ func B64ToJWK(userPubJWK string) (*JWK, error) {
 // PRIVATE FUNCTIONS FOR PKG UTILS
 func bigIntEqual(a, b *big.Int) bool {
 	return subtle.ConstantTimeCompare(a.Bytes(), b.Bytes()) == 1
-}
-
-func (JWK *JWK) generateJWT() (string, error) {
-	claims := jwt.MapClaims{
-		"user_id": 123,
-		"exp":     time.Now().Add(time.Hour * 1).Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(JWK)
-	if err != nil {
-		return "", err
-	}
-
-	return tokenString, nil
 }

@@ -37,6 +37,10 @@ app.post("/", (req, res)=>{
     res.send("Server has registered a POST.")
 })
 
+app.post("/api/message", (req, res)=>{
+    res.send("API message is working!")
+})
+
 app.post('/api/register', async (req, res) => {
     console.log("req.body: ", req.body)
     const { password, email } = req.body;

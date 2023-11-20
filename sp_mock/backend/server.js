@@ -1,10 +1,10 @@
 const express = require("express");
 const cors = require("cors");
-const popsicle = require('popsicle')
+const popsicle = require("popsicle");
 const Layer8 = require("../../middleware/dist/loadWASM.js");
 const ClientOAuth2 = require("client-oauth2");
 require("dotenv").config();
-const POEMS = require("./poems.json")
+const POEMS = require("./poems.json");
 
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -48,13 +48,13 @@ app.post("/", (req, res) => {
   res.send("Server has registered a POST.");
 });
 
-let counter = 0
+let counter = 0;
 app.get("/nextpoem", (req, res) => {
-  counter++
-  let marker = (counter%3)
-  console.log("Served: ",POEMS.data[marker].title)
-  res.status(200).json(POEMS.data[marker])
-})
+  counter++;
+  let marker = counter % 3;
+  console.log("Served: ", POEMS.data[marker].title);
+  res.status(200).json(POEMS.data[marker]);
+});
 
 app.post("/api/register", async (req, res) => {
   console.log("req.body: ", req.body);
@@ -100,7 +100,7 @@ app.post("/api/login/layer8/auth", async (req, res) => {
           })
         )
         .then((res) => {
-          console.log("response: ", res)
+          console.log("response: ", res);
           return JSON.parse(res.body);
         });
     })
@@ -112,7 +112,6 @@ app.post("/api/login/layer8/auth", async (req, res) => {
   const token = jwt.sign({ username }, SECRET_KEY);
   res.status(200).json({ token });
 });
-
 
 app.listen(port, () => {
   console.log(

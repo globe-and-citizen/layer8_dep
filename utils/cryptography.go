@@ -458,6 +458,35 @@ func B64ToJWK(userPubJWK string) (*JWK, error) {
 }
 
 // PRIVATE FUNCTIONS FOR PKG UTILS
-func bigIntEqual(a, b *big.Int) bool {
+func BigIntEqual(a, b *big.Int) bool {
 	return subtle.ConstantTimeCompare(a.Bytes(), b.Bytes()) == 1
+}
+
+func JWKFromMap(data map[string]interface{}) (*JWK, error) {
+	serverPubKeyRaw, ok := data["server_pubKeyECDH"]
+	if !ok {
+		return nil, fmt.Errorf("server_pubKeyECDH not found in data")
+	}
+
+	serverPubKey, ok := serverPubKeyRaw.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("server_pubKeyECDH is not a valid map")
+	}
+
+	jwk := &JWK{}
+
+	// Extracting values from the serverPubKey map
+	if use, ok := serverPubKey["use"].([]interface{}); ok {
+		for _, v := range use {
+			jwk.Key_ops = append(jwk.Key_ops, v.(string))
+		}
+	}
+	jwk.Kty, _ = serverPubKey["kty"].(string)
+	jwk.Kid, _ = serverPubKey["kid"].(string)
+	jwk.Crv, _ = serverPubKey["crv"].(string)
+	jwk.X, _ = serverPubKey["x"].(string)
+	jwk.Y, _ = serverPubKey["y"].(string)
+	jwk.D, _ = serverPubKey["d"].(string)
+
+	return jwk, nil
 }

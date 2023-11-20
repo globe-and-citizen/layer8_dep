@@ -2,10 +2,13 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"globe-and-citizen/layer8/interceptor/internals"
 	"globe-and-citizen/layer8/utils"
 	"net/http"
+	"strings"
 	"syscall/js"
 )
 
@@ -23,6 +26,7 @@ var (
 	privJWK_ecdh     *utils.JWK
 	pubJWK_ecdh      *utils.JWK
 	userSymmetricKey *utils.JWK
+	UpJWT            string
 )
 
 func main() {
@@ -124,7 +128,6 @@ func initializeECDHTunnel() {
 			ETunnelFlag = false
 			return
 		}
-		defer resp.Body.Close()
 
 		if resp.StatusCode == 401 {
 			fmt.Printf("User not authorized\n")
@@ -132,17 +135,41 @@ func initializeECDHTunnel() {
 			return
 		}
 
+		// upJWT := resp.Header.Get("up_JWT")
+		// fmt.Println("up_JWT: ", upJWT)
+
 		// TODO: For some reason I am unable to put (or access?) custom response headers coming from
 		// either the backend OR the proxy... Therefore, I've sent along the backend's public key in the
 		// response's body.
 		// for k, v := range resp.Header {
 		// 	fmt.Println("header pairs from SP:", k, v)
 		// }
-		// fmt.Println("resp.Header: ", resp.Header.Get("Content-Length"))
 
 		Respbody := utils.ReadResponseBody(resp.Body)
-		//fmt.Println("response body: ", string(Respbody))
-		server_pubKeyECDH, err := utils.B64ToJWK(string(Respbody))
+
+		respBodyConverted, err := base64.URLEncoding.DecodeString(string(Respbody))
+		if err != nil {
+			fmt.Println(err.Error())
+			ETunnelFlag = false
+			return
+		}
+
+		data := map[string]interface{}{}
+
+		err = json.Unmarshal(respBodyConverted, &data)
+		if err != nil {
+			if strings.Contains(err.Error(), "unexpected end of JSON input") {
+				fmt.Println("JSON data might be incomplete or improperly formatted.")
+			} else {
+				fmt.Println(err.Error())
+			}
+			ETunnelFlag = false
+			return
+		}
+
+		UpJWT = data["up_JWT"].(string)
+
+		server_pubKeyECDH, err := utils.JWKFromMap(data)
 		if err != nil {
 			fmt.Println(err.Error())
 			ETunnelFlag = false
@@ -207,6 +234,9 @@ func fetch(this js.Value, args []js.Value) interface{} {
 			headers = js.ValueOf(map[string]interface{}{})
 		}
 
+		// set the UpJWT to the headers
+		headers.Set("up_JWT", UpJWT)
+
 		// setting the body to an empty string if it's undefined
 		body := options.Get("body").String()
 		if body == "<undefined>" {
@@ -218,6 +248,11 @@ func fetch(this js.Value, args []js.Value) interface{} {
 			headersMap[args[0].Index(0).String()] = args[0].Index(1).String()
 			return nil
 		}))
+
+		// Print the headersMap for debugging purposes
+		for k, v := range headersMap {
+			fmt.Println("Encrypted Headers from the SP: ", k, v)
+		}
 
 		go func() {
 			// forward request to the layer8 proxy server

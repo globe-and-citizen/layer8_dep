@@ -397,6 +397,7 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 			for k, v := range jres.Headers {
 				resHeaders[k] = v
 			}
+			resHeaders["mp_JWT"] = MpJWT
 			// Send response
 			res.Set("statusCode", jres.Status)
 			res.Set("statusMessage", jres.StatusText)

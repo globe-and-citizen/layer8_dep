@@ -53,7 +53,7 @@ func GenerateKeyPair(keyUse KeyUse) (*JWK, *JWK, error) {
 	} else if keyUse == ECDH {
 		privKey.Key_ops = append(privKey.Key_ops, "deriveKey")
 	} else {
-		return nil, nil, fmt.Errorf("Unrecognized keyUse. Must be 'ECDSA', or 'ECDH.'")
+		return nil, nil, fmt.Errorf("unrecognized keyUse. Must be 'ECDSA', or 'ECDH.'")
 	}
 
 	privKey_ecdsaPtr, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -74,7 +74,7 @@ func GenerateKeyPair(keyUse KeyUse) (*JWK, *JWK, error) {
 	} else if keyUse == ECDH {
 		pubKey.Key_ops = append(pubKey.Key_ops, "deriveKey")
 	} else {
-		return nil, nil, fmt.Errorf("Unrecognized keyUse. Must be 'ECDSA', or 'ECDH.'")
+		return nil, nil, fmt.Errorf("unrecognized keyUse. Must be 'ECDSA', or 'ECDH.'")
 	}
 
 	pubKey.X = base64.URLEncoding.EncodeToString(privKey_ecdsaPtr.X.Bytes())
@@ -85,11 +85,11 @@ func GenerateKeyPair(keyUse KeyUse) (*JWK, *JWK, error) {
 
 func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 	if jwk.Crv != "P-256" {
-		return nil, fmt.Errorf("Cannot convert to *ecdh.PublicKey. Incorrect 'Crv' property.")
+		return nil, fmt.Errorf("cannot convert to *ecdh.PublicKey. Incorrect 'Crv' property")
 	}
 
 	if jwk.Kty != "EC" {
-		return nil, fmt.Errorf("Cannot convert to *ecdh.PublicKey. Incorrect 'Kty' property.")
+		return nil, fmt.Errorf("cannot convert to *ecdh.PublicKey. Incorrect 'Kty' property")
 	}
 
 	// Step 1, create the 'common-to-all' base key. That is, an ecdsa.PublicKey
@@ -98,13 +98,13 @@ func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 
 	bsX, err := base64.URLEncoding.DecodeString(jwk.X)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to interpret jwk.X coordinate as byte slice: %w", err)
+		return nil, fmt.Errorf("unable to interpret jwk.X coordinate as byte slice: %w", err)
 	}
 	pubKey.X = new(big.Int).SetBytes(bsX)
 
 	bsY, err := base64.URLEncoding.DecodeString(jwk.Y)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to interpret jwk.Y coordinate as byte slice: %w", err)
+		return nil, fmt.Errorf("unable to interpret jwk.Y coordinate as byte slice: %w", err)
 	}
 	pubKey.Y = new(big.Int).SetBytes(bsY)
 
@@ -126,7 +126,7 @@ func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 		privKey.PublicKey = *pubKey
 		bsD, err := base64.URLEncoding.DecodeString(jwk.D)
 		if err != nil {
-			return nil, fmt.Errorf("Unable to interpret jwk.D coordinate as byte slice: %w", err)
+			return nil, fmt.Errorf("unable to interpret jwk.D coordinate as byte slice: %w", err)
 		}
 		privKey.D = new(big.Int).SetBytes(bsD)
 	}
@@ -148,7 +148,7 @@ func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 		}
 		return privateKey, nil
 	}
-	return nil, fmt.Errorf("Unable to Export key. Unrecognized Key_ops.")
+	return nil, fmt.Errorf("unable to Export key. Unrecognized Key_ops")
 }
 
 // Currently only supports checking against pk of type *ecdsa.Private/Public & *ecdh.Private/Public
@@ -255,47 +255,50 @@ func (jwk1 *JWK) EqualToJWK(jwk2 *JWK) bool {
 func (privateKey *JWK) GetECDHSharedSecret(publicKey *JWK) (*JWK, error) {
 	// is public key public?
 	if publicKey.D != "" {
-		return nil, fmt.Errorf("Function takes a public JWK as argument. Private key detected.")
+		return nil, fmt.Errorf("function takes a public JWK as argument. Private key detected")
 	}
 	// is publis key for ECDH?
 	if !slices.Contains(publicKey.Key_ops, "deriveKey") {
-		return nil, fmt.Errorf("The public JWK passed in as argument must have 'deriveKey' as one of the key_ops")
+		return nil, fmt.Errorf("the public JWK passed in as argument must have 'deriveKey' as one of the key_ops")
 	}
 	// is private private?
 	if privateKey.D == "" {
-		return nil, fmt.Errorf("Function receiver must be private JWK. No private key detected.")
+		return nil, fmt.Errorf("function receiver must be private JWK. No private key detected")
 	}
 	// is private for ECDH?
 	if !slices.Contains(privateKey.Key_ops, "deriveKey") {
-		return nil, fmt.Errorf("Function receiver must have 'deriveKey' as one of the Key_ops.")
+		return nil, fmt.Errorf("function receiver must have 'deriveKey' as one of the Key_ops")
 	}
 	// convert both to *ecdh.[private|public]Key
 	privKey_unCasted, err := privateKey.ExportKeyAsGoType()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to export private key as Go Type: %w", err)
+		return nil, fmt.Errorf("unable to export private key as Go Type: %w", err)
 	}
 
 	var privKey *ecdh.PrivateKey
 	if pk, ok := privKey_unCasted.(*ecdh.PrivateKey); ok {
 		privKey = pk
 	} else {
-		return nil, fmt.Errorf("Returned private key could not be cast as *ecdh.PrivateKey")
+		return nil, fmt.Errorf("returned private key could not be cast as *ecdh.PrivateKey")
 	}
 
 	pubKey_unCasted, err := publicKey.ExportKeyAsGoType()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to export public key as Go Type: %w", err)
+		return nil, fmt.Errorf("unable to export public key as Go Type: %w", err)
 	}
 
 	var pubKey *ecdh.PublicKey
 	if pk, ok := pubKey_unCasted.(*ecdh.PublicKey); ok {
 		pubKey = pk
 	} else {
-		return nil, fmt.Errorf("Returned public key could not be cast as *ecdh.PublicKey")
+		return nil, fmt.Errorf("returned public key could not be cast as *ecdh.PublicKey")
 	}
 
 	// Do ECDH
 	ss, err := privKey.ECDH(pubKey)
+	if err != nil {
+		return nil, fmt.Errorf("ECDH failed: %w", err)
+	}
 
 	// Kid is derived from the private key's Kid
 
@@ -313,24 +316,24 @@ func (privateKey *JWK) GetECDHSharedSecret(publicKey *JWK) (*JWK, error) {
 
 func (ss *JWK) SymmetricEncrypt(data []byte) ([]byte, error) {
 	if !slices.Contains(ss.Key_ops, "encrypt") {
-		return nil, fmt.Errorf("Receiver Key_ops must include 'encrypt' ")
+		return nil, fmt.Errorf("receiver Key_ops must include 'encrypt' ")
 	}
 
 	ssBS, err := base64.URLEncoding.DecodeString(ss.X)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to interpret ss.X coordinate as byte slice: %w", err)
+		return nil, fmt.Errorf("unable to interpret ss.X coordinate as byte slice: %w", err)
 	}
 	blockCipher, err := aes.NewCipher(ssBS)
 	if err != nil {
-		return nil, fmt.Errorf("Symmetric encryption failed @ 1 : %w", err)
+		return nil, fmt.Errorf("symmetric encryption failed @ 1 : %w", err)
 	}
 	aesgcm, err := cipher.NewGCM(blockCipher)
 	if err != nil {
-		return nil, fmt.Errorf("Symmetric encryption failed @ 2: %w", err)
+		return nil, fmt.Errorf("symmetric encryption failed @ 2: %w", err)
 	}
 	nonce := make([]byte, aesgcm.NonceSize())
 	if _, err = io.ReadFull(rand.Reader, nonce); err != nil {
-		return nil, fmt.Errorf("Symmetric encryption failed @ 3: %w", err)
+		return nil, fmt.Errorf("symmetric encryption failed @ 3: %w", err)
 	}
 
 	cipherText := aesgcm.Seal(nonce, nonce, data, nil)
@@ -340,31 +343,31 @@ func (ss *JWK) SymmetricEncrypt(data []byte) ([]byte, error) {
 
 func (ss *JWK) SymmetricDecrypt(ciphertext []byte) ([]byte, error) {
 	if len(ciphertext) == 0 {
-		return nil, fmt.Errorf("Receiver Key_ops must include 'decrypt' ")
+		return nil, fmt.Errorf("receiver Key_ops must include 'decrypt' ")
 	}
 
 	if !slices.Contains(ss.Key_ops, "decrypt") {
-		return nil, fmt.Errorf("Receiver Key_ops must include 'decrypt' ")
+		return nil, fmt.Errorf("receiver Key_ops must include 'decrypt' ")
 	}
 
 	ssBS, err := base64.URLEncoding.DecodeString(ss.X)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to interpret ss.X coordinate as byte slice: %w", err)
+		return nil, fmt.Errorf("unable to interpret ss.X coordinate as byte slice: %w", err)
 	}
 	blockCipher, err := aes.NewCipher(ssBS)
 	if err != nil {
-		return nil, fmt.Errorf("Symmetric encryption failed @ 1: %w", err)
+		return nil, fmt.Errorf("symmetric encryption failed @ 1: %w", err)
 	}
 	aesgcm, err := cipher.NewGCM(blockCipher)
 	if err != nil {
-		return nil, fmt.Errorf("Symmetric encryption failed @ 2: %w", err)
+		return nil, fmt.Errorf("symmetric encryption failed @ 2: %w", err)
 	}
 	nonceSize := aesgcm.NonceSize()
 	nonce, ciphertext := ciphertext[:nonceSize], ciphertext[nonceSize:]
 
 	plaintext, err := aesgcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Symmetric encryption failed @ 3: %w", err)
+		return nil, fmt.Errorf("symmetric encryption failed @ 3: %w", err)
 	}
 	return plaintext, nil
 }
@@ -372,13 +375,13 @@ func (ss *JWK) SymmetricDecrypt(ciphertext []byte) ([]byte, error) {
 func (privateKey *JWK) SignWithKey(data []byte) ([]byte, error) {
 	ecdsaPrivateKey, err := privateKey.ExportKeyAsGoType()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to call ExportKeyAsGoType on function receiver. Error: %w", err)
+		return nil, fmt.Errorf("unable to call ExportKeyAsGoType on function receiver. Error: %w", err)
 	}
 	var ecdsaKeyAsGoType *ecdsa.PrivateKey
 	if privKey, ok := ecdsaPrivateKey.(*ecdsa.PrivateKey); ok {
 		ecdsaKeyAsGoType = privKey
 	} else {
-		return nil, fmt.Errorf("Receiver, privateKey, of type %T could not be cast as compatible Go type, *ecdsa.PrivateKey.", privateKey)
+		return nil, fmt.Errorf("receiver, privateKey, of type %T could not be cast as compatible Go type, *ecdsa.PrivateKey", privateKey)
 	}
 
 	hash32 := sha256.Sum256(data) //sha256 outputs a [32]byte that must be converted to []byte using the built in copy() method.
@@ -386,33 +389,33 @@ func (privateKey *JWK) SignWithKey(data []byte) ([]byte, error) {
 	copy(hash, hash32[:])
 	signature, err := ecdsa.SignASN1(rand.Reader, ecdsaKeyAsGoType, hash)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to sign data. Internal error: %w", err)
+		return nil, fmt.Errorf("unable to sign data. Internal error: %w", err)
 	}
 	return signature, nil
 }
 
 func (publicKey *JWK) CheckAgainstASN1Signature(signature, data []byte) (bool, error) {
 	if !slices.Contains(publicKey.Key_ops, "verify") {
-		return false, fmt.Errorf("Check function receiver. *JWK Key_ops must include 'verify'")
+		return false, fmt.Errorf("check function receiver. *JWK Key_ops must include 'verify'")
 	}
 
 	ecdsaPublicKey, err := publicKey.ExportKeyAsGoType()
 	if err != nil {
-		return false, fmt.Errorf("Unable to call ExportKeyAsGoType on function receiver. Error: %w", err)
+		return false, fmt.Errorf("unable to call ExportKeyAsGoType on function receiver. Error: %w", err)
 	}
 	var ecdsaKeyAsGoType *ecdsa.PublicKey
 	if pubKey, ok := ecdsaPublicKey.(*ecdsa.PublicKey); ok {
 		ecdsaKeyAsGoType = pubKey
 	} else {
-		return false, fmt.Errorf("Receiver, publicKey, of type %T could not be cast as a compatible *ecdsa.PublicKey.", publicKey)
+		return false, fmt.Errorf("receiver, publicKey, of type %T could not be cast as a compatible *ecdsa.PublicKey", publicKey)
 	}
 
 	hash32 := sha256.Sum256(data) //sha256 outputs a [32]byte that must be converted to []byte using the built in copy() method.
 	var hash []byte
 	copy(hash, hash32[:])
 	verified := ecdsa.VerifyASN1(ecdsaKeyAsGoType, hash, signature)
-	if verified != true {
-		return false, fmt.Errorf("Signature validation failed for this public key")
+	if !verified {
+		return false, fmt.Errorf("signature validation failed for this public key")
 	}
 
 	return verified, nil
@@ -421,7 +424,7 @@ func (publicKey *JWK) CheckAgainstASN1Signature(signature, data []byte) (bool, e
 func VerifyASN1Signature(JWK *JWK, signature, data []byte) (bool, error) {
 	result, err := JWK.CheckAgainstASN1Signature(signature, data)
 	if err != nil {
-		return false, fmt.Errorf("Unable to verify signature: %w", err)
+		return false, fmt.Errorf("unable to verify signature: %w", err)
 	}
 	return result, nil
 }
@@ -429,7 +432,7 @@ func VerifyASN1Signature(JWK *JWK, signature, data []byte) (bool, error) {
 func SignData(JWK *JWK, data []byte) ([]byte, error) {
 	ASN1Signature, err := JWK.SignWithKey(data)
 	if err != nil {
-		return nil, fmt.Errorf("Unable to sign: %w", err)
+		return nil, fmt.Errorf("unable to sign: %w", err)
 	}
 
 	return ASN1Signature, nil
@@ -438,7 +441,7 @@ func SignData(JWK *JWK, data []byte) ([]byte, error) {
 func (JWK *JWK) ExportAsBase64() (string, error) {
 	marshalled, err := json.Marshal(JWK)
 	if err != nil {
-		return "", fmt.Errorf("Failure to export JWK as Base64 %w", err.Error())
+		return "", fmt.Errorf("failure to export JWK as Base64 %w", err)
 	}
 
 	return base64.URLEncoding.EncodeToString(marshalled), nil
@@ -447,12 +450,12 @@ func (JWK *JWK) ExportAsBase64() (string, error) {
 func B64ToJWK(userPubJWK string) (*JWK, error) {
 	userPubJWK_BS, err := base64.URLEncoding.DecodeString(userPubJWK)
 	if err != nil {
-		return nil, fmt.Errorf("Failure to decode userPubJWK", err.Error())
+		return nil, fmt.Errorf("failure to decode userPubJWK: %w", err)
 	}
 	userPubJWKConverted := &JWK{}
 	err = json.Unmarshal(userPubJWK_BS, userPubJWKConverted)
 	if err != nil {
-		return nil, fmt.Errorf("Failure to unmarshal userPubJWK: ", err.Error())
+		return nil, fmt.Errorf("failure to unmarshal userPubJWK: %w", err)
 	}
 	return userPubJWKConverted, nil
 }

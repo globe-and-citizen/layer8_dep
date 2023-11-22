@@ -39,3 +39,12 @@ run_rs_backend: # Port 3000
 # Run Resource Server Frontend
 run_rs_frontend: # Port 5174
 	cd resource_server/frontend && npm run dev
+
+run_db:
+	docker run -d --rm \
+		--name layer8-resource \
+		-v $(PWD)/.docker/postgres:/var/lib/postgresql/data \
+		-e POSTGRES_USER=postgres \
+		-e POSTGRES_PASSWORD=postgres \
+		-e POSTGRES_DBNAME=postgres \
+		-p 5434:5432 postgres:14.3

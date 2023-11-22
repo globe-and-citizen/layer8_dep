@@ -83,12 +83,21 @@ const loginUser = async () => {
     }
     
 
-    var {proof, signature} = scram.first(
-      loginPassword.value,
-      responseOne.iteration_count,
-      responseOne.salt,
-      responseOne.combined_nonce,
-    );
+    var proof, signature;
+
+    try {
+      var initial = await scram.first(
+        loginPassword.value,
+        responseOne.iteration_count,
+        responseOne.salt,
+        responseOne.combined_nonce,
+      );
+      proof = initial.proof;
+      signature = initial.signature;
+    } catch (error) {
+      alert(error);
+      return;
+    }
 
     const respTwo = await window.fetch(
       "http://localhost:3050/api/v1/login-user",
@@ -107,10 +116,16 @@ const loginUser = async () => {
     const responseTwo = await respTwo.json();
 
     // authenticate the server with the signature
-    if (!scram.final(signature, responseTwo.proof)) {
-      alert("Login failed. Signatures didn't match");
+    try {
+      var verified = await scram.final(signature, responseTwo.proof)
+      if (!verified) {
+        alert("(scram) server authentication failed!");
+        return;
+      }
+    } catch (error) {
+      alert(error);
       return;
-    }
+    };
 
     // then check if the token is received
     if (responseTwo.token) {

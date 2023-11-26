@@ -19,3 +19,7 @@ type LoginUserDTO struct {
 type LoginPrecheckDTO struct {
 	Username string `json:"username"`
 }
+
+type UpdateDisplayNameDTO struct {
+	DisplayName string `json:"display_name"`
+}

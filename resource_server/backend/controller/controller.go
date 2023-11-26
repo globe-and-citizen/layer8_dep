@@ -67,13 +67,18 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 	userMetadata := []models.UserMetadata{
 		{
 			UserID: user.ID,
-			Key:    "email-verified",
+			Key:    "email_verified",
 			Value:  "false",
 		},
 		{
 			UserID: user.ID,
 			Key:    "country",
 			Value:  req.Country,
+		},
+		{
+			UserID: user.ID,
+			Key:    "display_name",
+			Value:  req.DisplayName,
 		},
 	}
 	if err := db.Create(&userMetadata).Error; err != nil {
@@ -265,18 +270,33 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get user metadata from the database
+	var userMetadata []models.UserMetadata
+	if err := db.Where("user_id = ?", claims.UserID).Find(&userMetadata).Error; err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		res := utils.BuildErrorResponse("Failed to get user profile", err.Error(), utils.EmptyObj{})
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
 	resp := models.ProfileResponseOutput{
 		Email:     user.Email,
 		Username:  user.Username,
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
-		// PhoneNumber:         user.PhoneNumber,
-		// Address:             user.Address,
-		// EmailVerified:       user.EmailVerified,
-		// PhoneNumberVerified: user.PhoneNumberVerified,
-		// LocationVerified:    user.LocationVerified,
-		// NationalIdVerified:  user.NationalIdVerified,
 	}
+
+	for _, metadata := range userMetadata {
+		switch metadata.Key {
+		case "display_name":
+			resp.DisplayName = metadata.Value
+		case "country":
+			resp.Country = metadata.Value
+		case "email_verified":
+			resp.EmailVerified = metadata.Value == "true"
+		}
+	}
+
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to get user profile", err.Error(), utils.EmptyObj{})
@@ -287,7 +307,7 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ExposeUserHandler(w http.ResponseWriter, r *http.Request) {
+func VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get the token from the request header
 	tokenString := r.Header.Get("Authorization")
@@ -301,41 +321,94 @@ func ExposeUserHandler(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		res := utils.BuildErrorResponse("Failed to get user profile", err.Error(), utils.EmptyObj{})
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.Printf("Error sending response: %v", err)
-		}
+		res := utils.BuildErrorResponse("Failed to verify email", err.Error(), utils.EmptyObj{})
+		json.NewEncoder(w).Encode(res)
 		return
 	}
 	if !token.Valid {
 		w.WriteHeader(http.StatusUnauthorized)
-		res := utils.BuildErrorResponse("Failed to get user profile", err.Error(), utils.EmptyObj{})
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.Printf("Error sending response: %v", err)
-		}
+		res := utils.BuildErrorResponse("Failed to verify email", err.Error(), utils.EmptyObj{})
+		json.NewEncoder(w).Encode(res)
 		return
 	}
 
-	resp := models.ExposeUserResponseOutput{
-		Username: claims.UserName,
-		// EmailVerified:       claims.EmailVerified,
-		// PhoneNumberVerified: claims.PhoneNumberVerified,
-		// LocationVerified:    claims.LocationVerified,
-		// NationalIdVerified:  claims.NationalIdVerified,
-		EmailVerified:       false,
-		PhoneNumberVerified: false,
-		LocationVerified:    false,
-		NationalIdVerified:  false,
+	db := config.SetupDatabaseConnection()
+	defer config.CloseDatabaseConnection(db)
+
+	err = db.Model(&models.UserMetadata{}).Where("user_id = ? AND key = ?", claims.UserID, "email_verified").Update("value", "true").Error
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		res := utils.BuildErrorResponse("Failed to verify email", err.Error(), utils.EmptyObj{})
+		json.NewEncoder(w).Encode(res)
+		return
 	}
+
+	resp := utils.BuildResponse(true, "OK!", "Email verified successfully")
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		res := utils.BuildErrorResponse("Failed to get user profile", err.Error(), utils.EmptyObj{})
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.Printf("Error sending response: %v", err)
-		}
+		res := utils.BuildErrorResponse("Failed to verify email", err.Error(), utils.EmptyObj{})
+		json.NewEncoder(w).Encode(res)
 		return
 	}
 }
 
-// TODO: Implement this after discussion
-// func AuthorizeHandler
+func UpdateDisplayNameHandler(w http.ResponseWriter, r *http.Request) {
+
+	var req dto.UpdateDisplayNameDTO
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		res := utils.BuildErrorResponse("Failed to update display name", err.Error(), utils.EmptyObj{})
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	// validate request
+	if err := validator.New().Struct(req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		res := utils.BuildErrorResponse("Failed to update display name", err.Error(), utils.EmptyObj{})
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	// Get the token from the request header
+	tokenString := r.Header.Get("Authorization")
+	tokenString = tokenString[7:] // Remove the "Bearer " prefix
+	// Get user ID from the token
+	claims := &models.Claims{}
+	JWT_SECRET_STR := os.Getenv("JWT_SECRET")
+	JWT_SECRET_BYTE := []byte(JWT_SECRET_STR)
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return JWT_SECRET_BYTE, nil
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		res := utils.BuildErrorResponse("Failed to update display name", err.Error(), utils.EmptyObj{})
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+	if !token.Valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		res := utils.BuildErrorResponse("Failed to update display name", err.Error(), utils.EmptyObj{})
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	db := config.SetupDatabaseConnection()
+	defer config.CloseDatabaseConnection(db)
+
+	err = db.Model(&models.UserMetadata{}).Where("user_id = ? AND key = ?", claims.UserID, "display_name").Update("value", req.DisplayName).Error
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		res := utils.BuildErrorResponse("Failed to update display name", err.Error(), utils.EmptyObj{})
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
+	resp := utils.BuildResponse(true, "OK!", "Display name updated successfully")
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		res := utils.BuildErrorResponse("Failed to update display name", err.Error(), utils.EmptyObj{})
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+}

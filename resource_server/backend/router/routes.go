@@ -23,20 +23,11 @@ func RegisterRoutes() http.HandlerFunc {
 		case "/api/v1/profile":
 			Ctl.ProfileHandler(w, r)
 
-		case "/api/v1/expose-user":
-			Ctl.ExposeUserHandler(w, r)
+		case "/api/v1/verify-email":
+			Ctl.VerifyEmailHandler(w, r)
 
-		// case "/api/v1/verify-email":
-		// 	Ctl.VerifyEmailHandler(w, r)
-
-		// case "/api/v1/verify-phone-number":
-		// 	Ctl.VerifyPhoneNumberHandler(w, r)
-
-		// case "/api/v1/verify-location":
-		// 	Ctl.VerifyLocationHandler(w, r)
-
-		// case "/api/v1/verify-national-id":
-		// 	Ctl.VerifyNationalIdHandler(w, r)
+		case "/api/v1/change-display-name":
+			Ctl.UpdateDisplayNameHandler(w, r)
 
 		default:
 			// Return a 404 Not Found error for unknown routes

@@ -43,7 +43,59 @@ const logoutUser = () => {
 };
 
 const verifyEmail = async () => {
-  user.value.email_verified = true;
+  try {
+    const resp = await window.fetch(
+      "http://localhost:3050/api/v1/verify-email",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "Application/Json",
+          Authorization: `Bearer ${token.value}`,
+        },
+      }
+    );
+    const data = await resp.json();
+    if (data.message === "OK!") {
+      alert("Email verified!");
+      user.value.email_verified = true;
+    } else {
+      alert("Email verification failed!");
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const changeDisplayName = async () => {
+  try {
+    const newDisplayName = prompt("Enter new display name:");
+    if (newDisplayName == "") {
+      alert("Please enter a display name!");
+      return;
+    }
+    const resp = await window.fetch(
+      "http://localhost:3050/api/v1/change-display-name",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "Application/Json",
+          Authorization: `Bearer ${token.value}`,
+        },
+        body: JSON.stringify({
+          display_name: newDisplayName,
+        }),
+      }
+    );
+    const data = await resp.json();
+    if (data.message === "OK!") {
+      alert("Display name changed!");
+      user.value.display_name = newDisplayName;
+    } else {
+      alert("Display name change failed!");
+    }
+  } catch (error) {
+    console.error(error);
+  }
 };
 </script>
 
@@ -72,6 +124,17 @@ const verifyEmail = async () => {
         <hr class="line" />
         <p class="box">Email: {{ user.email }}</p>
         <hr class="line" />
+        <p class="box">Country: {{ user.country }}</p>
+        <hr class="line" />
+        <p class="box">Display Name: {{ user.display_name }}</p>
+        <button
+          class="btn-primary"
+          style="margin-left: 16%"
+          @click="changeDisplayName"
+        >
+          Change Display Name
+        </button>
+        <hr class="line" />
         <p class="box">Email Verified: {{ user.email_verified }}</p>
         <button
           class="btn-primary"
@@ -82,7 +145,13 @@ const verifyEmail = async () => {
           Verify Email
         </button>
         <hr class="line" />
-        <button class="btn-primary-2" style="margin-top: 4%;"  @click="logoutUser">Logout</button>
+        <button
+          class="btn-primary-2"
+          style="margin-top: 4%"
+          @click="logoutUser"
+        >
+          Logout
+        </button>
       </div>
     </div>
   </div>

@@ -32,12 +32,6 @@ CREATE TABLE users (
     password VARCHAR(255) NOT NULL,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
-    -- phone_number VARCHAR(50) NOT NULL,
-    -- address VARCHAR(255) NOT NULL,
-    -- email_verified BOOLEAN NOT NULL DEFAULT FALSE,
-    -- phone_number_verified BOOLEAN NOT NULL DEFAULT FALSE,
-    -- location_verified BOOLEAN NOT NULL DEFAULT FALSE,
-    -- national_id_verified BOOLEAN NOT NULL DEFAULT FALSE,
     salt VARCHAR(255) NOT NULL DEFAULT 'ThisIsARandomSalt123!@#',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -48,6 +42,16 @@ CREATE TABLE clients (
 	secret VARCHAR NOT NULL,
 	name VARCHAR(255) NOT NULL,
 	redirect_uri VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE user_metadata (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    key VARCHAR(255) NOT NULL,
+    value VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
 ```

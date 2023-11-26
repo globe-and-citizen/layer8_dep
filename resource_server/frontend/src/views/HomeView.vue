@@ -8,8 +8,7 @@ const registerUsername = ref("");
 const registerPassword = ref("");
 const registerFirstName = ref("");
 const registerLastName = ref("");
-// const registerPhoneNumber = ref("");
-// const registerAddress = ref("");
+const registerDisplayName = ref("");
 const loginUsername = ref("");
 const loginPassword = ref("");
 const isRegister = ref(false);
@@ -34,8 +33,7 @@ const registerUser = async () => {
         first_name: registerFirstName.value,
         last_name: registerLastName.value,
         password: registerPassword.value,
-        // phone_number: registerPhoneNumber.value,
-        // address: registerAddress.value,
+        display_name: registerDisplayName.value,
       }),
     });
     alert("Registration successful!");
@@ -145,26 +143,19 @@ const loginUser = async () => {
         </div>
         <div class="input-group">
           <input
+            v-model="registerDisplayName"
+            placeholder="Display Name"
+            class="input-button"
+          />
+        </div>
+        <div class="input-group">
+          <input
             v-model="registerPassword"
             type="password"
             placeholder="Password"
             class="input-button"
           />
         </div>
-        <!-- <div class="input-group">
-            <input
-              v-model="registerPhoneNumber"
-              placeholder="Phone Number"
-              class="input-button"
-            />
-          </div>
-          <div class="input-group">
-            <input
-              v-model="registerAddress"
-              placeholder="Address"
-              class="input-button"
-            />
-          </div> -->
         <button class="btn-primary" @click="registerUser">Register</button>
         <a
           class="text"

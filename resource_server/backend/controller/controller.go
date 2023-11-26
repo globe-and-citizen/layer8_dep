@@ -54,9 +54,7 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		Password:  HashedAndSaltedPass,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
-		// PhoneNumber: req.PhoneNumber,
-		// Address:     req.Address,
-		Salt: rmSalt,
+		Salt:      rmSalt,
 	}
 	if err := db.Create(&user).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

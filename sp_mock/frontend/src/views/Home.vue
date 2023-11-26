@@ -4,19 +4,17 @@ import Navbar from "../components/Navbar.vue";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
-const token = ref(localStorage.getItem("token") || null);
-const isLoggedIn = computed(() => token.value !== null);
+const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
+const isLoggedIn = computed(() => SpToken.value !== null);
 let nextPoem = ref({});
 
 const userName = computed(() => {
-    if (token.value && token.value.split(".").length > 1) {
-        const payload = JSON.parse(atob(token.value.split(".")[1]));
-        return payload.username;
+    if (SpToken.value && SpToken.value.split(".").length > 1) {
+        const payload = JSON.parse(atob(SpToken.value.split(".")[1]));
+        return payload.email;
     }
     return "";
 });
-
-//console.log("payload", JSON.parse(atob(token.value.split(".")[1])));
 
 const getPoem = async () => {
     try {
@@ -38,8 +36,8 @@ const getPoem = async () => {
 
 
 const logoutUser = () => {
-    token.value = null;
-    localStorage.removeItem("token");
+    SpToken.value = null;
+    localStorage.removeItem("SP_TOKEN");
     router.push({ name: "loginRegister" });
 };
 

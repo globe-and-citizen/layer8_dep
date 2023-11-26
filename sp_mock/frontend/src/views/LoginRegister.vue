@@ -9,9 +9,9 @@ const registerPassword = ref("");
 const loginEmail = ref("");
 const loginPassword = ref("");
 const isRegister = ref(false);
-const isLoggedIn = computed(() => token.value !== null);
+const isLoggedIn = computed(() => SpToken.value !== null);
 const isContinueAnonymously = ref(false);
-const token = ref(localStorage.getItem("token") || null);
+const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
 
 const registerUser = async () => {
   try {
@@ -53,8 +53,8 @@ const loginUser = async () => {
     });
 
     const data = await response.json();
-    token.value = data.token;
-    localStorage.setItem("token", data.token);
+    SpToken.value = data.token;
+    localStorage.setItem("SP_TOKEN", data.token);
     alert("Login successful!");
   } catch (error) {
     console.error(error);
@@ -69,10 +69,18 @@ const continueAnonymously = () => {
 };
 
 const logoutUser = () => {
-  token.value = null;
-  localStorage.removeItem("token");
+  SpToken.value = null;
+  localStorage.removeItem("SP_TOKEN");
   isContinueAnonymously.value = false;
 };
+
+const userName = computed(() => {
+    if (SpToken.value && SpToken.value.split(".").length > 1) {
+        const payload = JSON.parse(atob(SpToken.value.split(".")[1]));
+        return payload.email;
+    }
+    return "";
+});
 
 const loginWithLayer8Popup = async () => {
   const response = await layer8.fetch("http://localhost:8000/api/login/layer8/auth")
@@ -97,7 +105,7 @@ const loginWithLayer8Popup = async () => {
         })
         .then(res => res.json())
         .then(data => {
-          localStorage.setItem("token", data.token)
+          localStorage.setItem("L8_TOKEN", data.token)
           router.push({ name: 'home' })
           popup.close();
         })
@@ -139,7 +147,7 @@ const loginWithLayer8Popup = async () => {
 
     <div v-if="isLoggedIn" class="welcome-container">
       <h1 style="color: rgb(136, 136, 136); font-weight: 600; padding-bottom: 2%">
-        Welcome User!
+        Welcome {{ userName }}!
       </h1>
       <div class="new-container" v-if="!isContinueAnonymously">
         <button class="btn-secondary" @click="continueAnonymously">

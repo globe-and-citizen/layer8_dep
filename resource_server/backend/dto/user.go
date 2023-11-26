@@ -7,6 +7,7 @@ type RegisterUserDTO struct {
 	FirstName   string `json:"first_name" validate:"required"`
 	LastName    string `json:"last_name"`
 	DisplayName string `json:"display_name"`
+	Country     string `json:"country"`
 }
 
 type LoginUserDTO struct {

@@ -9,6 +9,7 @@ const registerPassword = ref("");
 const registerFirstName = ref("");
 const registerLastName = ref("");
 const registerDisplayName = ref("");
+const registerCountry = ref("");
 const loginUsername = ref("");
 const loginPassword = ref("");
 const isRegister = ref(false);
@@ -34,6 +35,7 @@ const registerUser = async () => {
         last_name: registerLastName.value,
         password: registerPassword.value,
         display_name: registerDisplayName.value,
+        country: registerCountry.value,
       }),
     });
     alert("Registration successful!");
@@ -145,6 +147,13 @@ const loginUser = async () => {
           <input
             v-model="registerDisplayName"
             placeholder="Display Name"
+            class="input-button"
+          />
+        </div>
+        <div class="input-group">
+          <input
+            v-model="registerCountry"
+            placeholder="Country"
             class="input-button"
           />
         </div>

@@ -64,6 +64,26 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	userMetadata := []models.UserMetadata{
+		{
+			UserID: user.ID,
+			Key:    "email-verified",
+			Value:  "false",
+		},
+		{
+			UserID: user.ID,
+			Key:    "country",
+			Value:  req.Country,
+		},
+	}
+	if err := db.Create(&userMetadata).Error; err != nil {
+		db.Delete(&user)
+		w.WriteHeader(http.StatusInternalServerError)
+		res := utils.BuildErrorResponse("Failed to register user", err.Error(), utils.EmptyObj{})
+		json.NewEncoder(w).Encode(res)
+		return
+	}
+
 	res := utils.BuildResponse(true, "OK!", "User registered successfully")
 	if err := json.NewEncoder(w).Encode(res); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

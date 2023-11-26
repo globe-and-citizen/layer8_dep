@@ -10,12 +10,9 @@ let user = ref({
   username: "",
   first_name: "",
   last_name: "",
-  phone_number: "",
-  address: "",
+  display_name: "",
+  country: "",
   email_verified: false,
-  phone_number_verified: false,
-  location_verified: false,
-  national_id_verified: false,
 });
 
 const getUserDetails = async () => {

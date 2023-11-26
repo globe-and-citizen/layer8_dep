@@ -25,26 +25,51 @@
         <div class="line"></div>
 
         <div class="body">
-            <h2 class="center">Authorize <b>{{.ClientName}}</b></h2>
-            <br>
-            <div class="box">
-                {{range .Scopes}}
-                <div class="box-item">
-                    <span><input type="checkbox" checked disabled></span>
-                    <span>{{.}}</span>
-                </div>
-                {{end}}
-            </div>
-            <br>
-            <form method="POST" id="submit">
-                <input type="hidden" name="decision" value="allow">
-                <input type="submit" value="Authorize">
-            </form>
-            <br>
-            <div class="footer">
-                <a class="cursor-pointer" onclick="logout()">Logout</a> | Layer8 &copy;<script>document.write(getDate());</script>
-            </div>
+            <h2 class="left">Authorize <b>{{.ClientName}}</b></h2>
+            <!-- <form action="/authorize{{if .HasNext}}?next={{.Next}}{{end}}" method="POST"> -->
+            <!-- <input type="hidden" name="decision" value="deny"> -->
+
+            <!-- </form> -->
         </div>
+        <br>
+        <div class="box">
+            {{range .Scopes}}
+            <div class="box-item">
+                <span><input type="checkbox" checked disabled></span>
+                <span>{{.}}</span>
+            </div>
+            {{end}}
+        </div>
+        <br>
+        <form method="POST">
+            <input type="hidden" name="decision" value="allow">
+            <label style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
+                <input type="checkbox" name="share_email_ver" id="share_email_ver" value="true"
+                    style="margin-right: 5px;">
+                <span style="font-size: 14px;">Share email verification data</span>
+            </label>
+            <label style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
+                <input type="checkbox" name="share_phone_number_ver" id="share_phone_number_ver" value="true"
+                    style="margin-right: 5px;">
+                <span style="font-size: 14px;">Share phone number verification data</span>
+            </label>
+            <label style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
+                <input type="checkbox" name="share_address_ver" id="share_address_ver" value="true"
+                    style="margin-right: 5px;">
+                <span style="font-size: 14px;">Share address verification data</span>
+            </label>
+            <label style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
+                <input type="checkbox" name="share_id_ver" id="share_id_ver" value="true" style="margin-right: 5px;">
+                <span style="font-size: 14px;">Share National ID verification data</span>
+            </label>
+            <input type="submit" value="Authorize">
+        </form>
+        <br>
+        <div class="footer">
+            <a class="cursor-pointer" onclick="logout()">Logout</a> | Layer8 &copy;
+            <script>document.write(getDate());</script>
+        </div>
+    </div>
     </div>
     <script>
         document.getElementById('submit').addEventListener('submit', e => {

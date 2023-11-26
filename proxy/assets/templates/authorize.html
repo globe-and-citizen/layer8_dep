@@ -43,24 +43,20 @@
         <br>
         <form method="POST">
             <input type="hidden" name="decision" value="allow">
-            <label style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
+            <!-- <label style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
                 <input type="checkbox" name="share_email_ver" id="share_email_ver" value="true"
                     style="margin-right: 5px;">
                 <span style="font-size: 14px;">Share email verification data</span>
-            </label>
+            </label> -->
             <label style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
-                <input type="checkbox" name="share_phone_number_ver" id="share_phone_number_ver" value="true"
+                <input type="checkbox" name="share_country_detail" id="share_country_detail" value="true"
                     style="margin-right: 5px;">
-                <span style="font-size: 14px;">Share phone number verification data</span>
-            </label>
+                <span style="font-size: 14px;">Share email verification data</span>
+            </label>    
             <label style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
-                <input type="checkbox" name="share_address_ver" id="share_address_ver" value="true"
+                <input type="checkbox" name="share_display_name" id="share_display_name" value="true"
                     style="margin-right: 5px;">
-                <span style="font-size: 14px;">Share address verification data</span>
-            </label>
-            <label style="display: flex; align-items: left; white-space: nowrap; align-self: flex-start;">
-                <input type="checkbox" name="share_id_ver" id="share_id_ver" value="true" style="margin-right: 5px;">
-                <span style="font-size: 14px;">Share National ID verification data</span>
+                <span style="font-size: 14px;">Share display name</span>
             </label>
             <input type="submit" value="Authorize">
         </form>

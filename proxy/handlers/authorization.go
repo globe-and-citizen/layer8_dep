@@ -153,6 +153,8 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		fmt.Println("L155")
+		// user.EmailVer = string(ctx.FormValue("email_ver")) == "true"
+		user.ShareDisplayName = r.FormValue("share_display_name") == "true"
 		// generate authorization url
 		authURL, err := usecase.GenerateAuthorizationURL(&oauth2.Config{
 			ClientID:    client.ID,

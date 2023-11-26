@@ -48,6 +48,15 @@ func (r *PostgresRepository) GetUserByID(id int64) (*models.User, error) {
 	return &user, nil
 }
 
+func (r *PostgresRepository) GetUserMetadata(userID int64, key string) (*models.UserMetadata, error) {
+	var userMetadata models.UserMetadata
+	err := r.db.Where("user_id = ? AND key = ?", userID, key).First(&userMetadata).Error
+	if err != nil {
+		return &models.UserMetadata{}, err
+	}
+	return &userMetadata, nil
+}
+
 func (r *PostgresRepository) SetClient(client *models.Client) error {
 	// Check if client already exists
 	var existingClient models.Client

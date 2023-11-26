@@ -152,9 +152,16 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/login?next="+r.URL.String(), http.StatusSeeOther)
 			return
 		}
+		fmt.Println("scopes before user decision: ", scopes)
 		fmt.Println("L155")
-		// user.EmailVer = string(ctx.FormValue("email_ver")) == "true"
-		user.ShareDisplayName = r.FormValue("share_display_name") == "true"
+		if r.FormValue("share_display_name") == "true" {
+			scopes += "," + constants.READ_USER_DISPLAY_NAME_SCOPE
+		}
+		if r.FormValue("share_country") == "true" {
+			scopes += "," + constants.READ_USER_COUNTRY_SCOPE
+		}
+		fmt.Println("L162")
+		fmt.Println("scopes after user decision: ", scopes)
 		// generate authorization url
 		authURL, err := usecase.GenerateAuthorizationURL(&oauth2.Config{
 			ClientID:    client.ID,

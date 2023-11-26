@@ -109,6 +109,10 @@ app.post("/api/login/layer8/auth", async (req, res) => {
     });
 
   const username = user.profile.username;
+  const displayName = user.display_name.value;
+  // Metadata check
+  console.log("username: ", username);
+  console.log("displayName: ", displayName);
   const token = jwt.sign({ username }, SECRET_KEY);
   res.status(200).json({ token });
 });

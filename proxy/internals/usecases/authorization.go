@@ -116,7 +116,28 @@ func (u *UseCase) AccessResourcesWithToken(token string) (map[string]interface{}
 				return nil, err
 			}
 			resources["profile"] = user
+
+			isEmailVerified, err := u.Repo.GetUserMetadata(claims.UserID, constants.USER_EMAIL_VERIFIED_METADATA_KEY)
+			if err != nil {
+				return nil, err
+			}
+			resources["is_email_verified"] = isEmailVerified
+
+		case constants.READ_USER_DISPLAY_NAME_SCOPE:
+			displayNameMetaData, err := u.Repo.GetUserMetadata(claims.UserID, constants.USER_DISPLAY_NAME_METADATA_KEY)
+			if err != nil {
+				return nil, err
+			}
+			resources["display_name"] = displayNameMetaData
+
+		case constants.READ_USER_COUNTRY_SCOPE:
+			countryMetaData, err := u.Repo.GetUserMetadata(claims.UserID, constants.USER_COUNTRY_METADATA_KEY)
+			if err != nil {
+				return nil, err
+			}
+			resources["country_name"] = countryMetaData
 		}
 	}
+	fmt.Println("resources check:", resources)
 	return resources, nil
 }

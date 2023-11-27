@@ -108,12 +108,11 @@ app.post("/api/login/layer8/auth", async (req, res) => {
       console.log("err: ", err);
     });
 
-  const username = user.profile.username;
+  // const username = user.profile.username;
+  const isEmailVerified = user.is_email_verified.value;
   const displayName = user.display_name.value;
-  // Metadata check
-  console.log("username: ", username);
-  console.log("displayName: ", displayName);
-  const token = jwt.sign({ username }, SECRET_KEY);
+  const countryName = user.country_name.value;
+  const token = jwt.sign({ isEmailVerified, displayName, countryName }, SECRET_KEY);
   res.status(200).json({ token });
 });
 

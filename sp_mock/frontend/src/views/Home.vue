@@ -17,10 +17,11 @@ const userName = computed(() => {
   return "";
 });
 
+// const token = jwt.sign({ isEmailVerified, displayName, countryName }, SECRET_KEY);
 const metaData = computed(() => {
   if (L8Token.value && L8Token.value.split(".").length > 1) {
     const payload = JSON.parse(atob(L8Token.value.split(".")[1]));
-    return payload.metaData;
+    return payload;
   }
   return "";
 });
@@ -62,8 +63,17 @@ const logoutUser = () => {
       <h3
         style="color: rgb(136, 136, 136); font-weight: 600; padding-bottom: 2%"
       >
-        Your MetaData is: {{ metaData }}
+        Your MetaData:
       </h3>
+      <h4 style="color: rgb(136, 136, 136); font-weight: 600">
+        Email: {{ metaData.displayName }}
+      </h4>
+      <h4 style="color: rgb(136, 136, 136); font-weight: 600">
+        Country: {{ metaData.countryName }}
+      </h4>
+      <h4 style="color: rgb(136, 136, 136); font-weight: 600">
+        Email Verified: {{ metaData.isEmailVerified }}
+      </h4>
       <div class="new-container">
         <button @click="getPoem">Get Next Poem</button>
         <button class="btn-secondary" @click="logoutUser">Logout</button>

@@ -111,11 +111,11 @@ func (u *UseCase) AccessResourcesWithToken(token string) (map[string]interface{}
 	for _, scope := range scopes {
 		switch scope {
 		case constants.READ_USER_SCOPE:
-			user, err := u.Repo.GetUserByID(claims.UserID)
-			if err != nil {
-				return nil, err
-			}
-			resources["profile"] = user
+			// 	user, err := u.Repo.GetUserByID(claims.UserID)
+			// 	if err != nil {
+			// 		return nil, err
+			// 	}
+			// 	resources["profile"] = user
 
 			isEmailVerified, err := u.Repo.GetUserMetadata(claims.UserID, constants.USER_EMAIL_VERIFIED_METADATA_KEY)
 			if err != nil {

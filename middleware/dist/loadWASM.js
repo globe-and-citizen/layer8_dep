@@ -5,7 +5,7 @@ const crypto = require("crypto").webcrypto;
 globalThis.crypto = crypto;
 require('./wasm_exec.js');
 
-const wasmCode = fs.readFileSync("../../middleware/dist/middleware.wasm");
+const wasmCode = fs.readFileSync("../../middleware/bin/middleware.wasm");
 const encoded = Buffer.from(wasmCode, 'binary').toString('base64');
 
 // only necessary if you want to export

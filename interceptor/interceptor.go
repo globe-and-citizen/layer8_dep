@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"globe-and-citizen/layer8/interceptor/internals"
 	"globe-and-citizen/layer8/utils"
@@ -224,11 +225,10 @@ func fetch(this js.Value, args []js.Value) interface{} {
 			res := internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port).
 				Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
 
-			if res.Status >= 100 || res.Status < 300 { // Handle Success & Default Rejection
+			if res.Status >= 100 && res.Status < 300 { // Handle Success & Default Rejection
 				resHeaders := js.Global().Get("Headers").New()
 
 				for k, v := range res.Headers {
-					//fmt.Println("Encrypted Headers from the SP: ", k, v)
 					resHeaders.Call("append", js.ValueOf(k), js.ValueOf(v))
 				}
 
@@ -240,8 +240,11 @@ func fetch(this js.Value, args []js.Value) interface{} {
 				return
 			}
 
-			reject.Invoke(js.Global().Get("Error").New(res.StatusText))
-			fmt.Println("status:", res.Status, res.StatusText)
+			bodyMap := make(map[string]interface{})
+			json.Unmarshal(res.Body, &bodyMap)
+			reject.Invoke(js.Global().Get("Error").New(res.StatusText, js.ValueOf(map[string]interface{}{
+				"cause": js.ValueOf(bodyMap),
+			})))
 			return
 		}()
 		return nil

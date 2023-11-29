@@ -58,7 +58,7 @@ const loginUser = async () => {
     alert("Login successful!");
   } catch (error) {
     console.error(error);
-    alert("Login failed!");
+    alert("Login failed: " + error.cause.error);
   }
 };
 

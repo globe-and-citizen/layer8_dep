@@ -31,6 +31,7 @@ const layer8Auth = new ClientOAuth2({
 
 // MIDDLEWARE
 //app.use(express.json()) // Using express.json() is necessary depending on which version of the middleware you use.
+app.use(express.json());
 app.use(Layer8);
 app.use(cors());
 
@@ -78,7 +79,7 @@ app.post("/api/login", async (req, res) => {
     console.log("token", token);
     res.status(200).json({ token });
   } else {
-    res.status(401).send("Invalid credentials!");
+    res.status(401).json({ error: "Invalid Credentials" });
   }
 });
 

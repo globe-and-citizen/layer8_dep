@@ -43,7 +43,7 @@ func (c *Client) transfer(sharedSecret *utils.JWK, req *utils.Request, url strin
 	// encode request body
 	b, err := req.ToJSON()
 	if err != nil {
-		return nil, fmt.Errorf("Could not encode request: %w", err)
+		return nil, fmt.Errorf("could not encode request: %w", err)
 	}
 	// send the request
 	_, res := c.do(b, sharedSecret, url)
@@ -138,7 +138,6 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string) (in
 	mapB := make(map[string]interface{})
 	json.Unmarshal(bufByte, &mapB)
 
-	fmt.Println("mapB: ", mapB)
 	toDecode, ok := mapB["data"].(string)
 	if !ok {
 		res := &utils.Response{
@@ -159,9 +158,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string) (in
 		return 500, resByte
 	}
 
-	fmt.Println("decoded: ", decoded)
 	bufByte, err = sharedSecret.SymmetricDecrypt(decoded)
-	fmt.Println("bufBytes: ", string(bufByte))
 	if err != nil {
 		res := &utils.Response{
 			Status:     500,

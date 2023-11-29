@@ -65,15 +65,28 @@ const logoutUser = () => {
       >
         Your MetaData:
       </h3>
-      <h4 style="color: rgb(136, 136, 136); font-weight: 600">
-        Email: {{ metaData.displayName }}
+      <h4
+        style="color: rgb(136, 136, 136); font-weight: 600"
+        v-if="metaData.displayName"
+      >
+        Username: {{ metaData.displayName }}
       </h4>
-      <h4 style="color: rgb(136, 136, 136); font-weight: 600">
+      <h4
+        style="color: rgb(136, 136, 136); font-weight: 600"
+        v-if="metaData.countryName"
+      >
         Country: {{ metaData.countryName }}
       </h4>
-      <h4 style="color: rgb(136, 136, 136); font-weight: 600">
-        Email Verified: {{ metaData.isEmailVerified }}
+      <h4
+        style="color: rgb(136, 136, 136); font-weight: 600"
+        v-if="metaData.isEmailVerified"
+      >
+        Email Verified: Email is verified!
       </h4>
+      <h4 style="color: rgb(136, 136, 136); font-weight: 600" v-else>
+        Email Verified: Email is not verified!
+      </h4>
+      <br />
       <div class="new-container">
         <button @click="getPoem">Get Next Poem</button>
         <button class="btn-secondary" @click="logoutUser">Logout</button>

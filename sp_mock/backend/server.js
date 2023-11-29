@@ -48,6 +48,7 @@ app.post("/", (req, res) => {
   res.send("Server has registered a POST.");
 });
 
+// CheckJWT 777 here
 let counter = 0;
 app.get("/nextpoem", (req, res) => {
   counter++;
@@ -108,11 +109,25 @@ app.post("/api/login/layer8/auth", async (req, res) => {
       console.log("err: ", err);
     });
 
-  // const username = user.profile.username;
   const isEmailVerified = user.is_email_verified.value;
-  const displayName = user.display_name.value;
-  const countryName = user.country_name.value;
-  const token = jwt.sign({ isEmailVerified, displayName, countryName }, SECRET_KEY);
+  let displayName = "";
+  let countryName = "";
+
+  if (user.display_name) {
+    displayName = user.display_name.value;
+  }
+
+  if (user.country_name) {
+    countryName = user.country_name.value;
+  }
+
+  console.log("Display Name: ", displayName);
+  console.log("Country Name: ", countryName);
+
+  const token = jwt.sign(
+    { isEmailVerified, displayName, countryName },
+    SECRET_KEY
+  );
   res.status(200).json({ token });
 });
 

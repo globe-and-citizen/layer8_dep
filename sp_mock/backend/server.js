@@ -123,7 +123,7 @@ app.post("/api/login/layer8/auth", async (req, res) => {
 
   console.log("Display Name: ", displayName);
   console.log("Country Name: ", countryName);
-
+  // 777 Token
   const token = jwt.sign(
     { isEmailVerified, displayName, countryName },
     SECRET_KEY

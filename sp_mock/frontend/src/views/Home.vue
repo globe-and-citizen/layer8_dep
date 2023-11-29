@@ -77,9 +77,11 @@ const logoutUser = () => {
       >
         Country: {{ metaData.countryName }}
       </h4>
+      <!-- Change here -->
       <h4
         style="color: rgb(136, 136, 136); font-weight: 600"
-        v-if="metaData.isEmailVerified"
+        
+        v-if="metaData.isEmailVerified === `true`"
       >
         Email Verified: Email is verified!
       </h4>

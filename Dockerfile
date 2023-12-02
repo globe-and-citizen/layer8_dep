@@ -4,6 +4,10 @@ RUN mkdir /app
 
 COPY ./proxy /app/proxy
 
-WORKDIR /app
+WORKDIR /app/proxy
 
-CMD ["go run main.go --server=proxy --port=5001"]
+RUN go build -o main .
+
+EXPOSE 5001
+
+CMD ["./main"]

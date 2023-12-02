@@ -1,7 +1,7 @@
 package entities
 
 import (
-	"github.com/globe-and-citizen/layer8-utils"
+	utilities "github.com/globe-and-citizen/layer8-utils"
 )
 
 type AbstractUser struct {

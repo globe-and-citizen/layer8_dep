@@ -5,10 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"globe-and-citizen/layer8/utils"
 	"io"
 	"net/http"
 	"os"
+
+	utilities "globe-and-citizen/layer8/proxy/utils"
 )
 
 // Tunnel forwards the request to the service provider's backend
@@ -17,7 +18,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Method) // > GET  | > POST
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
 
-	mpJWT, err := utils.GenerateStandardToken(os.Getenv("MP_123_SECRET_KEY"))
+	mpJWT, err := utilities.GenerateStandardToken(os.Getenv("MP_123_SECRET_KEY"))
 	if err != nil {
 		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -73,7 +74,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	// 	fmt.Println("header pairs from SP: ", k, v)
 	// }
 
-	upJWT, err := utils.GenerateStandardToken(os.Getenv("UP_999_SECRET_KEY"))
+	upJWT, err := utilities.GenerateStandardToken(os.Getenv("UP_999_SECRET_KEY"))
 	if err != nil {
 		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -85,7 +86,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println("w.Headers (Going back to client): ", w.Header())
 	// Headers not being sent back to client for some reason...
 
-	server_pubKeyECDH, err := utils.B64ToJWK(string(resBodyTempBytes))
+	server_pubKeyECDH, err := utilities.B64ToJWK(string(resBodyTempBytes))
 	if err != nil {
 		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -147,7 +148,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	// Get up_JWT from request header and verify it
 	upJWT := r.Header.Get("up_JWT")
 
-	_, err = utils.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
+	_, err = utilities.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
 	if err != nil {
 		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusUnauthorized)
@@ -168,7 +169,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	// Get mp_JWT from response header and verify it
 	mpJWT := res.Header.Get("mp_JWT")
 
-	_, err = utils.VerifyStandardToken(mpJWT, os.Getenv("MP_123_SECRET_KEY"))
+	_, err = utilities.VerifyStandardToken(mpJWT, os.Getenv("MP_123_SECRET_KEY"))
 	if err != nil {
 		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusUnauthorized)

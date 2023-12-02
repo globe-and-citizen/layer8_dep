@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/proxy/constants"
 	"globe-and-citizen/layer8/proxy/entities"
-	"globe-and-citizen/layer8/utils"
 	"strings"
 	"time"
+
+	utilities "github.com/globe-and-citizen/layer8-utils"
 
 	"golang.org/x/oauth2"
 )
@@ -25,7 +26,7 @@ func (u *UseCase) GenerateAuthorizationURL(config *oauth2.Config, userID int64) 
 		return nil, fmt.Errorf("could not get user: %v", err)
 	}
 
-	state, stateErr := utils.GenerateRandomString(24)
+	state, stateErr := utilities.GenerateRandomString(24)
 	if stateErr != nil {
 		return nil, fmt.Errorf("could not generate random state: %v", stateErr)
 	}
@@ -35,7 +36,7 @@ func (u *UseCase) GenerateAuthorizationURL(config *oauth2.Config, userID int64) 
 	for _, scope := range config.Scopes {
 		scopes += scope + ","
 	}
-	code, err := utils.GenerateAuthCode(client.Secret, &utils.AuthCodeClaims{
+	code, err := utilities.GenerateAuthCode(client.Secret, &utilities.AuthCodeClaims{
 		ClientID:    config.ClientID,
 		UserID:      int64(user.ID),
 		RedirectURI: config.RedirectURL,
@@ -63,12 +64,12 @@ func (u *UseCase) ExchangeCodeForToken(config *oauth2.Config, code string) (*oau
 		return nil, fmt.Errorf("client secret is not specified")
 	}
 	// verify the code
-	claims, err := utils.DecodeAuthCode(config.ClientSecret, code)
+	claims, err := utilities.DecodeAuthCode(config.ClientSecret, code)
 	if err != nil {
 		return nil, err
 	}
 	// generating random token
-	token, err := utils.GenerateRandomString(32)
+	token, err := utilities.GenerateRandomString(32)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +101,7 @@ func (u *UseCase) AccessResourcesWithToken(token string) (map[string]interface{}
 	if res == nil {
 		return nil, fmt.Errorf("could not get token")
 	}
-	var claims utils.AuthCodeClaims
+	var claims utilities.AuthCodeClaims
 	err = json.Unmarshal(res, &claims)
 	if err != nil {
 		return nil, err

@@ -1,10 +1,10 @@
 FROM golang:1.21.4-alpine3.17
 
-RUN mkdir /app
+RUN mkdir /build
 
-COPY ./proxy /app
+COPY ./proxy /build
 
-WORKDIR /app
+WORKDIR /build
 
 RUN go mod tidy
 
@@ -12,4 +12,10 @@ RUN go build -o main .
 
 EXPOSE 5001
 
-CMD ["./main --server=proxy --port=5001"]
+RUN chmod +x ./main
+
+# RUN ls -la
+
+# CMD ["./build/main --server=proxy --port=5001"]
+
+ENTRYPOINT ["./main", "--server=proxy", "--port=5001"]

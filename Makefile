@@ -27,6 +27,7 @@ run_backend: # Port 8000
 ## Run Proxy
 run_proxy: # Port 5000
 	cd proxy && go run main.go --server=proxy --port=5001
+# cd proxy && go build -o bin/proxy && ./bin/proxy --server=proxy --port=5001
 
 # Serve auth server
 run_auth: # Port 5001

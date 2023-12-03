@@ -14,8 +14,4 @@ EXPOSE 5001
 
 RUN chmod +x ./main
 
-# RUN ls -la
-
-# CMD ["./build/main --server=proxy --port=5001"]
-
 ENTRYPOINT ["./main", "--server=proxy", "--port=5001"]

@@ -17,7 +17,8 @@ let user = ref({
 
 const getUserDetails = async () => {
   try {
-    const resp = await window.fetch("http://localhost:3050/api/v1/profile", {
+    // const resp = await window.fetch("http://localhost:3050/api/v1/profile", {
+    const resp = await window.fetch("https://layer8devproxy.net/api/v1/profile", {
       method: "GET",
       headers: {
         "Content-Type": "Application/Json",
@@ -45,7 +46,8 @@ const logoutUser = () => {
 const verifyEmail = async () => {
   try {
     const resp = await window.fetch(
-      "http://localhost:3050/api/v1/verify-email",
+      // "http://localhost:3050/api/v1/verify-email",
+      "https://layer8devproxy.net/api/v1/verify-email",
       {
         method: "POST",
         headers: {
@@ -74,7 +76,8 @@ const changeDisplayName = async () => {
       return;
     }
     const resp = await window.fetch(
-      "http://localhost:3050/api/v1/change-display-name",
+      // "http://localhost:3050/api/v1/change-display-name",
+      "https://layer8devproxy.net/api/v1/change-display-name",
       {
         method: "POST",
         headers: {
@@ -106,14 +109,12 @@ const changeDisplayName = async () => {
   <div id="app">
     <div class="container">
       <div class="form-container">
-        <h1
-          style="
+        <h1 style="
             font-weight: bold;
             padding-left: 10%;
             padding-bottom: 3%;
             color: black;
-          "
-        >
+          ">
           User Profile
         </h1>
         <p class="box">Username: {{ user.username }}</p>
@@ -127,29 +128,16 @@ const changeDisplayName = async () => {
         <p class="box">Country: {{ user.country }}</p>
         <hr class="line" />
         <p class="box">Display Name: {{ user.display_name }}</p>
-        <button
-          class="btn-primary"
-          style="margin-left: 16%"
-          @click="changeDisplayName"
-        >
+        <button class="btn-primary" style="margin-left: 16%" @click="changeDisplayName">
           Change Display Name
         </button>
         <hr class="line" />
         <p class="box">Email Verified: {{ user.email_verified }}</p>
-        <button
-          class="btn-primary"
-          style="margin-left: 28%"
-          v-if="!user.email_verified"
-          @click="verifyEmail"
-        >
+        <button class="btn-primary" style="margin-left: 28%" v-if="!user.email_verified" @click="verifyEmail">
           Verify Email
         </button>
         <hr class="line" />
-        <button
-          class="btn-primary-2"
-          style="margin-top: 4%"
-          @click="logoutUser"
-        >
+        <button class="btn-primary-2" style="margin-top: 4%" @click="logoutUser">
           Logout
         </button>
       </div>

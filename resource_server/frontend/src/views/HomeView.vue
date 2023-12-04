@@ -23,7 +23,8 @@ const registerUser = async () => {
       alert("Please enter a username and password!");
       return;
     }
-    await window.fetch("http://localhost:3050/api/v1/register-user", {
+    // await window.fetch("http://localhost:3050/api/v1/register-user", {
+       await window.fetch("https://layer8devproxy.net/api/v1/register-user", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",
@@ -53,7 +54,8 @@ const loginUser = async () => {
       return;
     }
     const respOne = await window.fetch(
-      "http://localhost:3050/api/v1/login-precheck",
+      // "http://localhost:3050/api/v1/login-precheck",
+      "https://layer8devproxy.net/api/v1/login-precheck",
       {
         method: "POST",
         headers: {
@@ -67,7 +69,8 @@ const loginUser = async () => {
     const responseOne = await respOne.json();
     console.log(responseOne.salt);
     const respTwo = await window.fetch(
-      "http://localhost:3050/api/v1/login-user",
+      // "http://localhost:3050/api/v1/login-user",
+      "https://layer8devproxy.net/api/v1/login-user",
       {
         method: "POST",
         headers: {

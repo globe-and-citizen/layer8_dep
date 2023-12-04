@@ -31,7 +31,7 @@ run_proxy: # Port 5001
 
 # Serve auth server
 run_auth: # Port 5000
-	cd proxy && go run main.go --server=auth
+	cd proxy && go run main.go
 
 # Run Resource Server Backend
 run_rs_backend: # Port 3050

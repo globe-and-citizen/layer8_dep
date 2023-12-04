@@ -35,6 +35,8 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("Checkpoint 1")
+
 	// add headers
 	for k, v := range r.Header {
 		req.Header[k] = v
@@ -42,6 +44,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 
 	req.Header["mp_JWT"] = []string{mpJWT}
 
+	fmt.Println("Checkpoint 2")
 	// send the request
 	res, err := http.DefaultClient.Do(req)
 
@@ -50,6 +53,8 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	fmt.Println("Checkpoint 3")
 
 	// Make a buffer to hold response body
 	var resBodyTemp bytes.Buffer
@@ -119,7 +124,6 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	// io.Copy(w, dataIoReader)
 
 	// io.CopyBuffer(w, bytes.NewBufferString(dataToSendB64), []byte(dataToSendB64))
-
 	w.Write([]byte(dataToSendB64))
 
 }

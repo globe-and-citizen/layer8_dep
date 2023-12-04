@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"globe-and-citizen/layer8/proxy/config"
 	"globe-and-citizen/layer8/proxy/handlers"
@@ -10,27 +9,40 @@ import (
 	"globe-and-citizen/layer8/proxy/internals/usecases"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
-)
 
-var (
-	port   = flag.Int("port", 5000, "Port to listen on")
-	server = flag.String("server", "auth", "Server type to run")
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
 	config.InitDB()
 
-	flag.Parse()
-
-	switch *server {
-	case "auth":
-		AuthServer(*port)
-	case "proxy":
-		ProxyServer(*port)
-	default:
-		log.Fatal("Invalid server type. Valid types are: auth, proxy")
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
 	}
+
+	authServerPort := os.Getenv("AUTH_SERVER_PORT")
+
+	authServerPortInt, err := strconv.Atoi(authServerPort)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// proxyServerPort := os.Getenv("PROXY_SERVER_PORT")
+
+	// proxyServerPortInt, err := strconv.Atoi(proxyServerPort)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	// go ProxyServer(proxyServerPortInt)
+
+	AuthServer(authServerPortInt)
+
 }
 
 func AuthServer(port int) {
@@ -73,8 +85,13 @@ func AuthServer(port int) {
 			case strings.HasPrefix(path, "/assets"):
 				// serve static files
 				http.StripPrefix("/assets", http.FileServer(http.Dir("./assets"))).ServeHTTP(w, r)
+			case path == "/init-tunnel":
+				fmt.Println("Init Tunnel Triggered")
+				handlers.InitTunnel(w, r)
+				fmt.Println("Init Tunnel Triggered v2")
 			default:
-				http.Error(w, "Invalid path", http.StatusNotFound)
+				fmt.Println("Tunnel Triggered")
+				handlers.Tunnel(w, r)
 			}
 			log.Printf("%d %s\t%s", http.StatusOK, r.Method, r.URL.Path)
 		}),
@@ -82,25 +99,25 @@ func AuthServer(port int) {
 	log.Fatal(server.ListenAndServe())
 }
 
-func ProxyServer(port int) {
-	server := http.Server{
-		Addr: fmt.Sprintf(":%d", port),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-			w.Header().Set("Access-Control-Allow-Headers", "*")
+// func ProxyServer(port int) {
+// 	server := http.Server{
+// 		Addr: fmt.Sprintf(":%d", port),
+// 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 			w.Header().Set("Access-Control-Allow-Origin", "*")
+// 			w.Header().Set("Access-Control-Allow-Headers", "*")
 
-			if r.Method == http.MethodOptions {
-				w.WriteHeader(http.StatusOK)
-				return
-			}
-			switch path := r.URL.Path; {
-			case path == "/":
-				handlers.InitTunnel(w, r)
-			default:
-				handlers.Tunnel(w, r)
-			}
-		}),
-	}
-	log.Printf("Starting proxy server on port %d...", port)
-	log.Fatal(server.ListenAndServe())
-}
+// 			if r.Method == http.MethodOptions {
+// 				w.WriteHeader(http.StatusOK)
+// 				return
+// 			}
+// 			switch path := r.URL.Path; {
+// 			case path == "/":
+// 				handlers.InitTunnel(w, r)
+// 			default:
+// 				handlers.Tunnel(w, r)
+// 			}
+// 		}),
+// 	}
+// 	log.Printf("Starting proxy server on port %d...", port)
+// 	log.Fatal(server.ListenAndServe())
+// }

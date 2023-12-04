@@ -40,3 +40,42 @@ run_rs_backend: # Port 3050
 # Run Resource Server Frontend
 run_rs_frontend: # Port 5174
 	cd resource_server/frontend && npm run dev
+
+# To build all images at once
+build_images:
+	docker build --tag proxy-server --file Dockerfile_server .
+	docker build --tag auth-server --file Dockerfile_auth .
+	docker build --tag resource-server --file Dockerfile_resourceServer .
+
+# To push all images to AWS Lightsail at once
+push_images:
+	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label proxy-server-v1 --image proxy-server:latest
+	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label auth-server-v1 --image auth-server:latest
+	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label resource-server-v1 --image resource-server:latest
+
+build_proxy_server_image:
+	docker build --tag proxy-server --file Dockerfile_server .
+
+build_auth_server_image:
+	docker build --tag auth-server --file Dockerfile_auth .
+
+build_resource_server_image:
+	docker build --tag resource-server --file Dockerfile_resourceServer .
+
+run_proxy_server_image:
+	docker run -p 5001:5001 proxy-server
+
+run_auth_server_image:
+	docker run -p 5000:5000 auth-server
+
+run_resource_server_image:
+	docker run -p 3050:3050 resource-server
+
+push_proxy_server_image:
+	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label proxy-server-v1 --image proxy-server:latest
+
+push_auth_server_image:
+	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label auth-server-v1 --image auth-server:latest
+
+push_resource_server_image:
+	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label resource-server-v1 --image resource-server:latest

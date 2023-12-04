@@ -15,12 +15,12 @@ const INTERCEPTOR_VERSION = "1.0.0"
 
 // Declare global variables
 var (
-	Layer8Scheme     string
-	Layer8Host       string
-	Layer8Port       string
-	Layer8Version    string
-	Counter          int
-	ETunnelFlag      bool
+	Layer8Scheme     string = "http"
+	Layer8Host       string = "localhost"
+	Layer8Port       string = "5001" // 5001 is Proxy & 5000 is Auth server.
+	Layer8Version    string = "1.0.0"
+	Counter          int    = 0
+	ETunnelFlag      bool   = false
 	privJWK_ecdh     *utils.JWK
 	pubJWK_ecdh      *utils.JWK
 	userSymmetricKey *utils.JWK
@@ -29,13 +29,6 @@ var (
 func main() {
 	// Create channel to keep the Go thread alive
 	c := make(chan struct{}, 0)
-
-	// Initialize global variables
-	Layer8Version = "1.0.0"
-	Layer8Scheme = "http"
-	Layer8Host = "localhost"
-	Layer8Port = "5001" // 5001 is Proxy & 5000 is Auth server.
-	ETunnelFlag = false
 
 	// Expose layer8 functionality to the front end Javascript
 	js.Global().Set("layer8", js.ValueOf(map[string]interface{}{

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/proxy/constants"
 	"globe-and-citizen/layer8/proxy/entities"
-	"globe-and-citizen/layer8/utils"
+	"globe-and-citizen/layer8/proxy/utils"
 	"strings"
 	"time"
 

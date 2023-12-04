@@ -1,5 +1,5 @@
 import * as interceptor from "./interceptor__local.json" assert { type: "json" };
-await import("../wasm_exec_v1.js");
+await import("./wasm_exec.js");
 
 // Original -- Instantiate from WASM
 // (async function(){

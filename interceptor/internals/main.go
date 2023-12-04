@@ -64,6 +64,7 @@ func (c *Client) transfer(sharedSecret *utils.JWK, req *utils.Request, url strin
 // do sends the request to the remote server through the layer8 proxy server
 // returns a status code and response body
 func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string) (int, []byte) {
+	println("Backend URL:", backendUrl)
 	// encrypt request body if a secret is provided
 	// if secret != nil {
 	// 	data, err = utils.Dep_SymmetricEncrypt(data, secret)

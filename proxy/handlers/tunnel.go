@@ -8,14 +8,20 @@ import (
 
 // Tunnel forwards the request to the service provider's backend
 func Tunnel(w http.ResponseWriter, r *http.Request) {
+	// get the service provider's backend url
+	host := r.Header.Get("X-Forwarded-Host")
+	scheme := r.Header.Get("X-Forwarded-Proto")
+	url := scheme + "://" + host + r.URL.Path
+
 	fmt.Println("\n\n*************")
 	fmt.Println(r.Method) // > GET  | > POST
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
 
-	backendURL := fmt.Sprintf("http://localhost:8000%s", r.URL)
+	// backendURL := fmt.Sprintf("%s://%s/%s", r.URL.Scheme, r.URL.Host, r.URL.Path)
+	println(url)
 
 	// create the request
-	req, err := http.NewRequest(r.Method, backendURL, r.Body)
+	req, err := http.NewRequest(r.Method, url, r.Body)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -36,7 +42,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("\nReceived response from 8000:", backendURL, " of code: ", res.StatusCode)
+	fmt.Println("\nReceived response from 8000:", url, " of code: ", res.StatusCode)
 
 	// copy response back
 	for k, v := range res.Header {

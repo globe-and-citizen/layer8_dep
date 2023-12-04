@@ -23,7 +23,7 @@ HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABI
 TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS 
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-const _ = require("./wasm_exec.js");
+const _ = require("./dist/wasm_exec.js");
 const wasmBin = require("./dist/middleware.json");
 
 const decode = (encoded) => {

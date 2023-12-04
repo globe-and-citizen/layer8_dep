@@ -4,6 +4,8 @@
 
 "use strict";
 
+globalThis.crypto = require("crypto").webcrypto;
+
 (() => {
 	const enosys = () => {
 		const err = new Error("not implemented");

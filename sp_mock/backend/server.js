@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const popsicle = require('popsicle')
-const Layer8 = require("../../middleware/dist/loadWASM.js");
+const Layer8 = require("layer8-middleware-ubuntu");
 const ClientOAuth2 = require("client-oauth2");
 require("dotenv").config();
 const POEMS = require("./poems.json")

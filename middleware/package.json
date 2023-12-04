@@ -1,0 +1,11 @@
+{
+  "name": "layer8-middleware-windows",
+  "version": "1.0.3",
+  "description": "Layer8 middleware for Windows",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Daniel Onoja",
+  "license": "ISC"
+}

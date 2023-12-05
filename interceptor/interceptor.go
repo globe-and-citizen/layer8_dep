@@ -110,7 +110,7 @@ func initializeECDHTunnel() {
 			return
 		}
 
-		ProxyURL := fmt.Sprintf("%s://%s:%s/%s", Layer8Scheme, Layer8Host, Layer8Port, "init-tunnel")
+		ProxyURL := fmt.Sprintf("%s://%s:%s", Layer8Scheme, Layer8Host, Layer8Port)
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", ProxyURL, bytes.NewBuffer([]byte{}))
 		if err != nil {

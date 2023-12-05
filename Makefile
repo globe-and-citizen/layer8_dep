@@ -24,9 +24,9 @@ run_frontend: # Port 5173
 run_backend: # Port 8000
 	cd sp_mock/backend && npm run dev
 
-# Serve auth server
+# Serve 3-in-1 server
 run_server: # Port 5000
-	cd proxy && go run main.go
+	cd server && go run main.go
 
 # To build all images at once
 build_images:

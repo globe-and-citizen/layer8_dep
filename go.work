@@ -3,7 +3,7 @@ go 1.21.4
 use (
 	./interceptor
 	./middleware
-	./proxy
+	./server
 	./resource_server/backend
 	./utils
 )

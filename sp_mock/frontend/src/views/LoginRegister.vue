@@ -15,7 +15,7 @@ const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
 
 const registerUser = async () => {
   try {
-    await layer8.fetch("http://localhost:5000/api/register", {
+    await layer8.fetch("http://localhost:5001/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",
@@ -41,7 +41,7 @@ const loginUser = async () => {
   }
 
   try {
-    const response = await layer8.fetch("http://localhost:5000/api/login", {
+    const response = await layer8.fetch("http://localhost:5001/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",

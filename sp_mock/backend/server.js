@@ -18,13 +18,13 @@ const users = []; // Store users in memory
 const SECRET_KEY = "my_very_secret_key";
 
 const LAYER8_CALLBACK_URL = "http://localhost:5173/oauth2/callback"; // defined in the frontend
-const LAYER8_RESOURCE_URL = "http://localhost:5000/api/user"; //problem?
+const LAYER8_RESOURCE_URL = "http://localhost:5001/api/user"; //problem?
 
 const layer8Auth = new ClientOAuth2({
   clientId: "notanid",
   clientSecret: "absolutelynotasecret!",
-  accessTokenUri: "http://localhost:5000/api/oauth",
-  authorizationUri: "http://localhost:5000/authorize",
+  accessTokenUri: "http://localhost:5001/api/oauth",
+  authorizationUri: "http://localhost:5001/authorize",
   redirectUri: LAYER8_CALLBACK_URL,
   scopes: ["read:user"],
 });

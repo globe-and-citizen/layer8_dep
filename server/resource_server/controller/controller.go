@@ -2,9 +2,11 @@ package controller
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -16,6 +18,31 @@ import (
 
 	"github.com/go-playground/validator/v10"
 )
+
+var workingDirectory string
+
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintln(w, http.StatusText(http.StatusMethodNotAllowed))
+		return
+	}
+
+	var relativePathFavicon = "dist/index.html"
+	faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
+	fmt.Println("faviconPath: ", faviconPath)
+	if r.URL.Path == "/favicon.ico" {
+		http.ServeFile(w, r, faviconPath)
+		return
+	}
+	var relativePathIndex = "/dist/index.html"
+	indexPath := filepath.Join(workingDirectory, relativePathIndex)
+	// http.ServeFile(w, r, "C:\\Ottawa_DT_Dev\\Learning_Computers\\layer8\\resource_server\\frontend\\dist\\index.html")
+	fmt.Println("indexPath: ", indexPath)
+	http.ServeFile(w, r, indexPath)
+
+}
 
 // RegisterUserHandler handles user registration requests
 func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {

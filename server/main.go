@@ -8,64 +8,20 @@ import (
 	"globe-and-citizen/layer8/proxy/handlers"
 	"globe-and-citizen/layer8/proxy/internals/repository"
 	"globe-and-citizen/layer8/proxy/internals/usecases"
-	"globe-and-citizen/layer8/proxy/resource_server/middleware"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 
-	router "globe-and-citizen/layer8/proxy/resource_server/router"
+	Ctl "globe-and-citizen/layer8/proxy/resource_server/controller"
 
 	"github.com/joho/godotenv"
 )
 
 //go:embed dist/*
 var StaticFiles embed.FS
-var workingDirectory string
-
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		fmt.Fprintln(w, http.StatusText(http.StatusMethodNotAllowed))
-		return
-	}
-
-	var relativePathFavicon = "dist/index.html"
-	faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
-	fmt.Println("faviconPath: ", faviconPath)
-	if r.URL.Path == "/favicon.ico" {
-		http.ServeFile(w, r, faviconPath)
-		return
-	}
-	var relativePathIndex = "/dist/index.html"
-	indexPath := filepath.Join(workingDirectory, relativePathIndex)
-	fmt.Println("indexPath: ", indexPath)
-	http.ServeFile(w, r, indexPath)
-
-}
-
-func routerFunc2() http.Handler {
-
-	mux := http.NewServeMux()
-
-	// index
-	mux.HandleFunc("/", indexHandler)
-
-	// static files
-	fmt.Println("anything?")
-	staticFS, _ := fs.Sub(StaticFiles, "dist")
-	httpFS := http.FileServer(http.FS(staticFS))
-	// httpFS := http.FileServer(http.Dir("resource_server\\frontend\\dist"))
-	mux.Handle("/assets/", httpFS)
-
-	// api
-	mux.HandleFunc("/api/v1/", middleware.LogRequest(middleware.Cors(router.RegisterRoutes())))
-	return mux
-}
 
 func main() {
 
@@ -113,7 +69,12 @@ func Server(port int) {
 
 			r = r.WithContext(context.WithValue(r.Context(), "usecase", usecase))
 
+			staticFS, _ := fs.Sub(StaticFiles, "dist")
+			httpFS := http.FileServer(http.FS(staticFS))
+
 			switch path := r.URL.Path; {
+
+			// Authorization Server endpoints
 			case path == "/login":
 				handlers.Login(w, r)
 			case path == "/authorize":
@@ -124,9 +85,28 @@ func Server(port int) {
 				handlers.OAuthToken(w, r)
 			case path == "/api/user":
 				handlers.UserInfo(w, r)
-			case strings.HasPrefix(path, "/assets"):
-				// serve static files
-				http.StripPrefix("/assets", http.FileServer(http.Dir("./assets"))).ServeHTTP(w, r)
+			case strings.HasPrefix(path, "/assets-v1"):
+				http.StripPrefix("/assets-v1", http.FileServer(http.Dir("./assets-v1"))).ServeHTTP(w, r)
+
+			// Resource Server endpoints
+			case path == "/api/v1/register-user":
+				Ctl.RegisterUserHandler(w, r)
+			case path == "/api/v1/login-precheck":
+				Ctl.LoginPrecheckHandler(w, r)
+			case path == "/api/v1/login-user":
+				Ctl.LoginUserHandler(w, r)
+			case path == "/api/v1/profile":
+				Ctl.ProfileHandler(w, r)
+			case path == "/api/v1/verify-email":
+				Ctl.VerifyEmailHandler(w, r)
+			case path == "/api/v1/change-display-name":
+				Ctl.UpdateDisplayNameHandler(w, r)
+			case path == "/frontend":
+				Ctl.IndexHandler(w, r)
+			case path == "/assets/":
+				httpFS.ServeHTTP(w, r)
+
+			// Proxy Server endpoints
 			case path == "/":
 				handlers.InitTunnel(w, r)
 			default:

@@ -26,7 +26,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// load the login page
-		t, err := template.ParseFiles("assets/templates/login.html")
+		t, err := template.ParseFiles("assets-v1/templates/login.html")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -43,7 +43,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		// login the user
 		rUser, err := usecase.LoginUser(username, password)
 		if err != nil {
-			t, errT := template.ParseFiles("assets/templates/login.html")
+			t, errT := template.ParseFiles("assets-v1/templates/login.html")
 			if errT != nil {
 				http.Error(w, errT.Error(), http.StatusInternalServerError)
 				return
@@ -58,7 +58,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		// set the token cookie
 		token, ok := rUser["token"].(string)
 		if !ok {
-			t, err := template.ParseFiles("assets/templates/login.html")
+			t, err := template.ParseFiles("assets-v1/templates/login.html")
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

@@ -78,7 +78,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// load the authorize page
-		t, err := template.ParseFiles("assets/templates/authorize.html")
+		t, err := template.ParseFiles("assets-v1/templates/authorize.html")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -298,7 +298,7 @@ func Error(w http.ResponseWriter, r *http.Request) {
 			opts = append(opts, errors[v])
 		}
 		// load the error page
-		t, err := template.ParseFiles("assets/templates/error.html")
+		t, err := template.ParseFiles("assets-v1/templates/error.html")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

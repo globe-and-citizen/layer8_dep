@@ -2,19 +2,70 @@ package main
 
 import (
 	"context"
+	"embed"
 	"fmt"
 	"globe-and-citizen/layer8/proxy/config"
 	"globe-and-citizen/layer8/proxy/handlers"
 	"globe-and-citizen/layer8/proxy/internals/repository"
 	"globe-and-citizen/layer8/proxy/internals/usecases"
+	"globe-and-citizen/layer8/proxy/resource_server/middleware"
+	"io/fs"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
+	router "globe-and-citizen/layer8/proxy/resource_server/router"
+
 	"github.com/joho/godotenv"
 )
+
+//go:embed dist/*
+var StaticFiles embed.FS
+var workingDirectory string
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintln(w, http.StatusText(http.StatusMethodNotAllowed))
+		return
+	}
+
+	var relativePathFavicon = "dist/index.html"
+	faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
+	fmt.Println("faviconPath: ", faviconPath)
+	if r.URL.Path == "/favicon.ico" {
+		http.ServeFile(w, r, faviconPath)
+		return
+	}
+	var relativePathIndex = "/dist/index.html"
+	indexPath := filepath.Join(workingDirectory, relativePathIndex)
+	fmt.Println("indexPath: ", indexPath)
+	http.ServeFile(w, r, indexPath)
+
+}
+
+func routerFunc2() http.Handler {
+
+	mux := http.NewServeMux()
+
+	// index
+	mux.HandleFunc("/", indexHandler)
+
+	// static files
+	fmt.Println("anything?")
+	staticFS, _ := fs.Sub(StaticFiles, "dist")
+	httpFS := http.FileServer(http.FS(staticFS))
+	// httpFS := http.FileServer(http.Dir("resource_server\\frontend\\dist"))
+	mux.Handle("/assets/", httpFS)
+
+	// api
+	mux.HandleFunc("/api/v1/", middleware.LogRequest(middleware.Cors(router.RegisterRoutes())))
+	return mux
+}
 
 func main() {
 

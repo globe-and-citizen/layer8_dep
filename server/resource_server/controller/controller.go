@@ -9,10 +9,10 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 
-	"globe-and-citizen/layer8/resource_server/backend/config"
-	"globe-and-citizen/layer8/resource_server/backend/dto"
-	"globe-and-citizen/layer8/resource_server/backend/models"
-	"globe-and-citizen/layer8/resource_server/backend/utils"
+	"globe-and-citizen/layer8/proxy/resource_server/config"
+	"globe-and-citizen/layer8/proxy/resource_server/dto"
+	"globe-and-citizen/layer8/proxy/resource_server/models"
+	"globe-and-citizen/layer8/proxy/resource_server/utils"
 
 	"github.com/go-playground/validator/v10"
 )

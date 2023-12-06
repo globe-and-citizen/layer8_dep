@@ -101,13 +101,16 @@ func Server(port int) {
 				Ctl.VerifyEmailHandler(w, r)
 			case path == "/api/v1/change-display-name":
 				Ctl.UpdateDisplayNameHandler(w, r)
-			case path == "/frontend":
-				Ctl.IndexHandler(w, r)
-			case path == "/assets/":
+			case path == "/favicon.ico":
+				faviconPath := "C:\\FtMac_DTop\\Learning_Computers\\layer8\\server\\dist\\favicon.ico"
+				http.ServeFile(w, r, faviconPath)
+			case strings.HasPrefix(path, "/assets/"):
 				httpFS.ServeHTTP(w, r)
 
-			// Proxy Server endpoints
+				// Proxy Server endpoints
 			case path == "/":
+				Ctl.IndexHandler(w, r)
+			case path == "/t":
 				handlers.InitTunnel(w, r)
 			default:
 				handlers.Tunnel(w, r)

@@ -29,18 +29,20 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var relativePathFavicon = "dist/index.html"
+	var relativePathFavicon = "server/dist/index.html"
 	faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
 	fmt.Println("faviconPath: ", faviconPath)
 	if r.URL.Path == "/favicon.ico" {
 		http.ServeFile(w, r, faviconPath)
 		return
 	}
-	var relativePathIndex = "/dist/index.html"
+	var relativePathIndex = "server/dist/index.html"
 	indexPath := filepath.Join(workingDirectory, relativePathIndex)
-	// http.ServeFile(w, r, "C:\\Ottawa_DT_Dev\\Learning_Computers\\layer8\\resource_server\\frontend\\dist\\index.html")
 	fmt.Println("indexPath: ", indexPath)
-	http.ServeFile(w, r, indexPath)
+	indexPath2 := "C:\\FtMac_DTop\\Learning_Computers\\layer8\\server\\dist\\index.html"
+	// http.ServeFile(w, r, "C:\\Ottawa_DT_Dev\\Learning_Computers\\layer8\\resource_server\\frontend\\dist\\index.html")
+	fmt.Println("indexPath: ", indexPath2)
+	http.ServeFile(w, r, indexPath2)
 
 }
 

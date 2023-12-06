@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
 
+	"globe-and-citizen/layer8/proxy/resource_server/utils"
 	utilities "globe-and-citizen/layer8/proxy/utils"
 )
 
@@ -17,6 +19,17 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("\n\n*************")
 	fmt.Println(r.Method) // > GET  | > POST
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
+	params := r.URL.Query()
+	var backend string
+	if _, ok := params["backend"]; ok != true {
+		res := utils.BuildErrorResponse("Failed to get User. Malformed query string.", "", utils.EmptyObj{})
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			log.Printf("Error sending response: %v", err)
+		}
+		return
+	} else {
+		backend = params["backend"][0]
+	}
 
 	mpJWT, err := utilities.GenerateStandardToken(os.Getenv("MP_123_SECRET_KEY"))
 	if err != nil {
@@ -25,7 +38,8 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	backendURL := fmt.Sprintf("http://localhost:8000%s", r.URL)
+	backendURL := fmt.Sprintf("http://%s", backend)
+	fmt.Println("User agent is attempting to initialize this backend SP: ", backendURL)
 
 	// create the request
 	req, err := http.NewRequest(r.Method, backendURL, r.Body)

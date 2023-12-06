@@ -33,5 +33,8 @@ const decode = (encoded) => {
     return await WebAssembly.instantiate(decode(interceptor.default), importObject).then((result) => {
         go.run(result.instance);
         globalThis.layer8 = layer8;
+        //globalThis.BACKEND = "localhost:8000"
+        console.log("globalThis.BACKEND: ", globalThis.BACKEND)
+        layer8.InitEncryptedTunnel(globalThis.BACKEND)
     });
 })();

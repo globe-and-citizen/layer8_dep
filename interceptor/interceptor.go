@@ -30,7 +30,7 @@ var (
 )
 
 func main() {
-	fmt.Print("please...")
+	// fmt.Print("please...")
 	// Create channel to keep the Go thread alive
 	c := make(chan struct{}, 0)
 
@@ -43,15 +43,15 @@ func main() {
 
 	// Expose layer8 functionality to the front end Javascript
 	js.Global().Set("layer8", js.ValueOf(map[string]interface{}{
-		"testWASM":         js.FuncOf(testWASM),
-		"persistenceCheck": js.FuncOf(persistenceCheck),
-		// "genericGetRequest": js.FuncOf(genericGetRequest),
+		"testWASM":            js.FuncOf(testWASM),
+		"persistenceCheck":    js.FuncOf(persistenceCheck),
+		"InitEncryptedTunnel": js.FuncOf(initializeECDHTunnel),
 		// "genericPost":       js.FuncOf(genericPost),
 		"fetch": js.FuncOf(fetch),
 	}))
 
 	// Initialize the encrypted tunnel
-	initializeECDHTunnel()
+	// initializeECDHTunnel()
 
 	// Developer Warnings:
 	fmt.Println("WARNING: wasm_exec.js is versioned and has some breaking changes. Ensure you are using the correct version.")
@@ -94,7 +94,9 @@ func persistenceCheck(this js.Value, args []js.Value) interface{} {
 	return promise
 }
 
-func initializeECDHTunnel() {
+func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
+	backend := args[0].String()
+
 	go func() {
 		var err error
 		privJWK_ecdh, pubJWK_ecdh, err = utils.GenerateKeyPair(utils.ECDH)
@@ -111,7 +113,7 @@ func initializeECDHTunnel() {
 			return
 		}
 
-		ProxyURL := fmt.Sprintf("%s://%s:%s/init-tunnel", Layer8Scheme, Layer8Host, Layer8Port)
+		ProxyURL := fmt.Sprintf("%s://%s:%s/init-tunnel?backend=%s", Layer8Scheme, Layer8Host, Layer8Port, backend)
 		fmt.Println(ProxyURL)
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", ProxyURL, bytes.NewBuffer([]byte{}))
@@ -192,7 +194,7 @@ func initializeECDHTunnel() {
 		return
 	}()
 
-	return
+	return nil
 }
 
 func fetch(this js.Value, args []js.Value) interface{} {

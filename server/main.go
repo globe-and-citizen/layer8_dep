@@ -110,7 +110,7 @@ func Server(port int) {
 				// Proxy Server endpoints
 			case path == "/":
 				Ctl.IndexHandler(w, r)
-			case path == "/t":
+			case path == "/init-tunnel":
 				handlers.InitTunnel(w, r)
 			default:
 				handlers.Tunnel(w, r)

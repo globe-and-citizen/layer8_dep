@@ -30,6 +30,7 @@ var (
 )
 
 func main() {
+	fmt.Print("please...")
 	// Create channel to keep the Go thread alive
 	c := make(chan struct{}, 0)
 
@@ -110,7 +111,8 @@ func initializeECDHTunnel() {
 			return
 		}
 
-		ProxyURL := fmt.Sprintf("%s://%s:%s", Layer8Scheme, Layer8Host, Layer8Port)
+		ProxyURL := fmt.Sprintf("%s://%s:%s/init-tunnel", Layer8Scheme, Layer8Host, Layer8Port)
+		fmt.Println(ProxyURL)
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", ProxyURL, bytes.NewBuffer([]byte{}))
 		if err != nil {

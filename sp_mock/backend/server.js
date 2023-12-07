@@ -1,7 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 const popsicle = require("popsicle");
-const Layer8 = require("../../middleware/dist/loadWASM.js");
+
+const Layer8 = require("./dist/loadWASM.js");
+// const Layer8 = require("../../middleware/dist/loadWASM.js");
+
+
 const ClientOAuth2 = require("client-oauth2");
 require("dotenv").config();
 const POEMS = require("./poems.json");
@@ -17,14 +21,21 @@ const users = []; // Store users in memory
 
 const SECRET_KEY = "my_very_secret_key";
 
-const LAYER8_CALLBACK_URL = "http://localhost:5173/oauth2/callback"; // defined in the frontend
-const LAYER8_RESOURCE_URL = "http://localhost:5001/api/user"; //problem?
+const env1 = "192.168.1.71"
+
+// const LAYER8_CALLBACK_URL = "http://localhost:5173/oauth2/callback"; // defined in the frontend
+// const LAYER8_RESOURCE_URL = "http://localhost:5001/api/user"; //problem?
+const LAYER8_CALLBACK_URL = `http://:${env1}:8000/oauth2/callback`; // defined in the frontend
+const LAYER8_RESOURCE_URL = `http://:${env1}:5001/api/user`; //problem?
+
+
+
 
 const layer8Auth = new ClientOAuth2({
   clientId: "notanid",
   clientSecret: "absolutelynotasecret!",
-  accessTokenUri: "http://localhost:5001/api/oauth",
-  authorizationUri: "http://localhost:5001/authorize",
+  accessTokenUri: `http://${env1}:5001/api/oauth`,
+  authorizationUri: `http://${env1}:5001/authorize`,
   redirectUri: LAYER8_CALLBACK_URL,
   scopes: ["read:user"],
 });
@@ -103,6 +114,8 @@ app.post("/api/login/layer8/auth", async (req, res) => {
         .then((res) => {
           console.log("response: ", res);
           return JSON.parse(res.body);
+        }).catch((err) => {
+          console.log("from popsicle: ", err)
         });
     })
     .catch((err) => {

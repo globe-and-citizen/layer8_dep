@@ -5,7 +5,6 @@ const popsicle = require("popsicle");
 const Layer8 = require("./dist/loadWASM.js");
 // const Layer8 = require("../../middleware/dist/loadWASM.js");
 
-
 const ClientOAuth2 = require("client-oauth2");
 require("dotenv").config();
 const POEMS = require("./poems.json");
@@ -14,28 +13,32 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 // INIT
-const port = 8000;
+// DYNAMIC!
+const port = process.env.PORT; // 8000; 
 const app = express();
 
 const users = []; // Store users in memory
 
 const SECRET_KEY = "my_very_secret_key";
 
-const env1 = "192.168.1.71"
+// DYNAMIC!
+const FRONTEND_URL = process.env.FRONTEND_URL; // locally, "192.168.1.71:9090"
+const LAYER8_URL = process.env.LAYER8_URL; // Locally, "192.168.1.71:5001"
+
+
+// LAYER8_CALLBACK_URL == REDIRECT_URI
+const LAYER8_CALLBACK_URL = `${FRONTEND_URL}/oauth2/callback`;
+const LAYER8_RESOURCE_URL = `${LAYER8_URL}/api/user`;
 
 // const LAYER8_CALLBACK_URL = "http://localhost:5173/oauth2/callback"; // defined in the frontend
-// const LAYER8_RESOURCE_URL = "http://localhost:5001/api/user"; //problem?
-const LAYER8_CALLBACK_URL = `http://:${env1}:8000/oauth2/callback`; // defined in the frontend
-const LAYER8_RESOURCE_URL = `http://:${env1}:5001/api/user`; //problem?
-
-
+// const LAYER8_RESOURCE_URL = "http://localhost:5001/api/user";
 
 
 const layer8Auth = new ClientOAuth2({
   clientId: "notanid",
   clientSecret: "absolutelynotasecret!",
-  accessTokenUri: `http://${env1}:5001/api/oauth`,
-  authorizationUri: `http://${env1}:5001/authorize`,
+  accessTokenUri: `${LAYER8_URL}/api/oauth`,
+  authorizationUri: `${LAYER8_URL}/authorize`,
   redirectUri: LAYER8_CALLBACK_URL,
   scopes: ["read:user"],
 });
@@ -95,10 +98,12 @@ app.post("/api/login", async (req, res) => {
 });
 
 app.get("/api/login/layer8/auth", async (req, res) => {
+  console.log("layer8Auth.code.getUri(): ", layer8Auth.code.getUri())
   res.status(200).json({ authURL: layer8Auth.code.getUri() });
 });
 
 app.post("/api/login/layer8/auth", async (req, res) => {
+  console.log("Do I even run?")
   const { callback_url } = req.body;
   const user = await layer8Auth.code
     .getToken(callback_url)

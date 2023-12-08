@@ -43,16 +43,17 @@ const layer8Auth = new ClientOAuth2({
   scopes: ["read:user"],
 });
 
-// MIDDLEWARE
-//app.use(express.json()) // Using express.json() is necessary depending on which version of the middleware you use.
-app.use(Layer8);
-app.use(cors());
-
-app.get("/", (req, res) => {
+//This comes first to ensure health checks
+app.get("/healthcheck", (req, res) => {
   console.log("Enpoint for testing");
   console.log("req.body: ", req.body);
   res.send("Bro, ur poems coming soon. Relax a little.");
 });
+
+// MIDDLEWARE
+//app.use(express.json()) // Using express.json() is necessary depending on which version of the middleware you use.
+app.use(Layer8);
+app.use(cors());
 
 app.post("/", (req, res) => {
   console.log("Enpoint for testing");

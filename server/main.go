@@ -32,7 +32,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	proxyServerPort := os.Getenv("PROXY_SERVER_PORT")
+	proxyServerPort := os.Getenv("SERVER_PORT")
 
 	proxyServerPortInt, err := strconv.Atoi(proxyServerPort)
 	if err != nil {
@@ -102,7 +102,7 @@ func Server(port int) {
 			case path == "/api/v1/change-display-name":
 				Ctl.UpdateDisplayNameHandler(w, r)
 			case path == "/favicon.ico":
-				faviconPath := "C:\\FtMac_DTop\\Learning_Computers\\layer8\\server\\dist\\favicon.ico"
+				faviconPath := "/home/hmk/Hmk/GlobeCitizen/layer8/server/dist/favicon.ico"
 				http.ServeFile(w, r, faviconPath)
 			case strings.HasPrefix(path, "/assets/"):
 				httpFS.ServeHTTP(w, r)

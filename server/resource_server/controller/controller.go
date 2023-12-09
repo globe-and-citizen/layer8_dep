@@ -21,6 +21,14 @@ import (
 
 var workingDirectory string
 
+func getPwd() {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	workingDirectory = dir
+}
+
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
@@ -29,17 +37,18 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var relativePathFavicon = "server/dist/index.html"
+	getPwd()
+	var relativePathFavicon = "dist/index.html"
 	faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
 	fmt.Println("faviconPath: ", faviconPath)
 	if r.URL.Path == "/favicon.ico" {
 		http.ServeFile(w, r, faviconPath)
 		return
 	}
-	var relativePathIndex = "server/dist/index.html"
+	var relativePathIndex = "dist/index.html"
 	indexPath := filepath.Join(workingDirectory, relativePathIndex)
 	fmt.Println("indexPath: ", indexPath)
-	indexPath2 := "C:\\FtMac_DTop\\Learning_Computers\\layer8\\server\\dist\\index.html"
+	indexPath2 := filepath.Join(workingDirectory, "dist/index.html")
 	// http.ServeFile(w, r, "C:\\Ottawa_DT_Dev\\Learning_Computers\\layer8\\resource_server\\frontend\\dist\\index.html")
 	fmt.Println("indexPath: ", indexPath2)
 	http.ServeFile(w, r, indexPath2)

@@ -17,16 +17,17 @@ const INTERCEPTOR_VERSION = "1.0.0"
 
 // Declare global variables
 var (
-	Layer8Scheme     string
-	Layer8Host       string
-	Layer8Port       string
-	Layer8Version    string
-	Counter          int
-	ETunnelFlag      bool
-	privJWK_ecdh     *utils.JWK
-	pubJWK_ecdh      *utils.JWK
-	userSymmetricKey *utils.JWK
-	UpJWT            string
+	Layer8Scheme       string
+	Layer8Host         string
+	Layer8Port         string
+	Layer8Version      string
+	Layer8LightsailURL string
+	Counter            int
+	ETunnelFlag        bool
+	privJWK_ecdh       *utils.JWK
+	pubJWK_ecdh        *utils.JWK
+	userSymmetricKey   *utils.JWK
+	UpJWT              string
 )
 
 func main() {
@@ -36,9 +37,11 @@ func main() {
 
 	// Initialize global variables
 	Layer8Version = "1.0.0"
-	Layer8Scheme = "http"
-	Layer8Host = "localhost"
-	Layer8Port = "5001" // 5001 is Proxy & 5000 is Auth server.
+	// Layer8Scheme = "http"
+	// Layer8Host = "localhost"
+	// Layer8Port = "5001"
+	Layer8LightsailURL = "http://aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
+
 	ETunnelFlag = false
 
 	// Expose layer8 functionality to the front end Javascript
@@ -113,7 +116,8 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 			return
 		}
 
-		ProxyURL := fmt.Sprintf("%s://%s:%s/init-tunnel?backend=%s", Layer8Scheme, Layer8Host, Layer8Port, backend)
+		// ProxyURL := fmt.Sprintf("%s://%s:%s/init-tunnel?backend=%s", Layer8Scheme, Layer8Host, Layer8Port, backend)
+		ProxyURL := fmt.Sprintf("%s/init-tunnel?backend=%s", Layer8LightsailURL, backend)
 		fmt.Println(ProxyURL)
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", ProxyURL, bytes.NewBuffer([]byte{}))

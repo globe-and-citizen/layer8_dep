@@ -15,7 +15,7 @@ build_interceptor: ## must do from a bash terminal ..
 
 ## Build Middleware
 build_middleware:
-	cd ./middleware/ && GOARCH=wasm GOOS=js go build -o ./dist/middleware.wasm
+	cd ./middleware/ && GOARCH=wasm GOOS=js go build -o ./dist/middleware.wasm && cp ./dist/middleware.wasm ../sp_mock/backend/dist/middleware.wasm
 
 ## Run Mock
 run_frontend: # Port 5173

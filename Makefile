@@ -30,39 +30,24 @@ run_server: # Port 5000
 
 # To build all images at once
 build_images:
-	docker build --tag proxy-server --file Dockerfile_server .
-	docker build --tag auth-server --file Dockerfile_auth .
-	docker build --tag resource-server --file Dockerfile_resourceServer .
+	docker build --tag layer8-server --file Dockerfile .
+	cd sp_mock/frontend && docker build --tag sp_mock_frontend --file Dockerfile .
+	cd sp_mock/backend && docker build --tag sp_mock_backend --file Dockerfile .
 
-# To push all images to AWS Lightsail at once
-push_images:
-	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label proxy-server-v1 --image proxy-server:latest
-	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label auth-server-v1 --image auth-server:latest
-	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label resource-server-v1 --image resource-server:latest
+run_layer8_server_image:
+	docker run -p 5001:5001 -t layer8-server
 
-build_proxy_server_image:
-	docker build --tag proxy-server --file Dockerfile_server .
+run_sp_mock_frontend_image:
+	docker run -p 8080:8080 -t sp_mock_frontend
 
-build_auth_server_image:
-	docker build --tag auth-server --file Dockerfile_auth .
+run_sp_mock_backend_image:
+	docker run -p 8000:8000 -t sp_mock_backend
 
-build_resource_server_image:
-	docker build --tag resource-server --file Dockerfile_resourceServer .
+push_layer8_server_image:
+	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label layer8-server-v1 --image layer8-server:latest
 
-run_proxy_server_image:
-	docker run -p 5001:5001 proxy-server
+push_sp_mock_frontend_image:
+	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-2 --label sp_mock_frontend --image sp_mock_frontend:latest
 
-run_auth_server_image:
-	docker run -p 5000:5000 auth-server
-
-run_resource_server_image:
-	docker run -p 3050:3050 resource-server
-
-push_proxy_server_image:
-	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label proxy-server-v1 --image proxy-server:latest
-
-push_auth_server_image:
-	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label auth-server-v1 --image auth-server:latest
-
-push_resource_server_image:
-	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label resource-server-v1 --image resource-server:latest
+push_sp_mock_backend_image:
+	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-3 --label sp_mock_backend --image sp_mock_backend:latest

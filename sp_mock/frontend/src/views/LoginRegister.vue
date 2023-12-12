@@ -15,7 +15,8 @@ const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
 
 const registerUser = async () => {
   try {
-    await layer8.fetch("http://localhost:5001/api/register", {
+    // await layer8.fetch("http://localhost:5001/api/register", {
+    await layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",
@@ -41,7 +42,8 @@ const loginUser = async () => {
   }
 
   try {
-    const response = await layer8.fetch("http://localhost:5001/api/login", {
+    // const response = await layer8.fetch("http://localhost:5001/api/login", {
+      const response = await layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",
@@ -75,41 +77,43 @@ const logoutUser = () => {
 };
 
 const userName = computed(() => {
-    if (SpToken.value && SpToken.value.split(".").length > 1) {
-        const payload = JSON.parse(atob(SpToken.value.split(".")[1]));
-        return payload.email;
-    }
-    return "";
+  if (SpToken.value && SpToken.value.split(".").length > 1) {
+    const payload = JSON.parse(atob(SpToken.value.split(".")[1]));
+    return payload.email;
+  }
+  return "";
 });
 
 const loginWithLayer8Popup = async () => {
-  const response = await layer8.fetch("http://localhost:8000/api/login/layer8/auth")
+  // const response = await layer8.fetch("http://localhost:8000/api/login/layer8/auth")
+  const response = await layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/login/layer8/auth")
   const data = await response.json()
 
   //alert(data.authURL)
   // create opener window
   const popup = window.open(data.authURL, "Login with Layer8", "width=600,height=600");
- 
+
   window.addEventListener("message", async (event) => {
-    if(event.data.redr){
+    if (event.data.redr) {
       console.log("event.data.redr: ", event.data.redr)
       setTimeout(() => {
-        layer8.fetch("http://localhost:8000/api/login/layer8/auth", {
-            method: "POST",
-            headers: {
-                "Content-Type": "Application/Json"
-            },
-            body: JSON.stringify({
-                callback_url: event.data.redr,
-            })
+        // layer8.fetch("http://localhost:8000/api/login/layer8/auth", {
+        layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/login/layer8/auth", {
+          method: "POST",
+          headers: {
+            "Content-Type": "Application/Json"
+          },
+          body: JSON.stringify({
+            callback_url: event.data.redr,
+          })
         })
-        .then(res => res.json())
-        .then(data => {
-          localStorage.setItem("L8_TOKEN", data.token)
-          router.push({ name: 'home' })
-          popup.close();
-        })
-        .catch(err => console.log(err))
+          .then(res => res.json())
+          .then(data => {
+            localStorage.setItem("L8_TOKEN", data.token)
+            router.push({ name: 'home' })
+            popup.close();
+          })
+          .catch(err => console.log(err))
       }, 1000);
     }
   });

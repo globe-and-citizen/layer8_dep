@@ -29,7 +29,8 @@ const metaData = computed(() => {
 const getPoem = async () => {
   try {
     console.log("going to try now 1...");
-    const resp = await layer8.fetch("http://localhost:8000/nextpoem");
+    // const resp = await layer8.fetch("http://localhost:8000/nextpoem");
+    const resp = await layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/nextpoem");
     console.log("going to try now 2...");
 
     let poemObj = await resp.json();

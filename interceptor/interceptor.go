@@ -40,7 +40,10 @@ func main() {
 	// Layer8Scheme = "http"
 	// Layer8Host = "localhost"
 	// Layer8Port = "5001"
-	Layer8LightsailURL = "http://aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
+	Layer8Scheme = "https"
+	Layer8Host = "aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
+	Layer8Port = ""
+	// Layer8LightsailURL = "https://aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
 
 	ETunnelFlag = false
 
@@ -116,8 +119,8 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 			return
 		}
 
-		// ProxyURL := fmt.Sprintf("%s://%s:%s/init-tunnel?backend=%s", Layer8Scheme, Layer8Host, Layer8Port, backend)
-		ProxyURL := fmt.Sprintf("%s/init-tunnel?backend=%s", Layer8LightsailURL, backend)
+		ProxyURL := fmt.Sprintf("%s://%s:%s/init-tunnel?backend=%s", Layer8Scheme, Layer8Host, Layer8Port, backend)
+		// ProxyURL := fmt.Sprintf("%s/init-tunnel?backend=%s", Layer8LightsailURL, backend)
 		fmt.Println(ProxyURL)
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", ProxyURL, bytes.NewBuffer([]byte{}))

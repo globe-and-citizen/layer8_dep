@@ -47,7 +47,7 @@ push_layer8_server_image:
 	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label layer8-server-v1 --image layer8-server:latest
 
 push_sp_mock_frontend_image:
-	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-2 --label sp_mock_frontend --image sp_mock_frontend:latest
+	aws lightsail push-container-image --region ca-central-1 --service-name container-service-2 --label sp_mock_frontend --image sp_mock_frontend:latest
 
 push_sp_mock_backend_image:
-	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-3 --label sp_mock_backend --image sp_mock_backend:latest
+	aws lightsail push-container-image --region ca-central-1 --service-name container-service-3 --label sp_mock_backend --image sp_mock_backend:latest

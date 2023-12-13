@@ -76,6 +76,7 @@ app.post("/api/register", async (req, res) => {
   console.log("req.body: ", req.body);
   const { password, email } = req.body;
   console.log(password, email);
+  // Check here, try catch exception
   const hashedPassword = await bcrypt.hash(password, 10);
   users.push({ email, password: hashedPassword });
   console.log("users: ", users);

@@ -174,14 +174,14 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get up_JWT from request header and verify it
-	// upJWT := r.Header.Get("up_JWT")
+	upJWT := r.Header.Get("up_JWT")
 
-	// _, err = utilities.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// 	http.Error(w, err.Error(), http.StatusUnauthorized)
-	// 	return
-	// }
+	_, err = utilities.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 
 	// send the request
 	res, err := http.DefaultClient.Do(req)
@@ -195,14 +195,14 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("\nReceived response from:", backendURL, " of code: ", res.StatusCode)
 
 	// Get mp_JWT from response header and verify it
-	// mpJWT := res.Header.Get("mp_JWT")
+	mpJWT := res.Header.Get("mp_JWT")
 
-	// _, err = utilities.VerifyStandardToken(mpJWT, os.Getenv("MP_123_SECRET_KEY"))
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// 	http.Error(w, err.Error(), http.StatusUnauthorized)
-	// 	return
-	// }
+	_, err = utilities.VerifyStandardToken(mpJWT, os.Getenv("MP_123_SECRET_KEY"))
+	if err != nil {
+		fmt.Println(err.Error())
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 
 	// copy response back
 	for k, v := range res.Header {

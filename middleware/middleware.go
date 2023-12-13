@@ -76,7 +76,7 @@ func doECDHWithClient(request, response js.Value) {
 	}
 
 	// Get mp_JWT from headers
-	MpJWT = headers.Get("mp_jwt").String()
+	MpJWT = headers.Get("mp_JWT").String()
 	fmt.Println("MpJWT at SP BE (Middleware): ", MpJWT)
 
 	response.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {

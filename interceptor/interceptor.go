@@ -37,12 +37,12 @@ func main() {
 
 	// Initialize global variables
 	Layer8Version = "1.0.0"
-	// Layer8Scheme = "http"
-	// Layer8Host = "localhost"
-	// Layer8Port = "5001"
-	Layer8Scheme = "https"
-	Layer8Host = "aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
-	Layer8Port = ""
+	Layer8Scheme = "http"
+	Layer8Host = "localhost"
+	Layer8Port = "5001"
+	// Layer8Scheme = "https"
+	// Layer8Host = "aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
+	// Layer8Port = ""
 	// Layer8LightsailURL = "https://aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
 
 	ETunnelFlag = false
@@ -193,6 +193,7 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 			ETunnelFlag = false
 			return
 		}
+		fmt.Println("userSymmetricKey: ", userSymmetricKey)
 
 		// TODO: Send an encrypted ping / confirmation to the server using the shared secret
 		// just like the 1. Syn 2. Syn/Ack 3. Ack flow in a TCP handshake

@@ -17,14 +17,15 @@ const token = ref(localStorage.getItem("token") || null);
 
 const isLoggedIn = computed(() => token.value !== null);
 
+const BackendURL = import.meta.env.VITE_BACKEND_URL;
+
 const registerUser = async () => {
   try {
     if (registerUsername.value == "" || registerPassword.value == "") {
       alert("Please enter a username and password!");
       return;
     }
-    await window.fetch("http://localhost:5001/api/v1/register-user", {
-      //  await window.fetch("https://layer8devproxy.net/api/v1/register-user", {
+    await window.fetch(BackendURL + "/api/v1/register-user", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",
@@ -53,9 +54,7 @@ const loginUser = async () => {
       alert("Please enter a username and password!");
       return;
     }
-    const respOne = await window.fetch(
-      "http://localhost:5001/api/v1/login-precheck",
-      // "https://layer8devproxy.net/api/v1/login-precheck",
+    const respOne = await window.fetch(BackendURL + "/api/v1/login-precheck",
       {
         method: "POST",
         headers: {
@@ -68,9 +67,7 @@ const loginUser = async () => {
     );
     const responseOne = await respOne.json();
     console.log(responseOne.salt);
-    const respTwo = await window.fetch(
-      "http://localhost:5001/api/v1/login-user",
-      // "https://layer8devproxy.net/api/v1/login-user",
+    const respTwo = await window.fetch(BackendURL + "/api/v1/login-user",
       {
         method: "POST",
         headers: {

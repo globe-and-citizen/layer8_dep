@@ -15,10 +15,11 @@ let user = ref({
   email_verified: false,
 });
 
+const BackendURL = import.meta.env.VITE_BACKEND_URL;
+
 const getUserDetails = async () => {
   try {
-    const resp = await window.fetch("http://localhost:5001/api/v1/profile", {
-    // const resp = await window.fetch("https://layer8devproxy.net/api/v1/profile", {
+    const resp = await window.fetch(BackendURL + "/api/v1/profile", {
       method: "GET",
       headers: {
         "Content-Type": "Application/Json",
@@ -45,9 +46,7 @@ const logoutUser = () => {
 
 const verifyEmail = async () => {
   try {
-    const resp = await window.fetch(
-      "http://localhost:5001/api/v1/verify-email",
-      // "https://layer8devproxy.net/api/v1/verify-email",
+    const resp = await window.fetch(BackendURL + "/api/v1/verify-email",
       {
         method: "POST",
         headers: {
@@ -75,9 +74,7 @@ const changeDisplayName = async () => {
       alert("Please enter a display name!");
       return;
     }
-    const resp = await window.fetch(
-      "http://localhost:5001/api/v1/change-display-name",
-      // "https://layer8devproxy.net/api/v1/change-display-name",
+    const resp = await window.fetch(BackendURL + "/api/v1/change-display-name",
       {
         method: "POST",
         headers: {

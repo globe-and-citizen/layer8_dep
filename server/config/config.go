@@ -28,10 +28,16 @@ func InitDB() {
 	dbPort := os.Getenv("DB_PORT")
 	sslMode := os.Getenv("SSL_MODE")
 	sslRootCert := os.Getenv("SSL_ROOT_CERT")
+	var dsn string
 
-	// DSN for PostgreSQL
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s sslrootcert=%s", dbHost, dbUser, dbPass, dbName, dbPort,
-		sslMode, sslRootCert)
+	if sslRootCert != "" {
+		// DSN for PostgreSQL
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s sslrootcert=%s", dbHost, dbUser, dbPass, dbName, dbPort,
+			sslMode, sslRootCert)
+	} else {
+		// DSN for PostgreSQL
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", dbHost, dbUser, dbPass, dbName, dbPort, sslMode)
+	}
 
 	db, err := gorm.Open(postgres.New(postgres.Config{
 		DSN: dsn,

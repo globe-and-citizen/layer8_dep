@@ -14,7 +14,7 @@ const bcrypt = require("bcrypt");
 
 // INIT
 // DYNAMIC!
-const port = process.env.PORT; // 8000; 
+const port = process.env.PORT; // 8000;
 const app = express();
 
 const users = []; // Store users in memory
@@ -25,14 +25,12 @@ const SECRET_KEY = "my_very_secret_key";
 const FRONTEND_URL = process.env.FRONTEND_URL; // locally, "192.168.1.71:9090"
 const LAYER8_URL = process.env.LAYER8_URL; // Locally, "192.168.1.71:5001"
 
-
 // LAYER8_CALLBACK_URL == REDIRECT_URI
 const LAYER8_CALLBACK_URL = `${FRONTEND_URL}/oauth2/callback`;
 const LAYER8_RESOURCE_URL = `${LAYER8_URL}/api/user`;
 
 // const LAYER8_CALLBACK_URL = "http://localhost:5173/oauth2/callback"; // defined in the frontend
 // const LAYER8_RESOURCE_URL = "http://localhost:5001/api/user";
-
 
 const layer8Auth = new ClientOAuth2({
   clientId: "notanid",
@@ -76,8 +74,12 @@ app.post("/api/register", async (req, res) => {
   console.log("req.body: ", req.body);
   const { password, email } = req.body;
   console.log(password, email);
-  // Check here, try catch exception
-  const hashedPassword = await bcrypt.hash(password, 10);
+  // const hashedPassword = await bcrypt.hash(password, 10);
+  try {
+    hashedPassword = await bcrypt.hash(password, 10);
+  } catch (err) {
+    console.log("err: ", err);
+  }
   users.push({ email, password: hashedPassword });
   console.log("users: ", users);
   res.status(200).send("User registered successfully!");
@@ -100,12 +102,12 @@ app.post("/api/login", async (req, res) => {
 });
 
 app.get("/api/login/layer8/auth", async (req, res) => {
-  console.log("layer8Auth.code.getUri(): ", layer8Auth.code.getUri())
+  console.log("layer8Auth.code.getUri(): ", layer8Auth.code.getUri());
   res.status(200).json({ authURL: layer8Auth.code.getUri() });
 });
 
 app.post("/api/login/layer8/auth", async (req, res) => {
-  console.log("Do I even run?")
+  console.log("Do I even run?");
   const { callback_url } = req.body;
   const user = await layer8Auth.code
     .getToken(callback_url)
@@ -121,8 +123,9 @@ app.post("/api/login/layer8/auth", async (req, res) => {
         .then((res) => {
           console.log("response: ", res);
           return JSON.parse(res.body);
-        }).catch((err) => {
-          console.log("from popsicle: ", err)
+        })
+        .catch((err) => {
+          console.log("from popsicle: ", err);
         });
     })
     .catch((err) => {

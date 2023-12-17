@@ -31,11 +31,20 @@ generate_rs_dist:
 run_server: # Port 5001
 	cd server && go run main.go
 
+make build_server_image:
+	docker build --tag layer8-server --file Dockerfile .
+
+make build_sp_mock_frontend_image:
+	cd sp_mock/frontend && docker build --tag sp_mock_frontend --file Dockerfile .
+
+make build_sp_mock_backend_image:
+	cd sp_mock/backend && docker build --tag sp_mock_backend --file Dockerfile .
+
 # To build all images at once
 build_images:
-	docker build --tag layer8-server --file Dockerfile .
-	cd sp_mock/frontend && docker build --tag sp_mock_frontend --file Dockerfile .
-	cd sp_mock/backend && docker build --tag sp_mock_backend --file Dockerfile .
+	@'$(MAKE)' -C ./ build_server_image
+	@'$(MAKE)' -C ./ build_sp_mock_frontend_image
+	@'$(MAKE)' -C ./ build_sp_mock_backend_image
 
 run_layer8_server_image:
 	docker run -p 5001:5001 -t layer8-server

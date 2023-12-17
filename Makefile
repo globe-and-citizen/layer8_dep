@@ -31,20 +31,18 @@ generate_rs_dist:
 run_server: # Port 5001
 	cd server && go run main.go
 
-make build_server_image:
+build_server_image:
 	docker build --tag layer8-server --file Dockerfile .
 
-make build_sp_mock_frontend_image:
+build_sp_mock_frontend_image:
 	cd sp_mock/frontend && docker build --tag sp_mock_frontend --file Dockerfile .
 
-make build_sp_mock_backend_image:
+build_sp_mock_backend_image:
 	cd sp_mock/backend && docker build --tag sp_mock_backend --file Dockerfile .
 
 # To build all images at once
 build_images:
-	@'$(MAKE)' -C ./ build_server_image
-	@'$(MAKE)' -C ./ build_sp_mock_frontend_image
-	@'$(MAKE)' -C ./ build_sp_mock_backend_image
+	make build_server_image && make build_sp_mock_frontend_image && make build_sp_mock_backend_image
 
 run_layer8_server_image:
 	docker run -p 5001:5001 -t layer8-server
@@ -56,10 +54,10 @@ run_sp_mock_backend_image:
 	docker run -p 8000:8000 -t sp_mock_backend
 
 push_layer8_server_image:
-	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label layer8-server-v1 --image layer8-server:latest
+	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label layer8-server-a4 --image layer8-server:latest
 
 push_sp_mock_frontend_image:
-	aws lightsail push-container-image --region ca-central-1 --service-name container-service-2 --label sp_mock_frontend --image sp_mock_frontend:latest
+	aws lightsail push-container-image --region ca-central-1 --service-name container-service-2 --label frontenda3 --image sp_mock_frontend:latest
 
 push_sp_mock_backend_image:
-	aws lightsail push-container-image --region ca-central-1 --service-name container-service-3 --label sp_mock_backend --image sp_mock_backend:latest
+	aws lightsail push-container-image --region ca-central-1 --service-name container-service-3 --label backenda6 --image sp_mock_backend:latest

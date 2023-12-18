@@ -340,7 +340,7 @@ func (ss *JWK) SymmetricEncrypt(data []byte) ([]byte, error) {
 
 func (ss *JWK) SymmetricDecrypt(ciphertext []byte) ([]byte, error) {
 	if len(ciphertext) == 0 {
-		return nil, fmt.Errorf("Receiver Key_ops must include 'decrypt' ")
+		return nil, fmt.Errorf("ciphertext is empty")
 	}
 
 	if !slices.Contains(ss.Key_ops, "decrypt") {

@@ -32,6 +32,8 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	for k, v := range r.Header {
 		req.Header[k] = v
 	}
+	// X-Layer8-Request is a custom header that is used to identify layer8 requests
+	req.Header["X-Layer8-Request"] = []string{"true"}
 
 	// send the request
 	res, err := http.DefaultClient.Do(req)
@@ -42,7 +44,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("\nReceived response from 8000:", url, " of code: ", res.StatusCode)
+	fmt.Println("\nReceived response from:", url, " of code: ", res.StatusCode)
 
 	// copy response back
 	for k, v := range res.Header {

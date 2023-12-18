@@ -1,6 +1,6 @@
 {
-  "name": "layer8-middleware-windows",
-  "version": "1.0.3",
+  "name": "layer8-middleware",
+  "version": "1.0.1",
   "description": "Layer8 middleware for Windows",
   "main": "index.js",
   "scripts": {

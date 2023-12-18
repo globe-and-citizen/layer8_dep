@@ -1,13 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const popsicle = require('popsicle')
-const Layer8 = require("layer8-middleware-ubuntu");
+const Layer8 = require("layer8-middleware");
 const ClientOAuth2 = require("client-oauth2");
 require("dotenv").config();
 const POEMS = require("./poems.json")
 
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 // INIT
 const port = 8000;
@@ -61,7 +61,7 @@ app.post("/api/register", async (req, res) => {
   console.log("req.body: ", req.body);
   const { password, email } = req.body;
   console.log(password, email);
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hashSync(password, bcrypt.genSaltSync());
   users.push({ email, password: hashedPassword });
   console.log("users: ", users);
   res.status(200).send("User registered successfully!");
@@ -74,7 +74,7 @@ app.post("/api/login", async (req, res) => {
   const { email, password } = req.body;
   const user = users.find((u) => u.email === email);
   console.log("user: ", user);
-  if (user && (await bcrypt.compare(password, user.password))) {
+  if (user && (await bcrypt.compareSync(password, user.password))) {
     const token = jwt.sign({ email }, SECRET_KEY);
     console.log("token", token);
     res.status(200).json({ token });

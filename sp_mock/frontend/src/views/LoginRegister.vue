@@ -15,7 +15,7 @@ const token = ref(localStorage.getItem("token") || null);
 
 const registerUser = async () => {
   try {
-    await layer8.fetch("http://localhost:8000/api/register", {
+    await layer8.fetch("https://layer8-mock-backend-gjzwz.ondigitalocean.app/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",
@@ -41,7 +41,7 @@ const loginUser = async () => {
   }
 
   try {
-    const response = await layer8.fetch("http://localhost:8000/api/login", {
+    const response = await layer8.fetch("https://layer8-mock-backend-gjzwz.ondigitalocean.app/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",
@@ -75,7 +75,7 @@ const logoutUser = () => {
 };
 
 const loginWithLayer8Popup = async () => {
-  const response = await layer8.fetch("http://localhost:8000/api/login/layer8/auth")
+  const response = await layer8.fetch("https://layer8-mock-backend-gjzwz.ondigitalocean.app/api/login/layer8/auth")
   const data = await response.json()
 
   //alert(data.authURL)
@@ -86,7 +86,7 @@ const loginWithLayer8Popup = async () => {
     if(event.data.redr){
       console.log("event.data.redr: ", event.data.redr)
       setTimeout(() => {
-        layer8.fetch("http://localhost:8000/api/login/layer8/auth", {
+        layer8.fetch("https://layer8-mock-backend-gjzwz.ondigitalocean.app/api/login/layer8/auth", {
             method: "POST",
             headers: {
                 "Content-Type": "Application/Json"

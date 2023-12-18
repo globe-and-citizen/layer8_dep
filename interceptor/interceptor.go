@@ -7,6 +7,7 @@ import (
 	"globe-and-citizen/layer8/interceptor/internals"
 	"globe-and-citizen/layer8/utils"
 	"net/http"
+	"net/url"
 	"syscall/js"
 )
 
@@ -32,15 +33,13 @@ func main() {
 
 	// Expose layer8 functionality to the front end Javascript
 	js.Global().Set("layer8", js.ValueOf(map[string]interface{}{
-		"testWASM":         js.FuncOf(testWASM),
-		"persistenceCheck": js.FuncOf(persistenceCheck),
+		"testWASM":             js.FuncOf(testWASM),
+		"persistenceCheck":     js.FuncOf(persistenceCheck),
+		"initializeECDHTunnel": js.FuncOf(initializeECDHTunnel),
 		// "genericGetRequest": js.FuncOf(genericGetRequest),
 		// "genericPost":       js.FuncOf(genericPost),
 		"fetch": js.FuncOf(fetch),
 	}))
-
-	// Initialize the encrypted tunnel
-	initializeECDHTunnel()
 
 	// Developer Warnings:
 	fmt.Println("WARNING: wasm_exec.js is versioned and has some breaking changes. Ensure you are using the correct version.")
@@ -83,7 +82,9 @@ func persistenceCheck(this js.Value, args []js.Value) interface{} {
 	return promise
 }
 
-func initializeECDHTunnel() {
+func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
+	serverURL := args[0].String()
+
 	go func() {
 		var err error
 		privJWK_ecdh, pubJWK_ecdh, err = utils.GenerateKeyPair(utils.ECDH)
@@ -110,6 +111,14 @@ func initializeECDHTunnel() {
 		}
 		req.Header.Add("x-ecdh-init", b64PubJWK)
 		req.Header.Add("X-client-id", "1")
+		parsedURL, err := url.Parse(serverURL)
+		if err != nil {
+			fmt.Println(err.Error())
+			ETunnelFlag = false
+			return
+		}
+		req.Header.Add("X-Forwarded-Host", parsedURL.Host)
+		req.Header.Add("X-Forwarded-Proto", parsedURL.Scheme)
 
 		// send request
 		resp, err := client.Do(req)
@@ -157,7 +166,7 @@ func initializeECDHTunnel() {
 		return
 	}()
 
-	return
+	return nil
 }
 
 func fetch(this js.Value, args []js.Value) interface{} {

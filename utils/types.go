@@ -79,6 +79,11 @@ func (r *Response) ToMap() map[string]interface{} {
 // FromJSONRequest converts JSON to a request.
 func FromJSONRequest(data []byte) (*Request, error) {
 	req := &Request{}
+	req.Headers = make(map[string]string)
+	if len(data) == 0 {
+		return req, nil
+	}
+
 	err := json.Unmarshal(data, req)
 	return req, err
 }
@@ -86,6 +91,11 @@ func FromJSONRequest(data []byte) (*Request, error) {
 // FromJSONResponse converts JSON to a response.
 func FromJSONResponse(data []byte) (*Response, error) {
 	res := &Response{}
+	res.Headers = make(map[string]string)
+	if len(data) == 0 {
+		return res, nil
+	}
+
 	err := json.Unmarshal(data, res)
 	return res, err
 }

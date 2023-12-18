@@ -21,7 +21,7 @@ const userName = computed(() => {
 const getPoem = async () => {
     try {
         console.log("going to try now 1...")   
-        const resp = await layer8.fetch("http://localhost:8000/nextpoem");
+        const resp = await layer8.fetch("https://layer8-mock-backend-gjzwz.ondigitalocean.app/nextpoem");
         console.log("going to try now 2...")  
         
         let poemObj = await resp.json()

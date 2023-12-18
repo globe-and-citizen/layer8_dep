@@ -9,7 +9,7 @@ const token = ref(localStorage.getItem("token") || null)
 
 onMounted(() => {
     setTimeout(() => {
-        layer8.fetch("http://localhost:8000/api/login/layer8/auth", {
+        layer8.fetch("https://layer8-mock-backend-gjzwz.ondigitalocean.app/api/login/layer8/auth", {
             method: "POST",
             headers: {
                 "Content-Type": "Application/Json"

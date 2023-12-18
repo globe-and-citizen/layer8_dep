@@ -3,6 +3,7 @@ module globe-and-citizen/layer8/proxy
 go 1.21.1
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/globe-and-citizen/layer8-utils v0.0.0-20230927121854-b5403af080d8
 	github.com/joho/godotenv v1.5.1
 	github.com/xdg-go/pbkdf2 v1.0.0
@@ -14,7 +15,6 @@ require (
 require (
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

@@ -5,12 +5,38 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vite App</title>
-    <script type="module" src="http://localhost:5000/assets/cdn/interceptor/index.local.js?backend=http://localhost:8000"></script>
-    <!-- <script type="module" src="https://auth-service-5mcaj.ondigitalocean.app/assets/cdn/interceptor/index.js"></script> -->
-
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
+    <script>
+        var interceptor = document.createElement("script");
+        interceptor.type = "module";
+        interceptor.src = "https://auth-service-5mcaj.ondigitalocean.app/assets/cdn/interceptor/index.js";
+        // interceptor.src = "http://localhost:5000/assets/cdn/interceptor/index.local.js";
+        
+        interceptor.addEventListener("load", () => {
+          // using a backoff strategy to wait for layer8 to be available
+          // it will try to initialize the tunnel every 100ms, then 200ms, then 400ms, etc.
+          // until it reaches 10 seconds, then it will stop trying
+          var backoff = 100;
+          var interval = setInterval(() => {
+            console.log("trying to initialize layer8 tunnel");
+            if (typeof(layer8) !== "undefined") {
+              clearInterval(interval);
+              // replace "https://api.layer8.com" with your API/backend URL
+              layer8.initializeECDHTunnel("https://layer8-mock-backend-gjzwz.ondigitalocean.app");
+              // layer8.initializeECDHTunnel("http://localhost:8000");
+            } else {
+              backoff *= 2;
+              if (backoff > 10000) {
+                clearInterval(interval);
+                console.log("could not initialize layer8 tunnel");
+              }
+            }
+          }, backoff);
+        });
+        document.body.appendChild(interceptor);
+    </script>
   </body>
 </html>

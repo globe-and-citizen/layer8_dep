@@ -114,19 +114,26 @@ func WASMMiddleware(this js.Value, args []js.Value) interface{} {
 	res := args[1]
 	next := args[2]
 
+	var (
+		data        []byte
+		headers 	= req.Get("headers")
+		body        = req.Get("body")
+		contentType = headers.Get("content-type").String()
+	)
+
+	// check if the request is encrypted (i.e. has x-layer8-request header)
+	isLayer8Request := headers.Get("x-layer8-request").String()
+	if isLayer8Request == "<undefined>" {
+		next.Invoke()
+		return nil
+	}
+	
 	// Decide if this is a redirect to ECDH init.
-	headers := req.Get("headers")
 	isECDHInit := headers.Get("x-ecdh-init").String()
 	if isECDHInit != "<undefined>" {
 		doECDHWithClient(req, res)
 		return nil
 	}
-
-	var (
-		data        []byte
-		body        = req.Get("body")
-		contentType = headers.Get("content-type").String()
-	)
 
 C:
 	switch contentType {
@@ -146,6 +153,7 @@ C:
 
 		// skip if no body
 		if body.String() == "<undefined>" {
+			println("no body")
 			break C
 		}
 
@@ -168,7 +176,7 @@ C:
 		res.Set("statusMessage", contentType+" content type is not supported")
 		return nil
 	}
-
+	
 	b, err := spSymmetricKey.SymmetricDecrypt(data)
 	if err != nil {
 		println("error decrypting request:", err.Error())
@@ -192,6 +200,7 @@ C:
 	var reqBody map[string]interface{}
 	json.Unmarshal(jreq.Body, &reqBody)
 	req.Set("body", reqBody)
+	println("request body: ", reqBody)
 
 	// OVERWRITE THE SEND FUNCTION
 	res.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {

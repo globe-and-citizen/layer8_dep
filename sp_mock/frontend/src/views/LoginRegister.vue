@@ -12,11 +12,11 @@ const isRegister = ref(false);
 const isLoggedIn = computed(() => SpToken.value !== null);
 const isContinueAnonymously = ref(false);
 const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
+const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"; // For Local: http://localhost:5001
 
 const registerUser = async () => {
   try {
-    // await layer8.fetch("http://localhost:5001/api/register", {
-    await layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/register", {
+    await layer8.fetch(BackendURL + "/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",
@@ -42,8 +42,7 @@ const loginUser = async () => {
   }
 
   try {
-    // const response = await layer8.fetch("http://localhost:5001/api/login", {
-      const response = await layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/login", {
+      const response = await layer8.fetch(BackendURL + "/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",
@@ -84,12 +83,10 @@ const userName = computed(() => {
   return "";
 });
 
+// Layer8 Components start here
 const loginWithLayer8Popup = async () => {
-  // const response = await layer8.fetch("http://localhost:8000/api/login/layer8/auth")
-  const response = await layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/login/layer8/auth")
+  const response = await layer8.fetch(BackendURL + "/api/login/layer8/auth")
   const data = await response.json()
-
-  //alert(data.authURL)
   // create opener window
   const popup = window.open(data.authURL, "Login with Layer8", "width=600,height=600");
 
@@ -97,8 +94,7 @@ const loginWithLayer8Popup = async () => {
     if (event.data.redr) {
       console.log("event.data.redr: ", event.data.redr)
       setTimeout(() => {
-        // layer8.fetch("http://localhost:8000/api/login/layer8/auth", {
-        layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/login/layer8/auth", {
+        layer8.fetch(BackendURL + "/api/login/layer8/auth", {
           method: "POST",
           headers: {
             "Content-Type": "Application/Json"
@@ -118,6 +114,7 @@ const loginWithLayer8Popup = async () => {
     }
   });
 }
+// Layer8 Components end here
 </script>
 
 <template>

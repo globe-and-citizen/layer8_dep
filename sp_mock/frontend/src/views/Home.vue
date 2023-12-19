@@ -8,6 +8,8 @@ const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
 const L8Token = ref(localStorage.getItem("L8_TOKEN") || null);
 const isLoggedIn = computed(() => SpToken.value !== null);
 let nextPoem = ref({});
+const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"; // For Local: http://localhost:5001
+
 
 const userName = computed(() => {
   if (SpToken.value && SpToken.value.split(".").length > 1) {
@@ -29,8 +31,7 @@ const metaData = computed(() => {
 const getPoem = async () => {
   try {
     console.log("going to try now 1...");
-    // const resp = await layer8.fetch("http://localhost:8000/nextpoem");
-    const resp = await layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/nextpoem");
+    const resp = await layer8.fetch(BackendURL + "/nextpoem");
     console.log("going to try now 2...");
 
     let poemObj = await resp.json();

@@ -1,55 +1,19 @@
 const express = require("express");
 const cors = require("cors");
-const popsicle = require("popsicle");
-
-const Layer8 = require("./dist/loadWASM.js");
-// const Layer8 = require("../../middleware/dist/loadWASM.js");
-
-const ClientOAuth2 = require("client-oauth2");
-require("dotenv").config();
 const POEMS = require("./poems.json");
-
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-
-// INIT
-// DYNAMIC!
 const port = process.env.PORT; // 8000;
 const app = express();
-
 const users = []; // Store users in memory
-
 const SECRET_KEY = "my_very_secret_key";
 
-// DYNAMIC!
-const FRONTEND_URL = process.env.FRONTEND_URL; // locally, "192.168.1.71:9090"
-const LAYER8_URL = process.env.LAYER8_URL; // Locally, "192.168.1.71:5001"
-
-// LAYER8_CALLBACK_URL == REDIRECT_URI
-const LAYER8_CALLBACK_URL = `${FRONTEND_URL}/oauth2/callback`;
-const LAYER8_RESOURCE_URL = `${LAYER8_URL}/api/user`;
-
-// const LAYER8_CALLBACK_URL = "http://localhost:5173/oauth2/callback"; // defined in the frontend
-// const LAYER8_RESOURCE_URL = "http://localhost:5001/api/user";
-
-const layer8Auth = new ClientOAuth2({
-  clientId: "notanid",
-  clientSecret: "absolutelynotasecret!",
-  accessTokenUri: `${LAYER8_URL}/api/oauth`,
-  authorizationUri: `${LAYER8_URL}/authorize`,
-  redirectUri: LAYER8_CALLBACK_URL,
-  scopes: ["read:user"],
-});
-
-//This comes first to ensure health checks
 app.get("/healthcheck", (req, res) => {
   console.log("Enpoint for testing");
   console.log("req.body: ", req.body);
   res.send("Bro, ur poems coming soon. Relax a little.");
 });
 
-// MIDDLEWARE
-//app.use(express.json()) // Using express.json() is necessary depending on which version of the middleware you use.
 app.use(Layer8);
 app.use(cors());
 
@@ -61,7 +25,6 @@ app.post("/", (req, res) => {
   res.send("Server has registered a POST.");
 });
 
-// CheckJWT 777 here
 let counter = 0;
 app.get("/nextpoem", (req, res) => {
   counter++;
@@ -74,7 +37,6 @@ app.post("/api/register", async (req, res) => {
   console.log("req.body: ", req.body);
   const { password, email } = req.body;
   console.log(password, email);
-  // const hashedPassword = await bcrypt.hash(password, 10);
   try {
     hashedPassword = await bcrypt.hash(password, 10);
   } catch (err) {
@@ -101,6 +63,24 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+// Layer8 Components start here
+const popsicle = require("popsicle");
+const Layer8 = require("./dist/loadWASM.js");
+const ClientOAuth2 = require("client-oauth2");
+require("dotenv").config();
+const FRONTEND_URL = process.env.FRONTEND_URL;
+const LAYER8_URL = process.env.LAYER8_URL;
+const LAYER8_CALLBACK_URL = `${FRONTEND_URL}/oauth2/callback`;
+const LAYER8_RESOURCE_URL = `${LAYER8_URL}/api/user`;
+const layer8Auth = new ClientOAuth2({
+  clientId: "notanid",
+  clientSecret: "absolutelynotasecret!",
+  accessTokenUri: `${LAYER8_URL}/api/oauth`,
+  authorizationUri: `${LAYER8_URL}/authorize`,
+  redirectUri: LAYER8_CALLBACK_URL,
+  scopes: ["read:user"],
+});
+
 app.get("/api/login/layer8/auth", async (req, res) => {
   console.log("layer8Auth.code.getUri(): ", layer8Auth.code.getUri());
   res.status(200).json({ authURL: layer8Auth.code.getUri() });
@@ -112,7 +92,6 @@ app.post("/api/login/layer8/auth", async (req, res) => {
   const user = await layer8Auth.code
     .getToken(callback_url)
     .then(async (user) => {
-      // get the user data from the resource server
       return await popsicle
         .request(
           user.sign({
@@ -146,93 +125,16 @@ app.post("/api/login/layer8/auth", async (req, res) => {
 
   console.log("Display Name: ", displayName);
   console.log("Country Name: ", countryName);
-  // 777 Token
   const token = jwt.sign(
     { isEmailVerified, displayName, countryName },
     SECRET_KEY
   );
   res.status(200).json({ token });
 });
+// Layer8 Components end here
 
 app.listen(port, () => {
   console.log(
     `\nA mock Service Provider backend is now listening on port ${port}.`
   );
 });
-
-// const express = require('express')
-// const cors = require('cors')
-// const Layer8 = require("../../middleware/dist/loadWASM.js")
-// require('dotenv').config()
-
-// // INIT
-// const port = 8000
-// const app = express()
-// const userDatabase = [{username:"chester", password:"tester"}]
-
-// // MIDDLEWARE
-// app.use(Layer8)
-// app.use(cors())
-// app.use(express.json())
-
-// app.get("/", (req, res)=>{
-//     console.log("req.body: ", req.body)
-//     console.log("res.custom_test_prop: ", res.custom_test_prop)
-//     res.send("Bro, ur poems coming soon. Relax a little.")
-// })
-
-// app.get("/success", (req, res)=>{
-//     console.log("req.headers: ", req.headers)
-//     res.send("Unfortunately, success has no final form.")
-// })
-
-// app.post("/success", (req, res)=>{
-//     console.log("Dude you're even closer...")
-//     console.log("req.header: ", req.headers)
-//     console.log("req.body", req.body)
-//     res.send("Well done. Never stop hustling.")
-// })
-
-// app.get("/login", (req, res)=>{
-//     console.log("Arrival at '/login'", req.query)
-//     const username = req.query.username
-//     const password = req.query.password
-
-//     const index = userDatabase.findIndex((user)=>{
-//         return user.username === username
-//     })
-
-//     if (userDatabase[index].password == password) {
-//         console.log("User now logged in.")
-//         res.send("You are logged in")
-//     } else {
-//         console.log("Error: Usertried to use incorrect password.")
-//         res.send("Denied! Get the fuck out you bum.")
-//     }
-// })
-
-// app.post("/register", (req, res)=>{
-//     console.log("Arrival at '/register'")
-
-//     const {username, password} = req.body
-
-//     const newUser = {
-//         username,
-//         password
-//     }
-
-//     if (userDatabase.findIndex((user)=>{
-//         return user.username === username
-//     }) != -1){
-//         console.log("Error: Username already taken.")
-//         res.send("Err: Username already exists.")
-//     } else {
-//         userDatabase.push(newUser)
-//         console.log(userDatabase)
-//         res.send("new user registered successfully")
-//     }
-// })
-
-// app.listen(port, () => {
-//     console.log(`\nA mock Service Provider backend is now listening on port ${port}.`)
-// })

@@ -18,11 +18,11 @@ type KeyPair struct {
 }
 
 var (
-	InstanceKey    *KeyPair
-	spSymmetricKey *utils.JWK
-	privKey_ECDH   *utils.JWK
-	pubKey_ECDH    *utils.JWK
-	MpJWT          string
+	InstanceKey    *KeyPair   // TODO: Array of *KeyPair (RSA keys)
+	spSymmetricKey *utils.JWK // TODO: Array of *utils.JWK (Symmetric keys)
+	privKey_ECDH   *utils.JWK // TODO: Array of *utils.JWK (ECDH keys)
+	pubKey_ECDH    *utils.JWK // TODO: Array of *utils.JWK (ECDH keys)
+	MpJWT          string     // TODO: Array of strings (JWTs)
 )
 
 func init() {

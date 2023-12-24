@@ -9,8 +9,8 @@ const token = ref(localStorage.getItem("token") || null)
 
 onMounted(() => {
     setTimeout(() => {
-        // layer8.fetch("http://localhost:8000/api/login/layer8/auth", {
-        layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/login/layer8/auth", {
+        layer8.fetch("http://localhost:8000/api/login/layer8/auth", {
+        // layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/login/layer8/auth", {
             method: "POST",
             headers: {
                 "Content-Type": "Application/Json"

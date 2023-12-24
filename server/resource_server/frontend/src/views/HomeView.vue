@@ -17,7 +17,8 @@ const token = ref(localStorage.getItem("token") || null);
 
 const isLoggedIn = computed(() => token.value !== null);
 
-const BackendURL = import.meta.env.VITE_BACKEND_URL;
+// const BackendURL = import.meta.env.VITE_BACKEND_URL;
+const BackendURL = 'http://localhost:5001';
 
 const registerUser = async () => {
   try {

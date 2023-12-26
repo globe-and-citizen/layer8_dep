@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 	"syscall/js"
+
+	uuid "github.com/google/uuid"
 )
 
 // Declare global constants
@@ -28,7 +30,10 @@ var (
 	pubJWK_ecdh        *utils.JWK
 	userSymmetricKey   *utils.JWK
 	UpJWT              string
+	UUID               string
 )
+
+var L8Client = internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port)
 
 func main() {
 	// fmt.Print("please...")
@@ -129,8 +134,11 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 			ETunnelFlag = false
 			return
 		}
+		uuid := uuid.New()
+		UUID = uuid.String()
+		fmt.Println("uuid: ", uuid.String())
 		req.Header.Add("x-ecdh-init", b64PubJWK)
-		req.Header.Add("X-client-id", "1")
+		req.Header.Add("x-client-uuid", uuid.String())
 
 		// send request
 		resp, err := client.Do(req)
@@ -269,7 +277,7 @@ func fetch(this js.Value, args []js.Value) interface{} {
 		go func() {
 			// forward request to the layer8 proxy server
 			fmt.Println("userSymmetricKey", userSymmetricKey)
-			res := internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port).
+			res := L8Client.
 				Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
 
 			if res.Status >= 100 || res.Status < 300 { // Handle Success & Default Rejection

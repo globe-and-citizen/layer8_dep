@@ -12,7 +12,9 @@ const isRegister = ref(false);
 const isLoggedIn = computed(() => SpToken.value !== null);
 const isContinueAnonymously = ref(false);
 const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
-const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"; // For Local: http://localhost:5001
+// const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com";
+const BackendURL = "http://localhost:5001";
+
 
 const registerUser = async () => {
   try {
@@ -42,7 +44,7 @@ const loginUser = async () => {
   }
 
   try {
-      const response = await layer8.fetch(BackendURL + "/api/login", {
+    const response = await layer8.fetch(BackendURL + "/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",

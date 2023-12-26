@@ -56,6 +56,9 @@ func doECDHWithClient(request, response js.Value) {
 		return
 	}
 
+	clientUUID := headers.Get("x-client-uuid").String()
+	fmt.Println("clientUUID: ", clientUUID)
+
 	ss, err := privKey_ECDH.GetECDHSharedSecret(userPubJWKConverted)
 	if err != nil {
 		fmt.Println("Unable to get ECDH shared secret", err.Error())
@@ -76,6 +79,7 @@ func doECDHWithClient(request, response js.Value) {
 	}
 
 	// Get mp_JWT from headers
+	// Use a uuid
 	MpJWT = headers.Get("mp_jwt").String()
 	fmt.Println("MpJWT at SP BE (Middleware): ", MpJWT)
 

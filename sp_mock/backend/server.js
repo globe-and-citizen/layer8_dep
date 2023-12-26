@@ -3,10 +3,29 @@ const cors = require("cors");
 const POEMS = require("./poems.json");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const port = process.env.PORT; // 8000;
 const app = express();
 const users = []; // Store users in memory
 const SECRET_KEY = "my_very_secret_key";
+// TODO: For future, use a layer8 npm published package for initialising the client and variables
+const popsicle = require("popsicle");
+const ClientOAuth2 = require("client-oauth2");
+require("dotenv").config();
+// const port = process.env.PORT;
+// const FRONTEND_URL = process.env.FRONTEND_URL;
+// const LAYER8_URL = process.env.LAYER8_URL;
+const port = 8000;
+const FRONTEND_URL = "http://localhost:5173"
+const LAYER8_URL = "http://localhost:5001"
+const LAYER8_CALLBACK_URL = `${FRONTEND_URL}/oauth2/callback`;
+const LAYER8_RESOURCE_URL = `${LAYER8_URL}/api/user`;
+const layer8Auth = new ClientOAuth2({
+  clientId: "notanid",
+  clientSecret: "absolutelynotasecret!",
+  accessTokenUri: `${LAYER8_URL}/api/oauth`,
+  authorizationUri: `${LAYER8_URL}/authorize`,
+  redirectUri: LAYER8_CALLBACK_URL,
+  scopes: ["read:user"],
+});
 
 app.get("/healthcheck", (req, res) => {
   console.log("Enpoint for testing");
@@ -14,6 +33,7 @@ app.get("/healthcheck", (req, res) => {
   res.send("Bro, ur poems coming soon. Relax a little.");
 });
 
+const Layer8 = require("./dist/loadWASM.js");
 app.use(Layer8);
 app.use(cors());
 
@@ -64,23 +84,6 @@ app.post("/api/login", async (req, res) => {
 });
 
 // Layer8 Components start here
-const popsicle = require("popsicle");
-const Layer8 = require("./dist/loadWASM.js");
-const ClientOAuth2 = require("client-oauth2");
-require("dotenv").config();
-const FRONTEND_URL = process.env.FRONTEND_URL;
-const LAYER8_URL = process.env.LAYER8_URL;
-const LAYER8_CALLBACK_URL = `${FRONTEND_URL}/oauth2/callback`;
-const LAYER8_RESOURCE_URL = `${LAYER8_URL}/api/user`;
-const layer8Auth = new ClientOAuth2({
-  clientId: "notanid",
-  clientSecret: "absolutelynotasecret!",
-  accessTokenUri: `${LAYER8_URL}/api/oauth`,
-  authorizationUri: `${LAYER8_URL}/authorize`,
-  redirectUri: LAYER8_CALLBACK_URL,
-  scopes: ["read:user"],
-});
-
 app.get("/api/login/layer8/auth", async (req, res) => {
   console.log("layer8Auth.code.getUri(): ", layer8Auth.code.getUri());
   res.status(200).json({ authURL: layer8Auth.code.getUri() });

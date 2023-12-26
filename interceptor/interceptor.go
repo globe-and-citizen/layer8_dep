@@ -257,6 +257,9 @@ func fetch(this js.Value, args []js.Value) interface{} {
 		// set the UpJWT to the headers
 		headers.Set("up_JWT", UpJWT)
 
+		// set the UUID to the headers
+		headers.Set("x-client-uuid", UUID)
+
 		// setting the body to an empty string if it's undefined
 		body := options.Get("body").String()
 		if body == "<undefined>" {

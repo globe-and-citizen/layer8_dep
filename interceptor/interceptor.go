@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 	"syscall/js"
+
+	uuid "github.com/google/uuid"
 )
 
 // Declare global constants
@@ -17,40 +19,50 @@ const INTERCEPTOR_VERSION = "1.0.0"
 
 // Declare global variables
 var (
-	Layer8Scheme     string
-	Layer8Host       string
-	Layer8Port       string
-	Layer8Version    string
-	Counter          int
-	ETunnelFlag      bool
-	privJWK_ecdh     *utils.JWK
-	pubJWK_ecdh      *utils.JWK
-	userSymmetricKey *utils.JWK
-	UpJWT            string
+	Layer8Scheme       string
+	Layer8Host         string
+	Layer8Port         string
+	Layer8Version      string
+	Layer8LightsailURL string
+	Counter            int
+	ETunnelFlag        bool
+	privJWK_ecdh       *utils.JWK
+	pubJWK_ecdh        *utils.JWK
+	userSymmetricKey   *utils.JWK
+	UpJWT              string
+	UUID               string
 )
 
+var L8Client = internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port)
+
 func main() {
+	// fmt.Print("please...")
 	// Create channel to keep the Go thread alive
 	c := make(chan struct{}, 0)
 
 	// Initialize global variables
 	Layer8Version = "1.0.0"
-	Layer8Scheme = "http"
-	Layer8Host = "localhost"
-	Layer8Port = "5001" // 5001 is Proxy & 5000 is Auth server.
+	// Layer8Scheme = "http"
+	// Layer8Host = "localhost"
+	// Layer8Port = "5001"
+	Layer8Scheme = "https"
+	Layer8Host = "aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
+	Layer8Port = ""
+	Layer8LightsailURL = "https://aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
+
 	ETunnelFlag = false
 
 	// Expose layer8 functionality to the front end Javascript
 	js.Global().Set("layer8", js.ValueOf(map[string]interface{}{
-		"testWASM":         js.FuncOf(testWASM),
-		"persistenceCheck": js.FuncOf(persistenceCheck),
-		// "genericGetRequest": js.FuncOf(genericGetRequest),
+		"testWASM":            js.FuncOf(testWASM),
+		"persistenceCheck":    js.FuncOf(persistenceCheck),
+		"InitEncryptedTunnel": js.FuncOf(initializeECDHTunnel),
 		// "genericPost":       js.FuncOf(genericPost),
 		"fetch": js.FuncOf(fetch),
 	}))
 
 	// Initialize the encrypted tunnel
-	initializeECDHTunnel()
+	// initializeECDHTunnel()
 
 	// Developer Warnings:
 	fmt.Println("WARNING: wasm_exec.js is versioned and has some breaking changes. Ensure you are using the correct version.")
@@ -93,7 +105,9 @@ func persistenceCheck(this js.Value, args []js.Value) interface{} {
 	return promise
 }
 
-func initializeECDHTunnel() {
+func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
+	backend := args[0].String()
+
 	go func() {
 		var err error
 		privJWK_ecdh, pubJWK_ecdh, err = utils.GenerateKeyPair(utils.ECDH)
@@ -110,7 +124,9 @@ func initializeECDHTunnel() {
 			return
 		}
 
-		ProxyURL := fmt.Sprintf("%s://%s:%s", Layer8Scheme, Layer8Host, Layer8Port)
+		ProxyURL := fmt.Sprintf("%s://%s:%s/init-tunnel?backend=%s", Layer8Scheme, Layer8Host, Layer8Port, backend)
+		// ProxyURL := fmt.Sprintf("%s/init-tunnel?backend=%s", Layer8LightsailURL, backend)
+		fmt.Println(ProxyURL)
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", ProxyURL, bytes.NewBuffer([]byte{}))
 		if err != nil {
@@ -118,8 +134,12 @@ func initializeECDHTunnel() {
 			ETunnelFlag = false
 			return
 		}
+		uuid := uuid.New()
+		UUID = uuid.String()
+		// For debugging purposes
+		fmt.Println("uuid: ", uuid.String())
 		req.Header.Add("x-ecdh-init", b64PubJWK)
-		req.Header.Add("X-client-id", "1")
+		req.Header.Add("x-client-uuid", uuid.String())
 
 		// send request
 		resp, err := client.Do(req)
@@ -182,6 +202,7 @@ func initializeECDHTunnel() {
 			ETunnelFlag = false
 			return
 		}
+		fmt.Println("userSymmetricKey: ", userSymmetricKey)
 
 		// TODO: Send an encrypted ping / confirmation to the server using the shared secret
 		// just like the 1. Syn 2. Syn/Ack 3. Ack flow in a TCP handshake
@@ -190,7 +211,7 @@ func initializeECDHTunnel() {
 		return
 	}()
 
-	return
+	return nil
 }
 
 func fetch(this js.Value, args []js.Value) interface{} {
@@ -237,6 +258,9 @@ func fetch(this js.Value, args []js.Value) interface{} {
 		// set the UpJWT to the headers
 		headers.Set("up_JWT", UpJWT)
 
+		// set the UUID to the headers
+		headers.Set("x-client-uuid", UUID)
+
 		// setting the body to an empty string if it's undefined
 		body := options.Get("body").String()
 		if body == "<undefined>" {
@@ -256,7 +280,8 @@ func fetch(this js.Value, args []js.Value) interface{} {
 
 		go func() {
 			// forward request to the layer8 proxy server
-			res := internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port).
+			fmt.Println("userSymmetricKey", userSymmetricKey)
+			res := L8Client.
 				Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
 
 			if res.Status >= 100 || res.Status < 300 { // Handle Success & Default Rejection

@@ -1,9 +1,9 @@
 ## NPM Install
 npm_install_all:
-	cd sp_mock/frontend && npm install && cd ../backend && npm install  && cd ../../resource_server/frontend && npm install
+	cd sp_mock/frontend && npm install && cd ../backend && npm install && cd ../../server/resource_server/frontend && npm install
 
 go_mod_tidy_all:
-	cd interceptor && go mod tidy && cd ../middleware && go mod tidy && cd ../proxy && go mod tidy && cd ../resource_server/backend && go mod tidy && cd ../../utils && go mod tidy
+	cd interceptor && go mod tidy && cd ../middleware && go mod tidy && cd ../server && go mod tidy && cd ../utils && go mod tidy
 
 ## Interceptor Calls
 build_interceptor: ## must do from a bash terminal ..
@@ -15,7 +15,10 @@ build_interceptor: ## must do from a bash terminal ..
 
 ## Build Middleware
 build_middleware:
-	cd ./middleware/ && GOARCH=wasm GOOS=js go build -o ./dist/middleware.wasm
+	cd ./middleware/ && GOARCH=wasm GOOS=js go build -o ./dist/middleware.wasm && cp ./dist/middleware.wasm ../sp_mock/backend/dist/middleware.wasm
+## Generate Resource Server build
+generate_rs_dist:
+	cd server/resource_server/frontend && npm run build
 
 ## Run Mock
 run_frontend: # Port 5173
@@ -24,18 +27,37 @@ run_frontend: # Port 5173
 run_backend: # Port 8000
 	cd sp_mock/backend && npm run dev
 
-## Run Proxy
-run_proxy: # Port 5000
-	cd proxy && go run main.go --server=proxy --port=5001
+# Serve 3-in-1 server
+run_server: # Port 5001
+	cd server && go run main.go
 
-# Serve auth server
-run_auth: # Port 5001
-	cd proxy && go run main.go --server=auth
+build_server_image:
+	docker build --tag layer8-server --file Dockerfile .
 
-# Run Resource Server Backend
-run_rs_backend: # Port 3000
-	cd resource_server/backend && go run main.go
+build_sp_mock_frontend_image:
+	cd sp_mock/frontend && docker build --tag sp_mock_frontend --file Dockerfile .
 
-# Run Resource Server Frontend
-run_rs_frontend: # Port 5174
-	cd resource_server/frontend && npm run dev
+build_sp_mock_backend_image:
+	cd sp_mock/backend && docker build --tag sp_mock_backend --file Dockerfile .
+
+# To build all images at once
+build_images:
+	make build_server_image && make build_sp_mock_frontend_image && make build_sp_mock_backend_image
+
+run_layer8_server_image:
+	docker run -p 5001:5001 -t layer8-server
+
+run_sp_mock_frontend_image:
+	docker run -p 8080:8080 -t sp_mock_frontend
+
+run_sp_mock_backend_image:
+	docker run -p 8000:8000 -t sp_mock_backend
+
+push_layer8_server_image:
+	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label layer8-server-a4 --image layer8-server:latest
+
+push_sp_mock_frontend_image:
+	aws lightsail push-container-image --region ca-central-1 --service-name container-service-2 --label frontenda3 --image sp_mock_frontend:latest
+
+push_sp_mock_backend_image:
+	aws lightsail push-container-image --region ca-central-1 --service-name container-service-3 --label backenda6 --image sp_mock_backend:latest

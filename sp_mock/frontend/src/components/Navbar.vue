@@ -43,7 +43,7 @@ async function ping8000 () {
 <div id="navbar">
     <RouterLink to="/">Home</RouterLink>
     <RouterLink to="/stress-test">Stress test</RouterLink>
-    <button @click="ping8000">Ping 8000</button>
+    <!-- <button @click="ping8000">Ping 8000</button> -->
     <button @click="persistenceCheckHandler">Check WASM Persistence</button>
     <span v-if="counter != 0 " >{{ counter }}</span >
     <br><hr><br>

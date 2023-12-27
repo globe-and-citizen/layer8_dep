@@ -156,3 +156,6 @@ out
 # Go workspace file
 go.work
 go.work.sum
+
+proxy/certificates
+resource_server/backend/certificates

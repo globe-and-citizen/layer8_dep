@@ -1,3 +1,4 @@
+<!-- This complete code (CallBack View) is a part of Layer8 Component -->
 <script setup>
 import { computed, ref } from "vue";
 import { onMounted } from 'vue'
@@ -6,10 +7,13 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const code = ref(new URLSearchParams(window.location.search).get("code"))
 const token = ref(localStorage.getItem("token") || null)
+const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com";
+// const BackendURL = "http://localhost:5001";
+
 
 onMounted(() => {
     setTimeout(() => {
-        layer8.fetch("http://localhost:8000/api/login/layer8/auth", {
+        layer8.fetch(BackendURL + "/api/login/layer8/auth", {
             method: "POST",
             headers: {
                 "Content-Type": "Application/Json"

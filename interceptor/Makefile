@@ -5,10 +5,11 @@ export
 .DEFAULT_GOAL := help
 ARG :=
 
+# ALTERED PATH
 define base64_encode
 	mkdir -p ../proxy/assets/cdn/interceptor/`dirname $(1) | cut -d'/' -f3` && \
-	base64 -w 0 $(1) | sed 's/^/"/' | sed 's/$$/"/' > ../proxy/assets/cdn/interceptor/`basename $(1) | cut -d'.' -f1`.json && \
-	echo "Encoded $(1) to ../proxy/assets/cdn/interceptor/`basename $(1) | cut -d'.' -f1`.json";
+	base64 -w 0 $(1) | sed 's/^/"/' | sed 's/$$/"/' > ../server/assets-v1/cdn/interceptor/`basename $(1) | cut -d'.' -f1`.json && \
+	echo "Encoded $(1) to ../server/assets-v1/cdn/interceptor/`basename $(1) | cut -d'.' -f1`.json";
 endef
 
 help: ## Show this help message

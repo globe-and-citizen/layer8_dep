@@ -149,4 +149,13 @@ out
 
 # Compiles WASM binaries
 .wasm
+*.wasm
 
+.vscode
+=======
+# Go workspace file
+go.work
+go.work.sum
+
+proxy/certificates
+resource_server/backend/certificates

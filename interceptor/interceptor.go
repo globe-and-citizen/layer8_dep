@@ -2,264 +2,311 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
-	"io"
+	"globe-and-citizen/layer8/interceptor/internals"
+	"globe-and-citizen/layer8/utils"
 	"net/http"
+	"strings"
 	"syscall/js"
 
-	utilities "github.com/globe-and-citizen/layer8-utils"
+	uuid "github.com/google/uuid"
 )
 
-const VERSION = "1.0.2"
+// Declare global constants
+const INTERCEPTOR_VERSION = "1.0.0"
 
-type Request struct {
-	Method  string            `json:"method"`
-	Headers map[string]string `json:"headers"`
-	Body    []byte            `json:"body"`
-}
-
+// Declare global variables
 var (
-	Layer8Scheme  string
-	Layer8Host    string
-	Layer8Port    string
-	Layer8Version string
+	Layer8Scheme       string
+	Layer8Host         string
+	Layer8Port         string
+	Layer8Version      string
+	Layer8LightsailURL string
+	Counter            int
+	ETunnelFlag        bool
+	privJWK_ecdh       *utils.JWK
+	pubJWK_ecdh        *utils.JWK
+	userSymmetricKey   *utils.JWK
+	UpJWT              string
+	UUID               string
 )
+
+var L8Client = internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port)
 
 func main() {
-	// keep the Go thread alive
+	// fmt.Print("please...")
+	// Create channel to keep the Go thread alive
 	c := make(chan struct{}, 0)
-	Layer8Scheme = "http"
-	Layer8Host = "localhost"
-	Layer8Port = "5000"
-	Layer8Version = "1.0"
 
-	// expose the layer8 functionality the global scope
+	// Initialize global variables
+	Layer8Version = "1.0.0"
+	// Layer8Scheme = "http"
+	// Layer8Host = "localhost"
+	// Layer8Port = "5001"
+	Layer8Scheme = "https"
+	Layer8Host = "aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
+	Layer8Port = ""
+	Layer8LightsailURL = "https://aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
+
+	ETunnelFlag = false
+
+	// Expose layer8 functionality to the front end Javascript
 	js.Global().Set("layer8", js.ValueOf(map[string]interface{}{
-		"testWASM":          js.FuncOf(testWASM),
-		"genericGetRequest": js.FuncOf(genericGetRequest),
-		"genericPost":       js.FuncOf(genericPost),
-		"fetch":             js.FuncOf(fetch),
+		"testWASM":            js.FuncOf(testWASM),
+		"persistenceCheck":    js.FuncOf(persistenceCheck),
+		"InitEncryptedTunnel": js.FuncOf(initializeECDHTunnel),
+		// "genericPost":       js.FuncOf(genericPost),
+		"fetch": js.FuncOf(fetch),
 	}))
 
-	fmt.Println("WASM interceptor loaded.")
+	// Initialize the encrypted tunnel
+	// initializeECDHTunnel()
+
+	// Developer Warnings:
+	fmt.Println("WARNING: wasm_exec.js is versioned and has some breaking changes. Ensure you are using the correct version.")
 
 	// Wait indefinitely
 	<-c
 }
 
+// Utility function to test promise resolution / rejection from the console.
 func testWASM(this js.Value, args []js.Value) interface{} {
-	fmt.Println("Fisrt argument: ", args[0])
-	fmt.Println("Second argument: ", args[1])
-	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
-		resolve := args[0]
-		//reject := args[1]
+	var promise_logic = func(this js.Value, resolve_reject []js.Value) interface{} {
+		resolve := resolve_reject[0]
+		reject := resolve_reject[1]
+		if len(args) == 0 {
+			reject.Invoke(js.ValueOf("Promise rejection occurs if not arguments are passed. Pass an argument."))
+			return nil
+		}
 		go func() {
-			// Main function body
-			//fmt.Println(string(args[2]))
-			resolve.Invoke(js.ValueOf(fmt.Sprintf("WASM Interceptor version %s successfully loaded.", VERSION)))
-			//reject.Invoke()
+			resolve.Invoke(js.ValueOf(fmt.Sprintf("WASM Interceptor version %s successfully loaded. Argument passed: %v. To test promise rejection, call with no argument.", INTERCEPTOR_VERSION, args[0])))
 		}()
 		return nil
 	}
 	promiseConstructor := js.Global().Get("Promise")
-	promise := promiseConstructor.New(js.FuncOf(resolve_reject_internals))
+	promise := promiseConstructor.New(js.FuncOf(promise_logic))
 	return promise
 }
 
-func genericGetRequest(this js.Value, args []js.Value) interface{} {
-	url := args[0]
-	fmt.Println("HERE: ", url.String())
-	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
-		resolve := args[0]
-		reject := args[1]
+func persistenceCheck(this js.Value, args []js.Value) interface{} {
+	var promise_logic = func(this js.Value, resolve_reject []js.Value) interface{} {
+		resolve := resolve_reject[0]
 		go func() {
-			// Main function body
-			res, err := http.Get(url.String()) // http://localhost:5000/success
-			if err != nil {
-				fmt.Println("Failure to get ", url.String())
-				reject.Invoke(js.ValueOf(err.Error()))
-			}
-
-			if res == nil || res.Body == nil {
-				fmt.Println("res or res.body from proxy was nil.")
-			}
-
-			defer res.Body.Close()
-
-			if res.StatusCode != http.StatusOK {
-				fmt.Println("Server returned non-OK stauts: ", res.Status)
-				reject.Invoke(js.ValueOf(fmt.Sprintf("Server returned non-OK stauts: ", res.Status)))
-				return
-			}
-
-			res_byteSlice, err := io.ReadAll(res.Body)
-			if err != nil {
-				fmt.Println("Error reading backend public key: ", err)
-				reject.Invoke(js.ValueOf(err.Error()))
-				return
-			}
-
-			resolve.Invoke(js.ValueOf(string(res_byteSlice)))
+			Counter++
+			fmt.Println("WASM Counter: ", Counter)
+			resolve.Invoke(js.ValueOf(Counter))
 		}()
 		return nil
 	}
 	promiseConstructor := js.Global().Get("Promise")
-	promise := promiseConstructor.New(js.FuncOf(resolve_reject_internals))
+	promise := promiseConstructor.New(js.FuncOf(promise_logic))
 	return promise
 }
 
-func genericPost(this js.Value, args []js.Value) interface{} {
-	url := args[0]
-	//stringifiedObject := `{"client_message": "hello, server!"}`
-	stringifiedObject := args[1].String()
-	fmt.Println(stringifiedObject)
-	jsonBody := []byte(stringifiedObject)
-	bodyReader := bytes.NewReader(jsonBody)
-	//	bodyReader := bytes.NewReader(byteObject)
+func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
+	backend := args[0].String()
 
-	fmt.Println("Interceptor will now POST to this url: ", url.String())
-	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
-		resolve := args[0]
-		reject := args[1]
-		go func() {
-			// Main function body
-			res, err := http.Post(url.String(), "application/json", bodyReader)
-			if err != nil {
-				fmt.Println("Failure to Post ", url.String())
-				reject.Invoke(js.ValueOf(err.Error()))
+	go func() {
+		var err error
+		privJWK_ecdh, pubJWK_ecdh, err = utils.GenerateKeyPair(utils.ECDH)
+		if err != nil {
+			fmt.Println(err.Error())
+			ETunnelFlag = false
+			return
+		}
+
+		b64PubJWK, err := pubJWK_ecdh.ExportAsBase64()
+		if err != nil {
+			fmt.Println(err.Error())
+			ETunnelFlag = false
+			return
+		}
+
+		ProxyURL := fmt.Sprintf("%s://%s:%s/init-tunnel?backend=%s", Layer8Scheme, Layer8Host, Layer8Port, backend)
+		// ProxyURL := fmt.Sprintf("%s/init-tunnel?backend=%s", Layer8LightsailURL, backend)
+		fmt.Println(ProxyURL)
+		client := &http.Client{}
+		req, err := http.NewRequest("GET", ProxyURL, bytes.NewBuffer([]byte{}))
+		if err != nil {
+			fmt.Println(err.Error())
+			ETunnelFlag = false
+			return
+		}
+		uuid := uuid.New()
+		UUID = uuid.String()
+		// For debugging purposes
+		fmt.Println("uuid: ", uuid.String())
+		req.Header.Add("x-ecdh-init", b64PubJWK)
+		req.Header.Add("x-client-uuid", uuid.String())
+
+		// send request
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Println(err.Error())
+			ETunnelFlag = false
+			return
+		}
+
+		if resp.StatusCode == 401 {
+			fmt.Printf("User not authorized\n")
+			ETunnelFlag = false
+			return
+		}
+
+		// upJWT := resp.Header.Get("up_JWT")
+		// fmt.Println("up_JWT: ", upJWT)
+
+		// TODO: For some reason I am unable to put (or access?) custom response headers coming from
+		// either the backend OR the proxy... Therefore, I've sent along the backend's public key in the
+		// response's body.
+		// for k, v := range resp.Header {
+		// 	fmt.Println("header pairs from SP:", k, v)
+		// }
+
+		Respbody := utils.ReadResponseBody(resp.Body)
+
+		respBodyConverted, err := base64.URLEncoding.DecodeString(string(Respbody))
+		if err != nil {
+			fmt.Println(err.Error())
+			ETunnelFlag = false
+			return
+		}
+
+		data := map[string]interface{}{}
+
+		err = json.Unmarshal(respBodyConverted, &data)
+		if err != nil {
+			if strings.Contains(err.Error(), "unexpected end of JSON input") {
+				fmt.Println("JSON data might be incomplete or improperly formatted.")
+			} else {
+				fmt.Println(err.Error())
 			}
+			ETunnelFlag = false
+			return
+		}
 
-			if res == nil || res.Body == nil {
-				fmt.Println("res or res.body from proxy was nil.")
-			}
+		UpJWT = data["up_JWT"].(string)
 
-			defer res.Body.Close()
+		server_pubKeyECDH, err := utils.JWKFromMap(data)
+		if err != nil {
+			fmt.Println(err.Error())
+			ETunnelFlag = false
+			return
+		}
 
-			if res.StatusCode != http.StatusOK {
-				fmt.Println("Server returned non-OK stauts: ", res.Status)
-				reject.Invoke(js.ValueOf(fmt.Sprintf("Server returned non-OK stauts: ", res.Status)))
-				return
-			}
+		userSymmetricKey, err = privJWK_ecdh.GetECDHSharedSecret(server_pubKeyECDH)
+		if err != nil {
+			fmt.Println(err.Error())
+			ETunnelFlag = false
+			return
+		}
+		fmt.Println("userSymmetricKey: ", userSymmetricKey)
 
-			res_byteSlice, err := io.ReadAll(res.Body)
-			if err != nil {
-				fmt.Println("Server side error: ", err.Error())
-				reject.Invoke(js.ValueOf(err.Error()))
-				return
-			}
+		// TODO: Send an encrypted ping / confirmation to the server using the shared secret
+		// just like the 1. Syn 2. Syn/Ack 3. Ack flow in a TCP handshake
+		ETunnelFlag = true
+		fmt.Println("Encrypted tunnel successfully established.")
+		return
+	}()
 
-			resolve.Invoke(js.ValueOf(string(res_byteSlice)))
-		}()
-		return nil
-	}
-	promiseConstructor := js.Global().Get("Promise")
-	promise := promiseConstructor.New(js.FuncOf(resolve_reject_internals))
-	return promise
+	return nil
 }
 
 func fetch(this js.Value, args []js.Value) interface{} {
-	url := args[0].String()
-	options := js.ValueOf(map[string]interface{}{
-		"method":  js.ValueOf(""),
-		"headers": js.ValueOf(map[string]interface{}{}),
-	})
+	var promise_logic = func(this js.Value, resolve_reject []js.Value) interface{} {
+		resolve := resolve_reject[0]
+		reject := resolve_reject[1]
 
-	if len(args) > 1 {
-		options = args[1]
-	}
+		if !ETunnelFlag {
+			reject.Invoke(js.Global().Get("Error").New("The Encrypted tunnel is closed. Reload page."))
+			return nil
+		}
 
-	method := options.Get("method").String()
-	if method == "" {
-		method = "GET"
-	}
+		if len(args) == 0 {
+			reject.Invoke(js.Global().Get("Error").New("No URL provided to fetch call."))
+			return nil
+		}
 
-	headers := options.Get("headers")
-	// setting headers to an empty object if it's undefined or null
-	if headers.String() == "<undefined>" || headers.String() == "null" {
-		headers = js.ValueOf(map[string]interface{}{})
-	}
+		url := args[0].String()
+		if len(url) <= 0 {
+			reject.Invoke(js.Global().Get("Error").New("Invalid URL provided to fetch call."))
+			return nil
+		}
 
-	//fmt.Println("headers outside: ", headers)
-	body := options.Get("body").String()
-	if body == "<undefined>" {
-		body = ""
-	}
+		options := js.ValueOf(map[string]interface{}{
+			"method":  "GET", // Set HTTP "GET" request to be the default
+			"headers": js.ValueOf(map[string]interface{}{}),
+		})
 
-	fmt.Println("body: ", body)
+		if len(args) > 1 {
+			options = args[1]
+		}
 
-	promise := js.Global().Get("Promise").New(js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		method := options.Get("method").String()
+		if method == "" {
+			method = "GET"
+		}
+
+		// Set headers to an empty object if it is 'undefined' or 'null'
+		headers := options.Get("headers")
+		if headers.String() == "<undefined>" || headers.String() == "null" {
+			headers = js.ValueOf(map[string]interface{}{})
+		}
+
+		// set the UpJWT to the headers
+		headers.Set("up_JWT", UpJWT)
+
+		// set the UUID to the headers
+		headers.Set("x-client-uuid", UUID)
+
+		// setting the body to an empty string if it's undefined
+		body := options.Get("body").String()
+		if body == "<undefined>" {
+			body = ""
+		}
+
+		headersMap := make(map[string]string)
+		js.Global().Get("Object").Call("entries", headers).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+			headersMap[args[0].Index(0).String()] = args[0].Index(1).String()
+			return nil
+		}))
+
+		// Print the headersMap for debugging purposes
+		for k, v := range headersMap {
+			fmt.Println("Encrypted Headers from the SP: ", k, v)
+		}
+
 		go func() {
-			headersMap := make(map[string]string)
-			// build the headersMap
-			js.Global().Get("Object").Call("keys", headers).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-				// args[0] is key & args[1] is value? or the index?
-				fmt.Println("args [1]  & [2]", args[0], args[1])
-				headersMap[args[0].String()] = args[1].String()
-				return nil
-			}))
-
-			// testRequest := Request{
-			// 	Method:  "POST",
-			// 	Headers: make(map[string]string),
-			// 	Body:    []byte("Hello Layer8"),
-			// }
-
-			//testRequest.Headers["x-test"] = "test header"
-
-			//data, err := json.Marshal(testRequest)
-
-			// if err != nil {
-			// 	panic("fuck this...")
-			// }
-
 			// forward request to the layer8 proxy server
-			client := &http.Client{}
-			r, err := http.NewRequest(method, url, bytes.NewBuffer([]byte(body)))
+			fmt.Println("userSymmetricKey", userSymmetricKey)
+			res := L8Client.
+				Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
 
-			if err != nil {
-				args[1].Invoke(js.ValueOf("Problem Creating Request"))
-			}
+			if res.Status >= 100 || res.Status < 300 { // Handle Success & Default Rejection
+				resHeaders := js.Global().Get("Headers").New()
 
-			res, err := client.Do(r)
-			if err != nil {
-				res := &utilities.Response{
-					Status:     500,
-					StatusText: err.Error(),
+				for k, v := range res.Headers {
+					//fmt.Println("Encrypted Headers from the SP: ", k, v)
+					resHeaders.Call("append", js.ValueOf(k), js.ValueOf(v))
 				}
-				resByte, _ := res.ToJSON()
-				fmt.Println(resByte)
-				args[1].Invoke(js.ValueOf("Still and error but closer"))
-			}
 
-			if res == nil || res.Body == nil {
-				fmt.Println("res or res.body was nil.")
-			}
-
-			defer res.Body.Close()
-
-			if res.StatusCode != http.StatusOK {
-				fmt.Println("Server returned non-OK stauts: ", res.Status)
-				args[1].Invoke(js.ValueOf(fmt.Sprintf("Server returned non-OK stauts: ", res.Status)))
+				resolve.Invoke(js.Global().Get("Response").New(string(res.Body), js.ValueOf(map[string]interface{}{
+					"status":     res.Status,
+					"statusText": res.StatusText,
+					"headers":    resHeaders,
+				})))
 				return
 			}
 
-			// buf := new(bytes.Buffer)
-			// buf.ReadFrom(res.Body)
-			res_byteSlice, err := io.ReadAll(res.Body)
-			if err != nil {
-				fmt.Println("Server side error: ", err.Error())
-				args[1].Invoke(js.ValueOf(err.Error()))
-				return
-			}
-			args[0].Invoke(js.ValueOf(string(res_byteSlice)))
-
+			reject.Invoke(js.Global().Get("Error").New(res.StatusText))
+			fmt.Println("status:", res.Status, res.StatusText)
 			return
 		}()
 		return nil
-	}), js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		// call reject() with the error message cast as a string.
-		return args[0].String()
-	}))
-
+	}
+	promiseConstructor := js.Global().Get("Promise")
+	promise := promiseConstructor.New(js.FuncOf(promise_logic))
 	return promise
 }

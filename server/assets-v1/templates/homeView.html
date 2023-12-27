@@ -4,19 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Authentication Page</title>
-    <!-- Include Vue.js 3 from CDN -->
     <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue-router@4"></script>
   </head>
   <body>
     <div class="header">
-      <img src="../assets/L8Logo.png" alt="Layer8" width="500" height="100" />
+      <img
+        src="../assets-v1/images/L8Logo.png"
+        alt="Layer8"
+        width="500"
+        height="100"
+      />
     </div>
 
     <div id="app">
       <div class="container" v-if="!isLoggedIn">
         <div v-if="isRegister" class="form-container">
-          <h2>Registerrr</h2>
+          <h2>Register</h2>
           <div class="input-group">
             <input
               v-model="registerEmail"
@@ -107,13 +111,13 @@
         routes: [],
       });
 
-      const registerEmail = ref("test@gmail.com");
-      const registerUsername = ref("tester");
-      const registerPassword = ref("test");
-      const registerFirstName = ref("Tester");
-      const registerLastName = ref("test");
-      const registerDisplayName = ref("test");
-      const registerCountry = ref("Uzb");
+      const registerEmail = ref("");
+      const registerUsername = ref("");
+      const registerPassword = ref("");
+      const registerFirstName = ref("");
+      const registerLastName = ref("");
+      const registerDisplayName = ref("");
+      const registerCountry = ref("");
       const loginUsername = ref("njavokhir");
       const loginPassword = ref("1234");
       const isRegister = ref(false);
@@ -127,10 +131,11 @@
             alert("Please enter a username and password!");
             return;
           }
-          await window.fetch("http://localhost:3050/api/v1/register-user", {
+          //await window.fetch("https://layer8devproxy.net/api/v1/register-user", {
+          await window.fetch("http://localhost:5001/api/v1/register-user", {
             method: "POST",
             headers: {
-              "Content-Type": "application/json", // Fix content-type
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               email: registerEmail.value,
@@ -156,8 +161,8 @@
             alert("Please enter a username and password!");
             return;
           }
-          const respOne = await window.fetch(
-            "http://localhost:3050/api/v1/login-precheck",
+          //const respOne = await window.fetch("https://layer8devproxy.net/api/v1/login-precheck",
+          const respOne = await window.fetch("http://localhost:5001/api/v1/login-precheck",
             {
               method: "POST",
               headers: {
@@ -170,8 +175,8 @@
           );
           const responseOne = await respOne.json();
           console.log(responseOne.salt);
-          const respTwo = await window.fetch(
-            "http://localhost:3050/api/v1/login-user",
+          //const respTwo = await window.fetch("https://layer8devproxy.net/api/v1/login-user",
+          const respTwo = await window.fetch("http://localhost:5001/api/v1/login-user",
             {
               method: "POST",
               headers: {
@@ -190,7 +195,9 @@
             token.value = responseTwo.token;
             localStorage.setItem("token", responseTwo.token);
             alert("Login successful!");
-            router.push("/user");
+            /* router.push("/user"); */
+            //window.location.href = "https://layer8devproxy.net/user";
+            window.location.href = "http://localhost:5001/user";
           } else {
             console.error("No token received.");
           }
@@ -242,7 +249,7 @@
       #app {
         display: flex;
         justify-content: center;
-        padding: 10%;
+        padding: 5%;
         background-color: #ffffff;
       }
 
@@ -266,7 +273,6 @@
       }
 
       .input-button {
-        width: 100%;
         padding: 6px 15px;
         border-radius: 5px;
         border: #adadad;
@@ -311,6 +317,7 @@
       }
 
       .text {
+        display: block;
         color: rgb(37, 37, 37);
         font-size: 13px;
         text-decoration: underline;
@@ -321,6 +328,7 @@
       .text:hover {
         color: rgb(35, 108, 38);
         transition-duration: 0.5s;
+        cursor: pointer;
       }
     </style>
   </body>

@@ -24,8 +24,8 @@ run_frontend: # Port 5173
 run_backend: # Port 8000
 	cd sp_mock/backend && npm run dev
 
-generate_rs_dist:
-	cd server/resource_server/frontend && npm run build
+# generate_rs_dist:
+# 	cd server/resource_server/frontend && npm run build
 
 # Serve 3-in-1 server
 run_server: # Port 5001

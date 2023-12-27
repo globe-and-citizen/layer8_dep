@@ -23,3 +23,8 @@ type LoginPrecheckDTO struct {
 type UpdateDisplayNameDTO struct {
 	DisplayName string `json:"display_name"`
 }
+
+type RegisterClientDTO struct {
+	Name    string `json:"name" validate:"required"`
+	RedirectURI   string `json:"redirect_uri" validate:"required"`
+}

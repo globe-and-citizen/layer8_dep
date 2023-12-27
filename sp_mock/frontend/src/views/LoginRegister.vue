@@ -15,8 +15,8 @@ const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
 
 const registerUser = async () => {
   try {
-    await layer8.fetch("http://localhost:5001/api/register", {
     // await layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/register", {
+    await layer8.fetch("http://localhost:5001/api/register", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",
@@ -42,8 +42,8 @@ const loginUser = async () => {
   }
 
   try {
+    // const response = await layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/login", {
     const response = await layer8.fetch("http://localhost:5001/api/login", {
-      // const response = await layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/api/login", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",

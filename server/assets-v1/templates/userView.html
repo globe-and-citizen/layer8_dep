@@ -7,10 +7,15 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
   </head>
   <body>
+    <div class="header">
+      <img
+        src="../assets-v1/images/L8Logo.png"
+        alt="Layer8"
+        width="500"
+        height="100"
+      />
+    </div>
     <div id="app">
-      <div class="header">
-        <img src="../assets/L8Logo.png" alt="Layer8" width="500" height="100" />
-      </div>
       <div class="container">
         <div class="form-container">
           <h1>User Profile</h1>
@@ -58,10 +63,9 @@
       });
 
       const getUserDetails = async () => {
-        console.log("I am in getUserDetails");
         try {
-          const resp = await window.fetch(
-            "http://localhost:3050/api/v1/profile",
+          //const resp = await window.fetch("https://layer8devproxy.net/api/v1/profile",
+          const resp = await window.fetch("http://localhost:5001/api/v1/profile",
             {
               method: "GET",
               headers: {
@@ -71,7 +75,7 @@
             }
           );
           const data = await resp.json();
-          console.log("resp", resp)
+          console.log("resp", resp);
           user.value = data;
         } catch (error) {
           console.error(error);
@@ -82,13 +86,14 @@
         token.value = null;
         localStorage.removeItem("token");
         /* router.push("/"); */
-        window.location.href = "http://localhost:3050/";
+        //window.location.href = "https://layer8devproxy.net/";
+        window.location.href = "http://localhost:5001/";
       };
 
       const verifyEmail = async () => {
         try {
-          const resp = await window.fetch(
-            "http://localhost:3050/api/v1/verify-email",
+          //const resp = await window.fetch("https://layer8devproxy.net/api/v1/verify-email",
+          const resp = await window.fetch("http://localhost:5001/api/v1/verify-email",
             {
               method: "POST",
               headers: {
@@ -116,8 +121,8 @@
             alert("Please enter a display name!");
             return;
           }
-          const resp = await window.fetch(
-            "http://localhost:3050/api/v1/change-display-name",
+          //const resp = await window.fetch("https://layer8devproxy.net/api/v1/change-display-name",
+          const resp = await window.fetch("http://localhost:5001/api/v1/change-display-name",
             {
               method: "POST",
               headers: {
@@ -160,10 +165,6 @@
     </script>
 
     <style>
-      #app {
-        background-color: #ffffff;
-      }
-
       .box {
         padding: 10px;
         color: #000000;
@@ -172,22 +173,28 @@
       }
 
       .header {
-        display: block;
-        justify-content: center;
+        display: flex;
+        justify-content: space-around;
         background-color: rgb(255, 255, 255);
         padding-top: 1%;
+      }
+
+      #app {
+        display: flex;
+        justify-content: center;
+        padding: 5%;
+        background-color: #ffffff;
       }
 
       .container {
         display: flex;
         justify-content: space-around;
         background-color: rgb(255, 255, 255);
-        padding: 3rem;
-        margin: 3rem 10rem 3rem 10rem;
+        padding: 1rem 3rem;
         border-radius: 1rem;
         border-color: #000000;
         border-style: solid;
-        border-width: 5px;
+        border-width: 3px;
       }
 
       .form-container {
@@ -215,7 +222,7 @@
         background-color: #1b54b1;
         color: white;
         border: none;
-        padding: 8px 10px;
+        padding: 5px 5px;
         cursor: pointer;
         border-radius: 5px;
         font-size: 1rem;
@@ -226,7 +233,7 @@
       .line {
         width: 100%;
         color: black;
-        height: 4px;
+        height: 3px;
         background-color: black;
       }
     </style>

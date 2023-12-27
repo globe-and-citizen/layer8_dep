@@ -99,6 +99,17 @@ input {
     outline: none;
 }
 
+.btn-primary {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border: 1px solid #0000001f;
+    outline: none;
+    background-color: #000000;
+    color: #fff;
+    cursor: pointer;
+}
+
 input:focus {
     border: 1px solid #000000;
 }

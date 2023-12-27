@@ -38,21 +38,42 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	getPwd()
-	var relativePathFavicon = "dist/index.html"
-	faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
-	fmt.Println("faviconPath: ", faviconPath)
-	if r.URL.Path == "/favicon.ico" {
-		http.ServeFile(w, r, faviconPath)
-		return
-	}
-	var relativePathIndex = "dist/index.html"
+	// var relativePathFavicon = "dist/index.html"
+	// faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
+	// fmt.Println("faviconPath: ", faviconPath)
+	// if r.URL.Path == "/favicon.ico" {
+	// 	http.ServeFile(w, r, faviconPath)
+	// 	return
+	// }
+
+	var relativePathIndex = "assets-v1/templates/homeView.html"
 	indexPath := filepath.Join(workingDirectory, relativePathIndex)
 	fmt.Println("indexPath: ", indexPath)
-	indexPath2 := filepath.Join(workingDirectory, "dist/index.html")
-	// http.ServeFile(w, r, "C:\\Ottawa_DT_Dev\\Learning_Computers\\layer8\\resource_server\\frontend\\dist\\index.html")
-	fmt.Println("indexPath: ", indexPath2)
-	http.ServeFile(w, r, indexPath2)
+	http.ServeFile(w, r, indexPath)
 
+}
+
+func UserHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintln(w, http.StatusText(http.StatusMethodNotAllowed))
+		return
+	}
+
+	getPwd()
+	// var relativePathFavicon = "dist/index.html"
+	// faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
+	// fmt.Println("faviconPath: ", faviconPath)
+	// if r.URL.Path == "/favicon.ico" {
+	// 	http.ServeFile(w, r, faviconPath)
+	// 	return
+	// }
+
+	var relativePathUser = "assets-v1/templates/userView.html"
+	userPath := filepath.Join(workingDirectory, relativePathUser)
+	fmt.Println("userPath: ", userPath)
+	http.ServeFile(w, r, userPath)
 }
 
 // RegisterUserHandler handles user registration requests
@@ -134,6 +155,21 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(res)
 		return
 	}
+}
+
+//Register Client
+func RegisterClientHandler(w http.ResponseWriter, r *http.Request) {
+	var req dto.RegisterClientDTO
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		res := utils.BuildErrorResponse("Failed to register client", err.Error(), utils.EmptyObj{})
+		if err := json.NewEncoder(w).Encode(res); err != nil {
+			log.Printf("Error sending response: %v", err)
+		}
+		return
+	}
+
+	fmt.Println("Register client body", req)
 }
 
 // LoginPrecheckHandler handles login precheck requests and get the salt of the user from the database using the username from the request URL

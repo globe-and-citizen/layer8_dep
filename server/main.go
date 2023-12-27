@@ -20,7 +20,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-//go:embed dist/*
+// go:embed dist
 var StaticFiles embed.FS
 
 func main() {
@@ -77,6 +77,8 @@ func Server(port int) {
 			// Authorization Server endpoints
 			case path == "/login":
 				handlers.Login(w, r)
+			case path == "/register":
+				handlers.Register(w, r)
 			case path == "/authorize":
 				handlers.Authorize(w, r)
 			case path == "/error":
@@ -91,6 +93,8 @@ func Server(port int) {
 			// Resource Server endpoints
 			case path == "/api/v1/register-user":
 				Ctl.RegisterUserHandler(w, r)
+			case path == "/api/v1/register-client":
+				Ctl.RegisterClientHandler(w, r)
 			case path == "/api/v1/login-precheck":
 				Ctl.LoginPrecheckHandler(w, r)
 			case path == "/api/v1/login-user":
@@ -110,6 +114,8 @@ func Server(port int) {
 				// Proxy Server endpoints
 			case path == "/":
 				Ctl.IndexHandler(w, r)
+			case path == "/user":
+				Ctl.UserHandler(w, r)
 			case path == "/init-tunnel":
 				handlers.InitTunnel(w, r)
 			default:

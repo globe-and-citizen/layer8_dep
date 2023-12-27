@@ -69,6 +69,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			}
 		} else {
 			http.Redirect(w, r, "/login?next="+next, http.StatusSeeOther)
+			
 			return
 		}
 

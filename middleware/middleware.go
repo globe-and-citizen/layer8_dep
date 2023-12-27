@@ -59,6 +59,7 @@ func doECDHWithClient(request, response js.Value) {
 	}
 
 	clientUUID := headers.Get("x-client-uuid").String()
+	// For testing purposes
 	fmt.Println("clientUUID: ", clientUUID)
 
 	ss, err := privKey_ECDH.GetECDHSharedSecret(userPubJWKConverted)

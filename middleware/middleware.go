@@ -37,7 +37,7 @@ func init() {
 }
 
 func main() {
-	c := make(chan struct{}, 0)
+	c := make(chan struct{})
 	fmt.Printf("L8 WASM Middleware version %s loaded.\n\n", VERSION)
 	js.Global().Set("WASMMiddleware", js.FuncOf(WASMMiddleware_v2))
 	js.Global().Set("TestWASM", js.FuncOf(TestWASM))

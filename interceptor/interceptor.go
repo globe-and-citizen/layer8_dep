@@ -36,19 +36,19 @@ var (
 var L8Client = internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port)
 
 func main() {
-	// fmt.Print("please...")
+	//fmt.Print("recompile please...")
 	// Create channel to keep the Go thread alive
 	c := make(chan struct{}, 0)
 
 	// Initialize global variables
 	Layer8Version = "1.0.0"
-	// Layer8Scheme = "http"
-	// Layer8Host = "localhost"
-	// Layer8Port = "5001"
-	Layer8Scheme = "https"
-	Layer8Host = "aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
-	Layer8Port = ""
-	Layer8LightsailURL = "https://aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
+	Layer8Scheme = "http"
+	Layer8Host = "localhost"
+	Layer8Port = "5001"
+	// Layer8Scheme = "https"
+	// Layer8Host = "aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
+	// Layer8Port = ""
+	// Layer8LightsailURL = "https://aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
 
 	ETunnelFlag = false
 

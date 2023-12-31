@@ -17,7 +17,8 @@ const LAYER8_URL = process.env.LAYER8_URL;
 // const FRONTEND_URL = "http://localhost:5173"
 // const LAYER8_URL = "http://localhost:5001"
 const LAYER8_CALLBACK_URL = `${FRONTEND_URL}/oauth2/callback`;
-const LAYER8_RESOURCE_URL = `${LAYER8_URL}/api/user`;
+// const LAYER8_RESOURCE_URL = `${LAYER8_URL}/api/user`;
+
 const layer8Auth = new ClientOAuth2({
   clientId: "notanid",
   clientSecret: "absolutelynotasecret!",

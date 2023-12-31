@@ -101,6 +101,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	// 	fmt.Println("header pairs from SP: ", k, v)
 	// }
 
+	// RAVI!
 	upJWT, err := utilities.GenerateStandardToken(os.Getenv("UP_999_SECRET_KEY"))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -156,8 +157,8 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
 	fmt.Println("Ravi Adds Path: ", r.URL.Path)
 
-	// backendURL := fmt.Sprintf("http://localhost:8000%s", r.URL)
-	backendURL := fmt.Sprintf(os.Getenv("VITE_BACKEND")+"%s", r.URL)
+	backendURL := fmt.Sprintf("http://localhost:8000%s", r.URL)
+	//backendURL := fmt.Sprintf(os.Getenv("VITE_BACKEND")+"%s", r.URL)
 
 	// create the request
 	req, err := http.NewRequest(r.Method, backendURL, r.Body)
@@ -174,7 +175,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get up_JWT from request header and verify it
-	upJWT := r.Header.Get("up_JWT")
+	upJWT := r.Header.Get("up_JWT") // RAVI!
 
 	_, err = utilities.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
 	if err != nil {
@@ -184,7 +185,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send the request
-	res, err := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req) // Source of MapB Error
 
 	if err != nil {
 		fmt.Println("Error sending request:", err)
@@ -217,4 +218,11 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, res.Body)
 
 	fmt.Println("w.Headers 2: ", w.Header())
+}
+
+func TestError(w http.ResponseWriter, r *http.Request) {
+	err := fmt.Errorf("This is a test error.")
+	fmt.Println("Test error endpoint:", err.Error())
+	http.Error(w, err.Error(), http.StatusInternalServerError)
+	return
 }

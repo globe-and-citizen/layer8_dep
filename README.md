@@ -1,7 +1,10 @@
 # Following Steps
 ## Connect L8 to your chosen PG database server
 1) If you're using Docker, use command: 
+*GOTCHA* Note the server, password, and ports!
 docker run --env=POSTGRES_USER=default_user --env=POSTGRES_PASSWORD=1234 --env=POSTGRES_DB=local_rs --env=PG_TRUST_LOCALNET=true -p 5544:5432 -d postgres:latest
+
+2) If your using a local PG DB, simply confirm the username, password, and name of the db you created.
 
 2) You will need to run the following queries in your database to create the necessary tables:
 ```
@@ -44,30 +47,37 @@ CREATE TABLE user_metadata (
 3) Alter 'sp_mock\backend\.env' to match your PG Server
 Example: 
 ```
-JWT_SECRET_KEY=secret
-SSL_MODE=disable
-DB_USER=default_user
-DB_PASS=1234 
-DB_NAME=local_rs
-SERVER_PORT=5001
-DB_HOST=localhost
-DB_PORT=5544
-UP_999_SECRET_KEY=
-MP_123_SECRET_KEY=
-SSL_ROOT_CERT=
+# JWT_SECRET_KEY=secret
+# SSL_MODE=disable
+# DB_USER=postgres # YOUR DB MAY DIFFER!
+# DB_PASS=1234 # YOUR DB MAY DIFFER!
+# DB_NAME=local_rs # YOUR DB MAY DIFFER!
+# SERVER_PORT=5001
+# DB_HOST=localhost
+# DB_PORT=5432 # YOUR DB MAY DIFFER!
+# UP_999_SECRET_KEY=
+# MP_123_SECRET_KEY=
+# SSL_ROOT_CERT=
 ```
 
 ## Run the TIO Proxy & Add a User
-1) Navigate to the root directory. Run `$make run_server` twice (The first time adds a client).
+1) Download and instal Golang
+2) Navigate to the root directory. Run `$make run_server` twice (The first time adds a client).
 
 1.1) OR RUN THE EXECUTABLE? TOMORROWS LABOUR
 
 2) Navigate to 'http://localhost:5001'. Register a new Layer8 user.
 
 ## Run the sp_mock frontend & backend
-1) Navigate to the root directory. Run `$make run_backend`
-
-2) Navigate to the root directory. Run `$make run_frontend`
+1) Run make `$make npm_instal_all`
+2) Run make `$make build_middleware`
+3) Clone `.env.dev` to `.env` in `sp_mock/backend`
+4) Navigate to the root directory. Run `$make run_backend`
+5) Clone `.env.dev` to `.env` in `interceptor`
+6) Run make `$make build_interceptor`
+7) Navigate to the root directory. Run `$make run_frontend`
+8) Configure the `.env` in '/server' to connect to your local PG implementation
+9) With Golang installed, run `$make run_server`
 
 
 # Layer8

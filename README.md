@@ -1,3 +1,75 @@
+# Following Steps
+## Connect L8 to your chosen PG database server
+1) If you're using Docker, use command: 
+docker run --env=POSTGRES_USER=default_user --env=POSTGRES_PASSWORD=1234 --env=POSTGRES_DB=local_rs --env=PG_TRUST_LOCALNET=true -p 5544:5432 -d postgres:latest
+
+2) You will need to run the following queries in your database to create the necessary tables:
+```
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    -- phone_number VARCHAR(50) NOT NULL,
+    -- address VARCHAR(255) NOT NULL,
+    -- email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    -- phone_number_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    -- location_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    -- national_id_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    salt VARCHAR(255) NOT NULL DEFAULT 'ThisIsARandomSalt123!@#',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE clients (
+	id VARCHAR(36) PRIMARY KEY,
+	secret VARCHAR NOT NULL,
+	name VARCHAR(255) NOT NULL,
+	redirect_uri VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE user_metadata (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    key VARCHAR(255) NOT NULL,
+    value VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+```
+
+3) Alter 'sp_mock\backend\.env' to match your PG Server
+Example: 
+```
+JWT_SECRET_KEY=secret
+SSL_MODE=disable
+DB_USER=default_user
+DB_PASS=1234 
+DB_NAME=local_rs
+SERVER_PORT=5001
+DB_HOST=localhost
+DB_PORT=5544
+UP_999_SECRET_KEY=
+MP_123_SECRET_KEY=
+SSL_ROOT_CERT=
+```
+
+## Run the TIO Proxy & Add a User
+1) Navigate to the root directory. Run `$make run_server` twice (The first time adds a client).
+
+1.1) OR RUN THE EXECUTABLE? TOMORROWS LABOUR
+
+2) Navigate to 'http://localhost:5001'. Register a new Layer8 user.
+
+## Run the sp_mock frontend & backend
+1) Navigate to the root directory. Run `$make run_backend`
+
+2) Navigate to the root directory. Run `$make run_frontend`
+
+
 # Layer8
 A suite of  network protocol implementations that sum to create an anonymizing reverse proxy dedicated to dissociating a user's true identity from their online content choices.  
 

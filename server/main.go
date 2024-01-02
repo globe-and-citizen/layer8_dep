@@ -77,8 +77,8 @@ func Server(port int) {
 			// Authorization Server endpoints
 			case path == "/login":
 				handlers.Login(w, r)
-			case path == "/register":
-				handlers.Register(w, r)
+			// case path == "/register":
+			// 	handlers.Register(w, r)
 			case path == "/authorize":
 				handlers.Authorize(w, r)
 			case path == "/error":
@@ -95,6 +95,10 @@ func Server(port int) {
 				Ctl.RegisterUserHandler(w, r)
 			case path == "/api/v1/register-client":
 				Ctl.RegisterClientHandler(w, r)
+			case path == "/register":
+				Ctl.ClientHandler(w, r)
+			case path == "/api/v1/getClient":
+				Ctl.GetClientData(w, r)
 			case path == "/api/v1/login-precheck":
 				Ctl.LoginPrecheckHandler(w, r)
 			case path == "/api/v1/login-user":

@@ -75,6 +75,21 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("userPath: ", userPath)
 	http.ServeFile(w, r, userPath)
 }
+func ClientHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintln(w, http.StatusText(http.StatusMethodNotAllowed))
+		return
+	}
+
+	getPwd()
+
+	var relativePathUser = "assets-v1/templates/registerClient.html"
+	userPath := filepath.Join(workingDirectory, relativePathUser)
+	fmt.Println("userPath: ", userPath)
+	http.ServeFile(w, r, userPath)
+}
 
 // RegisterUserHandler handles user registration requests
 func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -161,15 +176,38 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 func RegisterClientHandler(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterClientDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		res := utils.BuildErrorResponse("Failed to register client", err.Error(), utils.EmptyObj{})
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.Printf("Error sending response: %v", err)
-		}
+		handleError(w, http.StatusBadRequest, "Failed to register client", err)
 		return
 	}
 
-	fmt.Println("Register client body", req)
+	if err := validator.New().Struct(req); err != nil {
+		handleError(w, http.StatusBadRequest, "Failed to register client", err)
+		return
+	}
+
+	clientUUID := utils.GenerateUUID()
+	clientSecret := utils.GenerateSecret(utils.SecretSize)
+
+	db := config.SetupDatabaseConnection()
+	defer config.CloseDatabaseConnection(db)
+
+	client := models.Client{
+		ID: clientUUID,
+		Secret: clientSecret,
+		Name: req.Name,
+		RedirectURI: req.RedirectURI,
+	}
+
+	if err := db.Create(&client).Error; err != nil {
+		handleError(w, http.StatusBadRequest, "Failed to register client", err)
+		return
+	}
+
+	res := utils.BuildResponse(true, "OK!", "Client registered successfully")
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		handleError(w, http.StatusBadRequest, "Failed to register client", err)
+		return
+	}
 }
 
 // LoginPrecheckHandler handles login precheck requests and get the salt of the user from the database using the username from the request URL
@@ -380,6 +418,30 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+func GetClientData(w http.ResponseWriter, r *http.Request) {
+	clientName := r.Header.Get("Name")
+
+	db := config.SetupDatabaseConnection()
+	defer config.CloseDatabaseConnection(db)
+	
+	var client models.Client
+	if err := db.Where("name = ?", clientName).First(&client).Error; err != nil {
+		handleError(w, http.StatusBadRequest, "Failed to get client profile", err)
+		return
+	}
+
+	resp := models.ClientResponseOutput{
+		ID:     client.ID,
+		Secret:  client.Secret,
+		Name: client.Name,
+		RedirectURI:  client.RedirectURI,
+	}
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		handleError(w, http.StatusBadRequest, "Failed to get client profile", err)
+		return
+	}
+}
 
 func VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -486,3 +548,12 @@ func UpdateDisplayNameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func handleError(w http.ResponseWriter, status int, message string, err error) {
+	w.WriteHeader(status)
+	res := utils.BuildErrorResponse(message, err.Error(), utils.EmptyObj{})
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf("Error sending response: %v", err)
+	}
+}
+

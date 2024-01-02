@@ -21,7 +21,6 @@
         padding: 20px;
         border-radius: 8px;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        width: 400px;
         max-width: 100%;
         text-align: center;
       }
@@ -65,11 +64,22 @@
       button:hover {
         background-color: #45a049;
       }
+
+      .client-data {
+        text-align: start;
+      }
+
+      .client-data span {
+        font-weight: bold;
+      }
+      .client-data div {
+        margin-bottom: 10px;
+      }
     </style>
   </head>
   <body>
     <div id="app">
-      <div class="container">
+      <div v-if="!isRegistered" class="container">
         <div class="icon">
           <img src="/assets-v1/images/logo.png" alt="logo" class="logo" />
         </div>
@@ -84,48 +94,86 @@
           <button @click="registerClient">Register</button>
         </div>
       </div>
+      <div v-if="isRegistered" class="container">
+        <h2>Your data</h2>
+        <div>
+          <div class="client-data">
+            <div><span>Name:</span> {{ client.name }}</div>
+            <div><span>Redirect URI:</span> {{ client.redirect_uri }}</div>
+            <div><span>UUID:</span> {{ client.id }}</div>
+            <div><span>Secret:</span> {{ client.secret }}</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
       const { createApp, ref } = Vue;
 
+      const name = ref("");
+      const redirect_uri = ref("");
+      const isRegistered = ref(false);
+      const client = ref({
+        id: "",
+        secret: "",
+        name: "",
+        redirect_uri: "",
+      });
+
+      const registerClient = async () => {
+        try {
+          if (name.value == "" || redirect_uri.value == "") {
+            alert("Please enter a name and redirect url!");
+            return;
+          }
+          // await window.fetch("https://layer8devproxy.net/api/v1/register-client", {
+          await window.fetch("http://localhost:5001/api/v1/register-client", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: name.value,
+              redirect_uri: redirect_uri.value,
+            }),
+          });
+          isRegistered.value = true;
+          alert("Registration successful!");
+          getClientData(name.value);
+        } catch (error) {
+          console.error(error);
+          alert("Registration failed!");
+        }
+      };
+      const getClientData = async (clientName) => {
+        try {
+          // await window.fetch("https://layer8devproxy.net/api/v1/register-client", {
+          const resp = await window.fetch(
+            "http://localhost:5001/api/v1/getClient",
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "Application/Json",
+                Name: clientName,
+              },
+            }
+          );
+          const data = await resp.json();
+          client.value = data;
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
       const app = createApp({
         setup() {
-          const name = ref("");
-          const redirect_uri = ref("");
-
-          const registerClient = async () => {
-            try {
-              if (name.value == "" || redirect_uri.value == "") {
-                alert("Please enter a name and redirect url!");
-                return;
-              }
-              // await window.fetch("https://layer8devproxy.net/api/v1/register-client", {
-              await window.fetch(
-                "http://localhost:5001/api/v1/register-client",
-                {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    name: name.value,
-                    redirect_uri: redirect_uri.value,
-                  }),
-                }
-              );
-              alert("Registration successful!");
-              // Set istrue to true after successful registration
-            } catch (error) {
-              console.error(error);
-              alert("Registration failed!");
-            }
-          };
-
           return {
+            client,
             name,
             redirect_uri,
             registerClient,
+            getClientData,
+            isRegistered,
           };
         },
       });

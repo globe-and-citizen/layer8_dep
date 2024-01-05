@@ -44,41 +44,39 @@ CREATE TABLE user_metadata (
 );
 ```
 
-3) Alter 'sp_mock\backend\.env' to match your PG Server
+3) Copy & modify '/server/.env.local' to '.env' and edit so that it matches your PG implementation
+
 Example: 
 ```
-# JWT_SECRET_KEY=secret
-# SSL_MODE=disable
-# DB_USER=postgres # YOUR DB MAY DIFFER!
-# DB_PASS=1234 # YOUR DB MAY DIFFER!
-# DB_NAME=local_rs # YOUR DB MAY DIFFER!
-# SERVER_PORT=5001
-# DB_HOST=localhost
-# DB_PORT=5432 # YOUR DB MAY DIFFER!
-# UP_999_SECRET_KEY=
-# MP_123_SECRET_KEY=
-# SSL_ROOT_CERT=
+JWT_SECRET_KEY=secret
+SSL_MODE=disable
+DB_USER=postgres # YOUR DB MAY DIFFER!
+DB_PASS=1234 # YOUR DB MAY DIFFER!
+DB_NAME=local_rs # YOUR DB MAY DIFFER!
+SERVER_PORT=5001
+DB_HOST=localhost
+DB_PORT=5432 # YOUR DB MAY DIFFER!
+UP_999_SECRET_KEY=
+MP_123_SECRET_KEY=
+SSL_ROOT_CERT=
 ```
 
 ## Run the TIO Proxy & Add a User
 1) Download and instal Golang
-2) Navigate to the root directory. Run `$make run_server` twice (The first time adds a client).
-
-1.1) OR RUN THE EXECUTABLE? TOMORROWS LABOUR
-
-2) Navigate to 'http://localhost:5001'. Register a new Layer8 user.
+2) Install the GNU Make utility program by running `$winget install GnuWin32.Make`. You will need to add `C:\Program Files (x86)\GnuWin32\bin` to your environment Path variable.
 
 ## Run the sp_mock frontend & backend
-1) Run make `$make npm_instal_all`
-2) Run make `$make build_middleware`
+1) In any terminal, run make `$make npm_instal_all`
+2) In a bash terminal, run make `$make build_middleware`
 3) Clone `.env.dev` to `.env` in `sp_mock/backend`
 4) Navigate to the root directory. Run `$make run_backend`
 5) Clone `.env.dev` to `.env` in `interceptor`
-6) Run make `$make build_interceptor`
+6) In a bash terminal run make `$make build_interceptor`
 7) Navigate to the root directory. Run `$make run_frontend`
 8) Configure the `.env` in '/server' to connect to your local PG implementation
 9) With Golang installed, run `$make run_server`
-
+10) Navigate to `http://localhost:5001`. Register a new Layer8 user.
+11) Navigate to `http://localhost:5173` to register and login a user of the sp_mock.
 
 # Layer8
 A suite of  network protocol implementations that sum to create an anonymizing reverse proxy dedicated to dissociating a user's true identity from their online content choices.  

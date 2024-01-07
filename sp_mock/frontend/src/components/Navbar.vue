@@ -53,9 +53,9 @@ async function ping8000 () {
         <RouterLink to="/stress-test">Stress test</RouterLink>
       </li>
       <!-- <li> <button @click="ping8000">Ping 8000</button>  </li>-->
-      <li>
-        <button @click="persistenceCheckHandler">Check WASM Persistence</button>
-        <span v-if="counter != 0 " >{{ counter }}</span >
+      <li class="inline-block">
+        <button @click="persistenceCheckHandler">Check WASM Persistence
+          <span v-if="counter != 0 " >{{ counter }}</span ></button>
       </li>
     </ul>
   </div>

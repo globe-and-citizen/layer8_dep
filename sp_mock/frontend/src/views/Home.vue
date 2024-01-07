@@ -54,48 +54,50 @@ const logoutUser = () => {
 </script>
 
 <template>
-  <Navbar></Navbar>
-  <div class="">
-    <div v-if="isLoggedIn" >
-      <h1>Welcome {{ userName }}!</h1>
-      <h3>Your MetaData:</h3>
-      <h4
-        v-if="metaData.displayName"
-      >
-        Username: {{ metaData.displayName }}
-      </h4>
-      <h4
-        v-if="metaData.countryName"
-      >
-        Country: {{ metaData.countryName }}
-      </h4>
-      <!-- Change here -->
-      <h4
-        v-if="metaData.isEmailVerified === `true`"
-      >
-        Email Verified: Email is verified!
-      </h4>
-      <h4 v-else>
-        Email Verified: Email is not verified!
-      </h4>
-      <br />
-      <div>
-        <button @click="getPoem">Get Next Poem</button>
-        <button class="btn-secondary" @click="logoutUser">Logout</button>
-      </div>
-      <div>
+  
+  <div class="h-screen bg-primary flex flex-col">
+    <Navbar></Navbar>
+    <div class="bg-primary-content w-full flex justify-center items-center p-4 flex-1">
+      <div  class="card w-auto bg-base-100 shadow-xl p-8 max-w-2xs h-min" v-if="isLoggedIn" >
+        <h1 class="text-4xl">Welcome {{ userName }}!</h1>
+        <h3 class="text-2xl">Your MetaData:</h3>
+        <h4
+          v-if="metaData.displayName"
+        >
+          Username: {{ metaData.displayName }}
+        </h4>
+        <h4
+          v-if="metaData.countryName"
+        >
+          Country: {{ metaData.countryName }}
+        </h4>
+        <!-- Change here -->
+        <h4
+          v-if="metaData.isEmailVerified === `true`"
+        >
+          Email Verified: Email is verified!
+        </h4>
+        <h4 v-else>
+          Email Verified: Email is not verified!
+        </h4>
         <br />
-        <div id="newPoem">
-          <h3>Next Poem goes here:</h3>
-          <div>Title:</div>
-          <p >{{ nextPoem.title }}</p>
-          <div>Author:</div>
-          <p>{{ nextPoem.author }}</p>
-          <div>Body:</div>
-          <p >{{ nextPoem.body }}</p>
+        <div class="flex gap-6">
+          <button class="btn" @click="getPoem">Get Next Poem</button>
+          <button class="btn btn-secondary" @click="logoutUser">Logout</button>
+        </div>
+        <div>
+          <br />
+          <div id="newPoem">
+            <h3>Next Poem goes here:</h3>
+            <div>Title:</div>
+            <p >{{ nextPoem.title }}</p>
+            <div>Author:</div>
+            <p>{{ nextPoem.author }}</p>
+            <div>Body:</div>
+            <p >{{ nextPoem.body }}</p>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  <div></div>
 </template>

@@ -121,30 +121,30 @@ const loginWithLayer8Popup = async () => {
 
 <template>
   <Navbar></Navbar>
-  <div id="app">
-    <div class="container" v-if="!isLoggedIn">
+  <div class="bg-primary-content w-full flex p-24">
+    <div class="card w-auto bg-base-100 shadow-xl p-8" v-if="!isLoggedIn">
       <div v-if="isRegister" class="form-container">
-        <h2>Register</h2>
+        <h2 class="text-lg font-bold ">Register</h2>
         <div class="input-group">
           <input v-model="registerEmail" placeholder="Email" />
         </div>
         <div class="input-group">
           <input v-model="registerPassword" type="password" placeholder="Password" />
         </div>
-        <button class="btn-primary" @click="registerUser">Register</button>
-        <a style="display: block" @click="isRegister = false">Already registered? Login</a>
+        <button class="btn btn-primary" @click="registerUser">Register</button>
+        <a class="block" @click="isRegister = false">Already registered? Login</a>
       </div>
 
       <div v-if="!isRegister" class="form-container">
-        <h2>Login</h2>
+        <h2  class="text-lg ">Login</h2>
         <div class="input-group">
           <input v-model="loginEmail" placeholder="Email" />
         </div>
         <div class="input-group">
           <input v-model="loginPassword" type="password" placeholder="Password" />
         </div>
-        <button class="btn-primary" @click="loginUser">Login</button>
-        <a style="display: block" @click="isRegister = true">Don't have an account? Register</a>
+        <button class="btn btn-primary" @click="loginUser">Login</button>
+        <a class="block" @click="isRegister = true">Don't have an account? Register</a>
       </div>
     </div>
 
@@ -163,7 +163,6 @@ const loginWithLayer8Popup = async () => {
       </div>
     </div>
   </div>
-  <div></div>
 </template>
 
 <style scoped>
@@ -177,37 +176,12 @@ const loginWithLayer8Popup = async () => {
   background-color: #f4f4f4;
 }
 
-.container {
-  display: flex;
-  justify-content: space-around;
-  width: 50%;
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
 .form-container {
   width: 100%;
 }
 
 .input-group {
   margin-bottom: 15px;
-}
-
-.btn-primary {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 16px;
-  transition: background-color 0.3s;
-}
-
-.btn-primary:hover {
-  background-color: #45a049;
 }
 
 .welcome-container {

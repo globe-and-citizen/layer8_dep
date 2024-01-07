@@ -40,13 +40,25 @@ async function ping8000 () {
 </script>
 
 <template>
-<div id="navbar">
-    <RouterLink to="/">Home</RouterLink>
-    <RouterLink to="/stress-test">Stress test</RouterLink>
-    <!-- <button @click="ping8000">Ping 8000</button> -->
-    <button @click="persistenceCheckHandler">Check WASM Persistence</button>
-    <span v-if="counter != 0 " >{{ counter }}</span >
-    <br><hr><br>
+<div class="navbar bg-base-100">
+  <div class="flex-1">
+    <a class="btn btn-ghost text-xl">SP MOCK</a>
+  </div>
+  <div class="flex-none">
+    <ul class="menu menu-horizontal px-1 bg-base-100">
+      <li>
+        <RouterLink to="/">Home</RouterLink>
+      </li>
+      <li>
+        <RouterLink to="/stress-test">Stress test</RouterLink>
+      </li>
+      <!-- <li> <button @click="ping8000">Ping 8000</button>  </li>-->
+      <li>
+        <button @click="persistenceCheckHandler">Check WASM Persistence</button>
+        <span v-if="counter != 0 " >{{ counter }}</span >
+      </li>
+    </ul>
+  </div>
 </div>
 </template>
 

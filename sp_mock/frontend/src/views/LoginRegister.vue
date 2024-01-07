@@ -156,21 +156,3 @@ const loginWithLayer8Popup = async () => {
     </div>
   </div>
 </template>
-
-<style scoped>
-#app {
-  font-family: "Arial", sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 80vh;
-  width: 100vh;
-  background-color: #f4f4f4;
-}
-
-
-.welcome-container {
-  text-align: center;
-  width: 100%;
-}
-</style>

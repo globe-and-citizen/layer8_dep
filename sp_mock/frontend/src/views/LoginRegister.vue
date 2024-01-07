@@ -121,21 +121,21 @@ const loginWithLayer8Popup = async () => {
 
 <template>
   <Navbar></Navbar>
-  <div class="bg-primary-content w-full flex p-24">
-    <div class="card w-auto bg-base-100 shadow-xl p-8" v-if="!isLoggedIn">
-      <div v-if="isRegister" class="flex gap-3 flex-col min-w-[300px]">
+  <div class="bg-primary-content w-full flex justify-center p-4">
+    <div class="card w-auto bg-base-100 shadow-xl p-8 max-w-xs" v-if="!isLoggedIn">
+      <div v-if="isRegister" class="flex gap-3 flex-col">
         <h2 class="text-lg font-bold ">Register</h2>
         <input v-model="registerEmail" placeholder="Email" class="input input-bordered input-primary w-full max-w-xs"/>
         <input v-model="registerPassword" type="password" placeholder="Password"  class="input input-bordered input-primary w-full max-w-xs"/>
-        <button class="btn btn-primary" @click="registerUser">Register</button>
+        <button class="btn btn-primary max-w-xs" @click="registerUser">Register</button>
         <a class="block" @click="isRegister = false">Already registered? Login</a>
       </div>
 
-      <div v-if="!isRegister"  class="flex gap-3 flex-col min-w-[300px]">
+      <div v-if="!isRegister"  class="flex gap-3 flex-col">
         <h2  class="text-lg font-bold">Login</h2>
         <input v-model="loginEmail" placeholder="Email" class="input input-bordered input-primary w-full max-w-xs"/>
         <input v-model="loginPassword" type="password" placeholder="Password" class="input input-bordered input-primary w-full max-w-xs" />
-        <button class="btn btn-primary" @click="loginUser">Login</button>
+        <button class="btn btn-primary max-w-xs" @click="loginUser">Login</button>
         <a class="block" @click="isRegister = true">Don't have an account? Register</a>
       </div>
     </div>

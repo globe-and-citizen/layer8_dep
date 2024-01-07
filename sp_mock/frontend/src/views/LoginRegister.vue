@@ -123,26 +123,18 @@ const loginWithLayer8Popup = async () => {
   <Navbar></Navbar>
   <div class="bg-primary-content w-full flex p-24">
     <div class="card w-auto bg-base-100 shadow-xl p-8" v-if="!isLoggedIn">
-      <div v-if="isRegister" class="form-container">
+      <div v-if="isRegister" class="flex gap-3 flex-col min-w-[300px]">
         <h2 class="text-lg font-bold ">Register</h2>
-        <div class="input-group">
-          <input v-model="registerEmail" placeholder="Email" />
-        </div>
-        <div class="input-group">
-          <input v-model="registerPassword" type="password" placeholder="Password" />
-        </div>
+        <input v-model="registerEmail" placeholder="Email" class="input input-bordered input-primary w-full max-w-xs"/>
+        <input v-model="registerPassword" type="password" placeholder="Password"  class="input input-bordered input-primary w-full max-w-xs"/>
         <button class="btn btn-primary" @click="registerUser">Register</button>
         <a class="block" @click="isRegister = false">Already registered? Login</a>
       </div>
 
-      <div v-if="!isRegister" class="form-container">
-        <h2  class="text-lg ">Login</h2>
-        <div class="input-group">
-          <input v-model="loginEmail" placeholder="Email" />
-        </div>
-        <div class="input-group">
-          <input v-model="loginPassword" type="password" placeholder="Password" />
-        </div>
+      <div v-if="!isRegister"  class="flex gap-3 flex-col min-w-[300px]">
+        <h2  class="text-lg font-bold">Login</h2>
+        <input v-model="loginEmail" placeholder="Email" class="input input-bordered input-primary w-full max-w-xs"/>
+        <input v-model="loginPassword" type="password" placeholder="Password" class="input input-bordered input-primary w-full max-w-xs" />
         <button class="btn btn-primary" @click="loginUser">Login</button>
         <a class="block" @click="isRegister = true">Don't have an account? Register</a>
       </div>
@@ -176,13 +168,6 @@ const loginWithLayer8Popup = async () => {
   background-color: #f4f4f4;
 }
 
-.form-container {
-  width: 100%;
-}
-
-.input-group {
-  margin-bottom: 15px;
-}
 
 .welcome-container {
   text-align: center;

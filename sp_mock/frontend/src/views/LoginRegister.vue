@@ -140,18 +140,18 @@ const loginWithLayer8Popup = async () => {
       </div>
     </div>
 
-    <div v-if="isLoggedIn" class="welcome-container">
-      <h1 style="color: rgb(136, 136, 136); font-weight: 600; padding-bottom: 2%">
+    <div v-if="isLoggedIn" class="card w-auto bg-base-100 shadow-xl p-8 max-w-xs">
+      <h1 class="text-dark pb-4 font-bold">
         Welcome {{ userName }}!
       </h1>
-      <div class="new-container" v-if="!isContinueAnonymously">
-        <button class="btn-secondary" @click="continueAnonymously">
+      <div class="flex flex-col gap-4" v-if="!isContinueAnonymously">
+        <button class="btn " @click="continueAnonymously">
           Login Anonymously
         </button>
-        <button class="btn-secondary" @click="loginWithLayer8Popup">
+        <button class="btn " @click="loginWithLayer8Popup">
           Login with Layer8
         </button>
-        <button class="btn-secondary" @click="logoutUser">Logout</button>
+        <button class="btn " @click="logoutUser">Logout</button>
       </div>
     </div>
   </div>

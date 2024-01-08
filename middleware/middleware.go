@@ -5,8 +5,11 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"globe-and-citizen/layer8/utils"
+
+	// "globe-and-citizen/layer8/utils" (Dep)
 	"syscall/js"
+
+	utils "github.com/globe-and-citizen/layer8-utils"
 )
 
 const VERSION = "1.0.3"

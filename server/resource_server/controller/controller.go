@@ -11,7 +11,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 
-	"globe-and-citizen/layer8/proxy/resource_server/config"
+	"globe-and-citizen/layer8/proxy/config"
 	"globe-and-citizen/layer8/proxy/resource_server/dto"
 	"globe-and-citizen/layer8/proxy/resource_server/models"
 	"globe-and-citizen/layer8/proxy/resource_server/utils"
@@ -81,10 +81,6 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 	rmSalt := utils.GenerateRandomSalt(utils.SaltSize)
 	HashedAndSaltedPass := utils.SaltAndHashPassword(req.Password, rmSalt)
 
-	// Make connection to database
-	db := config.SetupDatabaseConnection()
-	// Close connection database
-	defer config.CloseDatabaseConnection(db)
 	// Save user to database
 	user := models.User{
 		Email:     req.Email,
@@ -94,7 +90,7 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		LastName:  req.LastName,
 		Salt:      rmSalt,
 	}
-	if err := db.Create(&user).Error; err != nil {
+	if err := config.DB.Create(&user).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to register user", err.Error(), utils.EmptyObj{})
 		if err := json.NewEncoder(w).Encode(res); err != nil {
@@ -119,8 +115,8 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 			Value:  req.DisplayName,
 		},
 	}
-	if err := db.Create(&userMetadata).Error; err != nil {
-		db.Delete(&user)
+	if err := config.DB.Create(&userMetadata).Error; err != nil {
+		config.DB.Delete(&user)
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to register user", err.Error(), utils.EmptyObj{})
 		json.NewEncoder(w).Encode(res)
@@ -158,13 +154,9 @@ func LoginPrecheckHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	// Make connection to database
-	db := config.SetupDatabaseConnection()
-	// Close connection database
-	defer config.CloseDatabaseConnection(db)
 	// Using the username, find the user in the database
 	var user models.User
-	if err := db.Where("username = ?", req.Username).First(&user).Error; err != nil {
+	if err := config.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to perform login precheck", err.Error(), utils.EmptyObj{})
 		if err := json.NewEncoder(w).Encode(res); err != nil {
@@ -205,13 +197,9 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	// Make connection to database
-	db := config.SetupDatabaseConnection()
-	// Close connection database
-	defer config.CloseDatabaseConnection(db)
 	// Using the username, find the user in the database
 	var user models.User
-	if err := db.Where("username = ?", req.Username).First(&user).Error; err != nil {
+	if err := config.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to login user", err.Error(), utils.EmptyObj{})
 		if err := json.NewEncoder(w).Encode(res); err != nil {
@@ -296,10 +284,8 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := config.SetupDatabaseConnection()
-	defer config.CloseDatabaseConnection(db)
 	var user models.User
-	if err := db.Where("id = ?", claims.UserID).First(&user).Error; err != nil {
+	if err := config.DB.Where("id = ?", claims.UserID).First(&user).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to get user profile", err.Error(), utils.EmptyObj{})
 		if err := json.NewEncoder(w).Encode(res); err != nil {
@@ -310,7 +296,7 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get user metadata from the database
 	var userMetadata []models.UserMetadata
-	if err := db.Where("user_id = ?", claims.UserID).Find(&userMetadata).Error; err != nil {
+	if err := config.DB.Where("user_id = ?", claims.UserID).Find(&userMetadata).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to get user profile", err.Error(), utils.EmptyObj{})
 		json.NewEncoder(w).Encode(res)
@@ -370,10 +356,7 @@ func VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := config.SetupDatabaseConnection()
-	defer config.CloseDatabaseConnection(db)
-
-	err = db.Model(&models.UserMetadata{}).Where("user_id = ? AND key = ?", claims.UserID, "email_verified").Update("value", "true").Error
+	err = config.DB.Model(&models.UserMetadata{}).Where("user_id = ? AND key = ?", claims.UserID, "email_verified").Update("value", "true").Error
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to verify email", err.Error(), utils.EmptyObj{})
@@ -431,10 +414,7 @@ func UpdateDisplayNameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := config.SetupDatabaseConnection()
-	defer config.CloseDatabaseConnection(db)
-
-	err = db.Model(&models.UserMetadata{}).Where("user_id = ? AND key = ?", claims.UserID, "display_name").Update("value", req.DisplayName).Error
+	err = config.DB.Model(&models.UserMetadata{}).Where("user_id = ? AND key = ?", claims.UserID, "display_name").Update("value", req.DisplayName).Error
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to update display name", err.Error(), utils.EmptyObj{})

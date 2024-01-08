@@ -1,3 +1,4 @@
+// Depreciated code and to be removed in future
 package config
 
 import (
@@ -14,7 +15,7 @@ type Config struct {
 	ServerPORT int
 }
 
-func SetupDatabaseConnection() *gorm.DB {
+func SetupDatabaseConnectionDep() *gorm.DB {
 	errEnv := godotenv.Load()
 	if errEnv != nil {
 		logrus.Error("loading env vars", errEnv.Error())
@@ -43,7 +44,7 @@ func SetupDatabaseConnection() *gorm.DB {
 	return db
 }
 
-func CloseDatabaseConnection(db *gorm.DB) {
+func CloseDatabaseConnectionDep(db *gorm.DB) {
 	dbSQL, err := db.DB()
 	if err != nil {
 		logrus.Error(err.Error())

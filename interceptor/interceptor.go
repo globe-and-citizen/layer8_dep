@@ -72,6 +72,10 @@ func main() {
 }
 
 // Utility function to test promise resolution / rejection from the console.
+js.Global().Get("Promise").New(js.FuncOf(func (this js.Value, resolve_reject []js.Value) interface{} {
+	testWASM(this, []js.Value{resolve_reject[0], resolve_reject[1]})
+}))
+
 func testWASM(this js.Value, args []js.Value) interface{} {
 	var promise_logic = func(this js.Value, resolve_reject []js.Value) interface{} {
 		resolve := resolve_reject[0]

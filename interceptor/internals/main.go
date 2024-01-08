@@ -43,7 +43,7 @@ func (c *Client) transfer(sharedSecret *utils.JWK, req *utils.Request, url strin
 	// encode request body
 	b, err := req.ToJSON()
 	if err != nil {
-		return nil, fmt.Errorf("Could not encode request: %w", err)
+		return nil, fmt.Errorf("could not encode request: %w", err)
 	}
 	// send the request
 	_, res := c.do(b, sharedSecret, url, req.Headers)

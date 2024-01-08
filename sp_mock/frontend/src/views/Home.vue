@@ -70,10 +70,9 @@ const logoutUser = () => {
         </h4>
         <h4 v-if="metaData.countryName">Country: {{ metaData.countryName }}</h4>
         <!-- Change here -->
-        <h4 v-if="metaData.isEmailVerified === `true`">
-          Email Verified: Email is verified!
+        <h4>
+          Email Verified: Email is {{ metaData.isEmailVerified ? "" : "not" }} verified!
         </h4>
-        <h4 v-else>Email Verified: Email is not verified!</h4>
         <br />
         <div class="flex gap-6">
           <button class="btn" @click="getPoem">Get Next Poem</button>

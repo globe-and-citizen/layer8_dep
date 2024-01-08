@@ -83,12 +83,20 @@ const logoutUser = () => {
           <br />
           <div id="newPoem">
             <h3>Next Poem goes here:</h3>
-            <div>Title:</div>
-            <p>{{ nextPoem.title }}</p>
-            <div>Author:</div>
-            <p>{{ nextPoem.author }}</p>
-            <div>Body:</div>
-            <p>{{ nextPoem.body }}</p>
+            <table class="table">
+              <tr>
+                <th>Title:</th>
+                <td>{{ nextPoem.title }}</td>
+              </tr>
+              <tr>
+                <th>Author:</th>
+                <td>{{ nextPoem.author }}</td>
+              </tr>
+              <tr>
+                <th>Body:</th>
+                <td>{{ nextPoem.body }}</td>
+              </tr>
+            </table>
           </div>
         </div>
       </div>

@@ -54,32 +54,26 @@ const logoutUser = () => {
 </script>
 
 <template>
-  
   <div class="h-screen bg-primary flex flex-col">
     <Navbar></Navbar>
-    <div class="bg-primary-content w-full flex justify-center items-center p-4 flex-1">
-      <div  class="card w-auto bg-base-100 shadow-xl p-8 h-min prose" v-if="isLoggedIn" >
+    <div
+      class="bg-primary-content w-full flex justify-center items-center p-4 flex-1"
+    >
+      <div
+        class="card w-auto bg-base-100 shadow-xl p-8 h-min prose"
+        v-if="isLoggedIn"
+      >
         <h1>Welcome {{ userName }}!</h1>
         <h3>Your MetaData:</h3>
-        <h4
-          v-if="metaData.displayName"
-        >
+        <h4 v-if="metaData.displayName">
           Username: {{ metaData.displayName }}
         </h4>
-        <h4
-          v-if="metaData.countryName"
-        >
-          Country: {{ metaData.countryName }}
-        </h4>
+        <h4 v-if="metaData.countryName">Country: {{ metaData.countryName }}</h4>
         <!-- Change here -->
-        <h4
-          v-if="metaData.isEmailVerified === `true`"
-        >
+        <h4 v-if="metaData.isEmailVerified === `true`">
           Email Verified: Email is verified!
         </h4>
-        <h4 v-else>
-          Email Verified: Email is not verified!
-        </h4>
+        <h4 v-else>Email Verified: Email is not verified!</h4>
         <br />
         <div class="flex gap-6">
           <button class="btn" @click="getPoem">Get Next Poem</button>
@@ -90,11 +84,11 @@ const logoutUser = () => {
           <div id="newPoem">
             <h3>Next Poem goes here:</h3>
             <div>Title:</div>
-            <p >{{ nextPoem.title }}</p>
+            <p>{{ nextPoem.title }}</p>
             <div>Author:</div>
             <p>{{ nextPoem.author }}</p>
             <div>Body:</div>
-            <p >{{ nextPoem.body }}</p>
+            <p>{{ nextPoem.body }}</p>
           </div>
         </div>
       </div>

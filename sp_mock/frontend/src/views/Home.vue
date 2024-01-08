@@ -58,9 +58,9 @@ const logoutUser = () => {
   <div class="h-screen bg-primary flex flex-col">
     <Navbar></Navbar>
     <div class="bg-primary-content w-full flex justify-center items-center p-4 flex-1">
-      <div  class="card w-auto bg-base-100 shadow-xl p-8 max-w-2xs h-min" v-if="isLoggedIn" >
-        <h1 class="text-4xl">Welcome {{ userName }}!</h1>
-        <h3 class="text-2xl">Your MetaData:</h3>
+      <div  class="card w-auto bg-base-100 shadow-xl p-8 h-min prose" v-if="isLoggedIn" >
+        <h1>Welcome {{ userName }}!</h1>
+        <h3>Your MetaData:</h3>
         <h4
           v-if="metaData.displayName"
         >

@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"strings"
 	"syscall/js"
+
+	uuid "github.com/google/uuid"
 )
 
 // Declare global constants
@@ -28,7 +30,10 @@ var (
 	pubJWK_ecdh        *utils.JWK
 	userSymmetricKey   *utils.JWK
 	UpJWT              string
+	UUID               string
 )
+
+var L8Client = internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port)
 
 func main() {
 	// fmt.Print("please...")
@@ -37,13 +42,13 @@ func main() {
 
 	// Initialize global variables
 	Layer8Version = "1.0.0"
-	Layer8Scheme = "http"
-	Layer8Host = "localhost"
-	Layer8Port = "5001"
-	// Layer8Scheme = "https"
-	// Layer8Host = "aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
-	// Layer8Port = ""
-	// Layer8LightsailURL = "https://aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
+	// Layer8Scheme = "http"
+	// Layer8Host = "localhost"
+	// Layer8Port = "5001"
+	Layer8Scheme = "https"
+	Layer8Host = "aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
+	Layer8Port = ""
+	Layer8LightsailURL = "https://aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
 
 	ETunnelFlag = false
 
@@ -129,8 +134,12 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 			ETunnelFlag = false
 			return
 		}
+		uuid := uuid.New()
+		UUID = uuid.String()
+		// For debugging purposes
+		fmt.Println("uuid: ", uuid.String())
 		req.Header.Add("x-ecdh-init", b64PubJWK)
-		req.Header.Add("X-client-id", "1")
+		req.Header.Add("x-client-uuid", uuid.String())
 
 		// send request
 		resp, err := client.Do(req)
@@ -249,6 +258,9 @@ func fetch(this js.Value, args []js.Value) interface{} {
 		// set the UpJWT to the headers
 		headers.Set("up_JWT", UpJWT)
 
+		// set the UUID to the headers
+		headers.Set("x-client-uuid", UUID)
+
 		// setting the body to an empty string if it's undefined
 		body := options.Get("body").String()
 		if body == "<undefined>" {
@@ -269,7 +281,7 @@ func fetch(this js.Value, args []js.Value) interface{} {
 		go func() {
 			// forward request to the layer8 proxy server
 			fmt.Println("userSymmetricKey", userSymmetricKey)
-			res := internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port).
+			res := L8Client.
 				Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
 
 			if res.Status >= 100 || res.Status < 300 { // Handle Success & Default Rejection

@@ -23,6 +23,16 @@ import (
 // go:embed dist
 var StaticFiles embed.FS
 
+var workingDirectory string
+
+func getPwd() {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	workingDirectory = dir
+}
+
 func main() {
 
 	config.InitDB()
@@ -55,6 +65,8 @@ func Server(port int) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	getPwd()
 
 	server := http.Server{
 		Addr: fmt.Sprintf(":%d", port),
@@ -110,7 +122,7 @@ func Server(port int) {
 			case path == "/api/v1/change-display-name":
 				Ctl.UpdateDisplayNameHandler(w, r)
 			case path == "/favicon.ico":
-				faviconPath := "/home/hmk/Hmk/GlobeCitizen/layer8/server/dist/favicon.ico"
+				faviconPath := workingDirectory + "/dist/favicon.ico"
 				http.ServeFile(w, r, faviconPath)
 			case strings.HasPrefix(path, "/assets/"):
 				httpFS.ServeHTTP(w, r)

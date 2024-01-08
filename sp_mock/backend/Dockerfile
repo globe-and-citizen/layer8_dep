@@ -2,7 +2,7 @@
 FROM node:lts-alpine
 WORKDIR /usr/app
 COPY package*.json ./
-RUN npm install
+RUN npm cache clean --force && rm -rf node_modules && npm install
 COPY . .
 # COPY ../../middleware/dist/middleware.wasm ./middleware.wasm
 EXPOSE 80

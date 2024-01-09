@@ -11,7 +11,6 @@ let nextPoem = ref({});
 // const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com";
 const BackendURL = "http://localhost:5001";
 
-
 const userName = computed(() => {
   if (SpToken.value && SpToken.value.split(".").length > 1) {
     const payload = JSON.parse(atob(SpToken.value.split(".")[1]));
@@ -55,77 +54,51 @@ const logoutUser = () => {
 </script>
 
 <template>
-  <Navbar></Navbar>
-  <div id="app">
-    <div v-if="isLoggedIn" class="welcome-container">
-      <h1
-        style="color: rgb(136, 136, 136); font-weight: 600; padding-bottom: 2%"
+  <div class="h-screen bg-primary flex flex-col">
+    <Navbar></Navbar>
+    <div
+      class="bg-primary-content w-full flex justify-center items-center p-4 flex-1"
+    >
+      <div
+        class="card w-auto bg-base-100 shadow-xl p-8 h-min prose"
+        v-if="isLoggedIn"
       >
-        Welcome {{ userName }}!
-      </h1>
-      <h3
-        style="color: rgb(136, 136, 136); font-weight: 600; padding-bottom: 2%"
-      >
-        Your MetaData:
-      </h3>
-      <h4
-        style="color: rgb(136, 136, 136); font-weight: 600"
-        v-if="metaData.displayName"
-      >
-        Username: {{ metaData.displayName }}
-      </h4>
-      <h4
-        style="color: rgb(136, 136, 136); font-weight: 600"
-        v-if="metaData.countryName"
-      >
-        Country: {{ metaData.countryName }}
-      </h4>
-      <!-- Change here -->
-      <h4
-        style="color: rgb(136, 136, 136); font-weight: 600"
-        
-        v-if="metaData.isEmailVerified === `true`"
-      >
-        Email Verified: Email is verified!
-      </h4>
-      <h4 style="color: rgb(136, 136, 136); font-weight: 600" v-else>
-        Email Verified: Email is not verified!
-      </h4>
-      <br />
-      <div class="new-container">
-        <button @click="getPoem">Get Next Poem</button>
-        <button class="btn-secondary" @click="logoutUser">Logout</button>
-      </div>
-      <div id="poems-container-2" style="color: black">
+        <h1>Welcome {{ userName }}!</h1>
+        <h3>Your MetaData:</h3>
+        <h4 v-if="metaData.displayName">
+          Username: {{ metaData.displayName }}
+        </h4>
+        <h4 v-if="metaData.countryName">Country: {{ metaData.countryName }}</h4>
+        <!-- Change here -->
+        <h4>
+          Email Verified: Email is {{ metaData.isEmailVerified ? "" : "not" }} verified!
+        </h4>
         <br />
-        <div id="newPoem">
-          <h3>Next Poem goes here:</h3>
-          <div>Title:</div>
-          <p style="font-weight: bold">{{ nextPoem.title }}</p>
-          <div>Author:</div>
-          <p style="font-weight: bold">{{ nextPoem.author }}</p>
-          <div>Body:</div>
-          <p style="font-weight: bold">{{ nextPoem.body }}</p>
+        <div class="flex gap-6">
+          <button class="btn" @click="getPoem">Get Next Poem</button>
+          <button class="btn btn-secondary" @click="logoutUser">Logout</button>
+        </div>
+        <div>
+          <br />
+          <div id="newPoem">
+            <h3>Next Poem goes here:</h3>
+            <table class="table">
+              <tr>
+                <th>Title:</th>
+                <td>{{ nextPoem.title }}</td>
+              </tr>
+              <tr>
+                <th>Author:</th>
+                <td>{{ nextPoem.author }}</td>
+              </tr>
+              <tr>
+                <th>Body:</th>
+                <td>{{ nextPoem.body }}</td>
+              </tr>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  <div></div>
 </template>
-
-<style scoped>
-#app {
-  font-family: "Arial", sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 80vh;
-  width: 100vh;
-  background-color: #f4f4f4;
-}
-
-.welcome-container {
-  text-align: center;
-  width: 100%;
-}
-</style>

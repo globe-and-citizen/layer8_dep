@@ -120,98 +120,41 @@ const loginWithLayer8Popup = async () => {
 </script>
 
 <template>
-  <Navbar></Navbar>
-  <div id="app">
-    <div class="container" v-if="!isLoggedIn">
-      <div v-if="isRegister" class="form-container">
-        <h2>Register</h2>
-        <div class="input-group">
-          <input v-model="registerEmail" placeholder="Email" />
+  <div class="h-screen bg-primary flex flex-col">
+    <Navbar></Navbar>
+    <div class="bg-primary-content w-full flex justify-center items-center p-4 flex-1">
+      <div class="card w-auto bg-base-100 shadow-xl p-8 max-w-xs h-min" v-if="!isLoggedIn">
+        <div v-if="isRegister" class="flex gap-3 flex-col">
+          <h2 class="text-lg font-bold ">Register</h2>
+          <input v-model="registerEmail" placeholder="Email" class="input input-bordered input-primary w-full max-w-xs"/>
+          <input v-model="registerPassword" type="password" placeholder="Password"  class="input input-bordered input-primary w-full max-w-xs"/>
+          <button class="btn btn-primary max-w-xs" @click="registerUser">Register</button>
+          <a class="block" @click="isRegister = false">Already registered? Login</a>
         </div>
-        <div class="input-group">
-          <input v-model="registerPassword" type="password" placeholder="Password" />
+
+        <div v-if="!isRegister"  class="flex gap-3 flex-col">
+          <h2  class="text-lg font-bold">Login</h2>
+          <input v-model="loginEmail" placeholder="Email" class="input input-bordered input-primary w-full max-w-xs"/>
+          <input v-model="loginPassword" type="password" placeholder="Password" class="input input-bordered input-primary w-full max-w-xs" />
+          <button class="btn btn-primary max-w-xs" @click="loginUser">Login</button>
+          <a class="block" @click="isRegister = true">Don't have an account? Register</a>
         </div>
-        <button class="btn-primary" @click="registerUser">Register</button>
-        <a style="display: block" @click="isRegister = false">Already registered? Login</a>
       </div>
 
-      <div v-if="!isRegister" class="form-container">
-        <h2>Login</h2>
-        <div class="input-group">
-          <input v-model="loginEmail" placeholder="Email" />
+      <div v-if="isLoggedIn" class="card w-auto bg-base-100 shadow-xl p-8 max-w-xs">
+        <h1 class="text-dark pb-4 font-bold">
+          Welcome {{ userName }}!
+        </h1>
+        <div class="flex flex-col gap-4" v-if="!isContinueAnonymously">
+          <button class="btn " @click="continueAnonymously">
+            Login Anonymously
+          </button>
+          <button class="btn " @click="loginWithLayer8Popup">
+            Login with Layer8
+          </button>
+          <button class="btn " @click="logoutUser">Logout</button>
         </div>
-        <div class="input-group">
-          <input v-model="loginPassword" type="password" placeholder="Password" />
-        </div>
-        <button class="btn-primary" @click="loginUser">Login</button>
-        <a style="display: block" @click="isRegister = true">Don't have an account? Register</a>
-      </div>
-    </div>
-
-    <div v-if="isLoggedIn" class="welcome-container">
-      <h1 style="color: rgb(136, 136, 136); font-weight: 600; padding-bottom: 2%">
-        Welcome {{ userName }}!
-      </h1>
-      <div class="new-container" v-if="!isContinueAnonymously">
-        <button class="btn-secondary" @click="continueAnonymously">
-          Login Anonymously
-        </button>
-        <button class="btn-secondary" @click="loginWithLayer8Popup">
-          Login with Layer8
-        </button>
-        <button class="btn-secondary" @click="logoutUser">Logout</button>
       </div>
     </div>
   </div>
-  <div></div>
 </template>
-
-<style scoped>
-#app {
-  font-family: "Arial", sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 80vh;
-  width: 100vh;
-  background-color: #f4f4f4;
-}
-
-.container {
-  display: flex;
-  justify-content: space-around;
-  width: 50%;
-  background-color: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.form-container {
-  width: 100%;
-}
-
-.input-group {
-  margin-bottom: 15px;
-}
-
-.btn-primary {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  border-radius: 5px;
-  font-size: 16px;
-  transition: background-color 0.3s;
-}
-
-.btn-primary:hover {
-  background-color: #45a049;
-}
-
-.welcome-container {
-  text-align: center;
-  width: 100%;
-}
-</style>

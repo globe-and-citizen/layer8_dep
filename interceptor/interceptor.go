@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"globe-and-citizen/layer8/interceptor/internals"
@@ -167,16 +166,9 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 
 		Respbody := utils.ReadResponseBody(resp.Body)
 
-		respBodyConverted, err := base64.URLEncoding.DecodeString(string(Respbody))
-		if err != nil {
-			fmt.Println(err.Error())
-			ETunnelFlag = false
-			return
-		}
-
 		data := map[string]interface{}{}
 
-		err = json.Unmarshal(respBodyConverted, &data)
+		err = json.Unmarshal(Respbody, &data)
 		if err != nil {
 			if strings.Contains(err.Error(), "unexpected end of JSON input") {
 				fmt.Println("JSON data might be incomplete or improperly formatted.")

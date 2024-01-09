@@ -67,16 +67,17 @@ SSL_ROOT_CERT=
 
 ## Run the sp_mock frontend & backend
 1) In any terminal, run make `$make npm_instal_all`
-2) In a bash terminal, run make `$make build_middleware`
-3) Clone `.env.dev` to `.env` in `sp_mock/backend`
-4) Navigate to the root directory. Run `$make run_backend`
-5) Clone `.env.dev` to `.env` in `interceptor`
-6) In a bash terminal run make `$make build_interceptor`
-7) Navigate to the root directory. Run `$make run_frontend`
-8) Configure the `.env` in '/server' to connect to your local PG implementation
-9) With Golang installed, run `$make run_server`
-10) Navigate to `http://localhost:5001`. Register a new Layer8 user.
-11) Navigate to `http://localhost:5173` to register and login a user of the sp_mock.
+2) In any terminal, run make `$make go_mod_tidy_all`
+3) In a bash terminal, run make `$make build_middleware`
+4) Clone `.env.dev` to `.env` in `sp_mock/backend`
+5) Navigate to the root directory. Run `$make run_backend`
+6) Clone `.env.dev` to `.env` in `interceptor`
+7) In a bash terminal run make `$make build_interceptor`
+8) Navigate to the root directory. Run `$make run_frontend`
+9) Configure the `.env` in '/server' to connect to your local PG implementation
+10) With Golang installed, run `$make run_server`
+11) Navigate to `http://localhost:5001`. Register a new Layer8 user.
+12) Navigate to `http://localhost:5173` to register and login a user of the sp_mock.
 
 # Layer8
 A suite of  network protocol implementations that sum to create an anonymizing reverse proxy dedicated to dissociating a user's true identity from their online content choices.  

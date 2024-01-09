@@ -6,10 +6,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"globe-and-citizen/layer8/interceptor/internals"
-	"globe-and-citizen/layer8/utils"
+
+	// "globe-and-citizen/layer8/utils" (Dep)
 	"net/http"
 	"strings"
 	"syscall/js"
+
+	utils "github.com/globe-and-citizen/layer8-utils"
 
 	uuid "github.com/google/uuid"
 )

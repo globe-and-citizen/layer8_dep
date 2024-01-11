@@ -61,3 +61,12 @@ push_sp_mock_frontend_image:
 
 push_sp_mock_backend_image:
 	aws lightsail push-container-image --region ca-central-1 --service-name container-service-3 --label backenda6 --image sp_mock_backend:latest
+
+run_local_db:
+	docker run -d --rm \
+		--name layer8-resource \
+		-v $(PWD)/.docker/postgres:/var/lib/postgresql/data \
+		-e POSTGRES_USER=postgres \
+		-e POSTGRES_PASSWORD=postgres \
+		-e POSTGRES_DBNAME=postgres \
+		-p 5434:5432 postgres:14.3

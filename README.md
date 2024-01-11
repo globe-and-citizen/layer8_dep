@@ -1,10 +1,11 @@
 # Following Steps
-## Connect L8 to your chosen PG database server
+## Create or configure a Postgres database
 1) If you're using Docker, use command: 
 *GOTCHA* Note the server, password, and ports!
 docker run --env=POSTGRES_USER=default_user --env=POSTGRES_PASSWORD=1234 --env=POSTGRES_DB=local_rs --env=PG_TRUST_LOCALNET=true -p 5544:5432 -d postgres:latest
 
-2) If your using a local PG DB, simply confirm the username, password, and name of the db you created.
+2) If your using a local postgres DB, simply confirm the username, password, and name of the db you created.
+Hint, if on windows, check "services" by opening up the windows menu and searching "services"
 
 2) You will need to run the following queries in your database to create the necessary tables:
 ```
@@ -44,24 +45,7 @@ CREATE TABLE user_metadata (
 );
 ```
 
-3) Copy & modify '/server/.env.local' to '.env' and edit so that it matches your PG implementation
-
-Example: 
-```
-JWT_SECRET_KEY=secret
-SSL_MODE=disable
-DB_USER=postgres # YOUR DB MAY DIFFER!
-DB_PASS=1234 # YOUR DB MAY DIFFER!
-DB_NAME=local_rs # YOUR DB MAY DIFFER!
-SERVER_PORT=5001
-DB_HOST=localhost
-DB_PORT=5432 # YOUR DB MAY DIFFER!
-UP_999_SECRET_KEY=
-MP_123_SECRET_KEY=
-SSL_ROOT_CERT=
-```
-
-## Run the TIO Proxy & Add a User
+## Other Utilities and Programs You'll Need
 1) Download and instal Golang
 2) Install the GNU Make utility program by running `$winget install GnuWin32.Make`. You will need to add `C:\Program Files (x86)\GnuWin32\bin` to your environment Path variable.
 
@@ -74,10 +58,26 @@ SSL_ROOT_CERT=
 6) Clone `.env.dev` to `.env` in `interceptor`
 7) In a bash terminal run make `$make build_interceptor`
 8) Navigate to the root directory. Run `$make run_frontend`
-9) Configure the `.env` in '/server' to connect to your local PG implementation
+9) Configure the `.env` in `/server` to connect to your local PG implementation
+    Example: 
+    ```
+    JWT_SECRET_KEY=secret
+    SSL_MODE=disable
+    DB_USER=postgres # YOUR DB MAY DIFFER!
+    DB_PASS=1234 # YOUR DB MAY DIFFER!
+    DB_NAME=local_rs # YOUR DB MAY DIFFER!
+    SERVER_PORT=5001
+    DB_HOST=localhost
+    DB_PORT=5432 # YOUR DB MAY DIFFER!
+    UP_999_SECRET_KEY=
+    MP_123_SECRET_KEY=
+    SSL_ROOT_CERT=
+    ```
 10) With Golang installed, run `$make run_server`
 11) Navigate to `http://localhost:5001`. Register a new Layer8 user.
 12) Navigate to `http://localhost:5173` to register and login a user of the sp_mock.
+
+
 
 # Layer8
 A suite of  network protocol implementations that sum to create an anonymizing reverse proxy dedicated to dissociating a user's true identity from their online content choices.  

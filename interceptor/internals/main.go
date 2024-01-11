@@ -46,7 +46,7 @@ func (c *Client) transfer(sharedSecret *utils.JWK, req *utils.Request, url strin
 	// encode request body
 	b, err := req.ToJSON()
 	if err != nil {
-		return nil, fmt.Errorf("Could not encode request: %w", err)
+		return nil, fmt.Errorf("could not encode request: %w", err)
 	}
 	// send the request
 	_, res := c.do(b, sharedSecret, url, req.Headers)
@@ -77,6 +77,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 		res := &utils.Response{
 			Status:     500,
 			StatusText: err.Error(),
+			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
 		return 500, resByte
@@ -90,6 +91,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 		res := &utils.Response{
 			Status:     500,
 			StatusText: err.Error(),
+			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
 		return 500, resByte
@@ -100,6 +102,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 		res := &utils.Response{
 			Status:     500,
 			StatusText: err.Error(),
+			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
 		return 500, resByte
@@ -112,6 +115,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 		res := &utils.Response{
 			Status:     500,
 			StatusText: err.Error(),
+			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
 		return 500, resByte
@@ -130,6 +134,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 		res := &utils.Response{
 			Status:     500,
 			StatusText: err.Error(),
+			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
 		return 500, resByte
@@ -151,6 +156,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 		res := &utils.Response{
 			Status:     500,
 			StatusText: "mapB[\"data\"].(string) not 'ok'",
+			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
 		return 500, resByte
@@ -161,6 +167,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 		res := &utils.Response{
 			Status:     500,
 			StatusText: err.Error(),
+			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
 		return 500, resByte
@@ -173,6 +180,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 		res := &utils.Response{
 			Status:     500,
 			StatusText: err.Error(),
+			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
 		return 500, resByte

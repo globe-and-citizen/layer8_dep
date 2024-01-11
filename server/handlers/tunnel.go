@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -105,7 +104,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	upJWT, err := utilities.GenerateStandardToken(os.Getenv("UP_999_SECRET_KEY"))
 	if err != nil {
 		fmt.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -117,7 +116,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	server_pubKeyECDH, err := utilities.B64ToJWK(string(resBodyTempBytes))
 	if err != nil {
 		fmt.Println(err.Error())
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -138,8 +137,6 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dataToSendB64 := base64.URLEncoding.EncodeToString(datatoSend)
-
 	// io.Copy(w, bytes.NewBufferString(dataToSendB64))
 
 	// io.Copy(w, strings.NewReader(dataToSendB64))
@@ -147,7 +144,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	// io.Copy(w, dataIoReader)
 
 	// io.CopyBuffer(w, bytes.NewBufferString(dataToSendB64), []byte(dataToSendB64))
-	w.Write([]byte(dataToSendB64))
+	w.Write(datatoSend)
 
 }
 

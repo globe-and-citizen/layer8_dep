@@ -7,7 +7,7 @@ ARG :=
 
 # ALTERED PATH
 define base64_encode
-	mkdir -p ../proxy/assets/cdn/interceptor/`dirname $(1) | cut -d'/' -f3` && \
+	mkdir -p ../server/assets-v1/assets/cdn/interceptor/`dirname $(1) | cut -d'/' -f3` && \
 	base64 -w 0 $(1) | sed 's/^/"/' | sed 's/$$/"/' > ../server/assets-v1/cdn/interceptor/`basename $(1) | cut -d'.' -f1`.json && \
 	echo "Encoded $(1) to ../server/assets-v1/cdn/interceptor/`basename $(1) | cut -d'.' -f1`.json";
 endef
@@ -37,4 +37,4 @@ encode: ## Encode the file specified by ARG or all files in ./bin if no ARG is s
 	fi
 
 build_local_cheating: ## Build the WASM interceptor without binary conversion
-	@GOOS=js GOARCH=wasm go build -ldflags="-X main.Layer8Scheme=$(LAYER8_PROXY_SCHEME_LOCAL) -X main.Layer8Host=$(LAYER8_PROXY_DOMAIN_LOCAL) -X main.Layer8Port=$(LAYER8_PROXY_PORT_LOCAL)" -o ../proxy/assets/cdn/interceptor/interceptor__local.wasm ./interceptor.go
+	@GOOS=js GOARCH=wasm go build -ldflags="-X main.Layer8Scheme=$(LAYER8_PROXY_SCHEME_LOCAL) -X main.Layer8Host=$(LAYER8_PROXY_DOMAIN_LOCAL) -X main.Layer8Port=$(LAYER8_PROXY_PORT_LOCAL)" -o ../server/assets-v1/cdn/interceptor/interceptor__local.wasm ./interceptor.go

@@ -139,6 +139,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 		resByte, _ := res.ToJSON()
 		return 500, resByte
 	}
+
 	defer res.Body.Close()
 
 	buf := new(bytes.Buffer)

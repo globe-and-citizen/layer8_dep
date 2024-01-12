@@ -2,7 +2,7 @@ module globe-and-citizen/layer8/middleware
 
 go 1.21.1
 
-require github.com/globe-and-citizen/layer8-utils v0.0.0-20230927121854-b5403af080d8
+require github.com/globe-and-citizen/layer8-utils v0.0.0-20240109163938-2e6e2f31641b
 
 require (
 	github.com/aead/ecdh v0.2.0 // indirect

@@ -154,8 +154,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
 	fmt.Println("Ravi Adds Path: ", r.URL.Path)
 
-	backendURL := fmt.Sprintf("http://localhost:8000%s", r.URL)
-	//backendURL := fmt.Sprintf(os.Getenv("VITE_BACKEND")+"%s", r.URL)
+	backendURL := fmt.Sprintf(os.Getenv("VITE_BACKEND")+"%s", r.URL)
 
 	// create the request
 	req, err := http.NewRequest(r.Method, backendURL, r.Body)

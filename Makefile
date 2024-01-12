@@ -3,7 +3,7 @@ npm_install_all:
 	cd sp_mock/frontend && npm install && cd ../backend && npm install && cd ../../server/resource_server/frontend && npm install
 
 go_mod_tidy_all:
-	cd interceptor && go mod tidy && cd ../middleware && go mod tidy && cd ../server && go mod tidy && cd ../utils && go mod tidy
+	cd interceptor && go mod tidy && cd ../middleware && go mod tidy && cd ../server && go mod tidy
 
 ## Interceptor Calls
 build_interceptor: ## must do from a bash terminal ..
@@ -16,6 +16,7 @@ build_interceptor: ## must do from a bash terminal ..
 ## Build Middleware
 build_middleware:
 	cd ./middleware/ && GOARCH=wasm GOOS=js go build -o ./dist/middleware.wasm && cp ./dist/middleware.wasm ../sp_mock/backend/dist/middleware.wasm
+	
 ## Generate Resource Server build
 generate_rs_dist:
 	cd server/resource_server/frontend && npm run build
@@ -61,3 +62,12 @@ push_sp_mock_frontend_image:
 
 push_sp_mock_backend_image:
 	aws lightsail push-container-image --region ca-central-1 --service-name container-service-3 --label backenda6 --image sp_mock_backend:latest
+
+run_local_db:
+	docker run -d --rm \
+		--name layer8-resource \
+		-v $(PWD)/.docker/postgres:/var/lib/postgresql/data \
+		-e POSTGRES_USER=postgres \
+		-e POSTGRES_PASSWORD=postgres \
+		-e POSTGRES_DBNAME=postgres \
+		-p 5434:5432 postgres:14.3

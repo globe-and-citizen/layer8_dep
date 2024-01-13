@@ -5,8 +5,11 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
-	"globe-and-citizen/layer8/utils"
+
+	// "globe-and-citizen/layer8/utils" (Dep)
 	"syscall/js"
+
+	utils "github.com/globe-and-citizen/layer8-utils"
 )
 
 const VERSION = "1.0.3"
@@ -37,7 +40,7 @@ func init() {
 }
 
 func main() {
-	c := make(chan struct{}, 0)
+	c := make(chan struct{})
 	fmt.Printf("L8 WASM Middleware version %s loaded.\n\n", VERSION)
 	js.Global().Set("WASMMiddleware", js.FuncOf(WASMMiddleware_v2))
 	js.Global().Set("TestWASM", js.FuncOf(TestWASM))

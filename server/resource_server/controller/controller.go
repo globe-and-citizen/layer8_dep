@@ -11,10 +11,10 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 
-	"globe-and-citizen/layer8/proxy/config"
-	"globe-and-citizen/layer8/proxy/resource_server/dto"
-	"globe-and-citizen/layer8/proxy/resource_server/models"
-	"globe-and-citizen/layer8/proxy/resource_server/utils"
+	"globe-and-citizen/layer8/server/config"
+	"globe-and-citizen/layer8/server/resource_server/dto"
+	"globe-and-citizen/layer8/server/resource_server/models"
+	"globe-and-citizen/layer8/server/resource_server/utils"
 
 	"github.com/go-playground/validator/v10"
 )

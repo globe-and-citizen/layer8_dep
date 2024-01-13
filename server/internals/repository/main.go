@@ -21,8 +21,8 @@
 package repository
 
 import (
-	"globe-and-citizen/layer8/proxy/constants"
-	"globe-and-citizen/layer8/proxy/models"
+	"globe-and-citizen/layer8/server/constants"
+	"globe-and-citizen/layer8/server/models"
 	"time"
 )
 

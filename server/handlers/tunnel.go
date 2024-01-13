@@ -10,8 +10,8 @@ import (
 	"net/http"
 	"os"
 
-	"globe-and-citizen/layer8/proxy/resource_server/utils"
-	utilities "globe-and-citizen/layer8/proxy/utils"
+	"globe-and-citizen/layer8/server/resource_server/utils"
+	utilities "globe-and-citizen/layer8/server/utils"
 )
 
 // Tunnel forwards the request to the service provider's backend

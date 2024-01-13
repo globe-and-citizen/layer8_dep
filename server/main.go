@@ -4,10 +4,10 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"globe-and-citizen/layer8/proxy/config"
-	"globe-and-citizen/layer8/proxy/handlers"
-	"globe-and-citizen/layer8/proxy/internals/repository"
-	"globe-and-citizen/layer8/proxy/internals/usecases"
+	"globe-and-citizen/layer8/server/config"
+	"globe-and-citizen/layer8/server/handlers"
+	"globe-and-citizen/layer8/server/internals/repository"
+	"globe-and-citizen/layer8/server/internals/usecases"
 	"io/fs"
 	"log"
 	"net/http"
@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"strings"
 
-	Ctl "globe-and-citizen/layer8/proxy/resource_server/controller"
+	Ctl "globe-and-citizen/layer8/server/resource_server/controller"
 
 	"github.com/joho/godotenv"
 )

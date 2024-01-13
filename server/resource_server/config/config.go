@@ -15,7 +15,7 @@ type Config struct {
 	ServerPORT int
 }
 
-func SetupDatabaseConnectionDep() *gorm.DB {
+func dep_SetupDatabaseConnection() *gorm.DB {
 	errEnv := godotenv.Load()
 	if errEnv != nil {
 		logrus.Error("loading env vars", errEnv.Error())
@@ -44,7 +44,7 @@ func SetupDatabaseConnectionDep() *gorm.DB {
 	return db
 }
 
-func CloseDatabaseConnectionDep(db *gorm.DB) {
+func dep_CloseDatabaseConnection(db *gorm.DB) {
 	dbSQL, err := db.DB()
 	if err != nil {
 		logrus.Error(err.Error())

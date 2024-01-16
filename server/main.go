@@ -127,13 +127,15 @@ func Server(port int) {
 			case strings.HasPrefix(path, "/assets/"):
 				httpFS.ServeHTTP(w, r)
 
-				// Proxy Server endpoints
+			// Proxy Server endpoints
 			case path == "/":
 				Ctl.IndexHandler(w, r)
 			case path == "/user":
 				Ctl.UserHandler(w, r)
 			case path == "/init-tunnel":
 				handlers.InitTunnel(w, r)
+			case path == "/error":
+				handlers.TestError(w, r)
 			default:
 				handlers.Tunnel(w, r)
 			}

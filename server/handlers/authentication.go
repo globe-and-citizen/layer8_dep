@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"globe-and-citizen/layer8/proxy/internals/usecases"
+	"globe-and-citizen/layer8/server/internals/usecases"
 	"html/template"
 	"net/http"
 )

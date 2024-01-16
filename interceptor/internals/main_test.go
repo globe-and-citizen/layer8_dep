@@ -1,4 +1,3 @@
-// internals_test.go
 package internals
 
 import (

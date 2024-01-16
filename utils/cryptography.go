@@ -41,7 +41,7 @@ type JWK struct {
 func GenerateKeyPair(keyUse KeyUse) (*JWK, *JWK, error) {
 	id := make([]byte, 16)
 	rand.Read(id)
-	id_str := base64.URLEncoding.EncodeToString(id)
+	id_str := base64.StdEncoding.EncodeToString(id)
 
 	var privKey JWK
 	privKey.Kty = "EC"
@@ -57,9 +57,9 @@ func GenerateKeyPair(keyUse KeyUse) (*JWK, *JWK, error) {
 	}
 
 	privKey_ecdsaPtr, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	privKey.D = base64.URLEncoding.EncodeToString(privKey_ecdsaPtr.D.Bytes())
-	privKey.X = base64.URLEncoding.EncodeToString(privKey_ecdsaPtr.X.Bytes())
-	privKey.Y = base64.URLEncoding.EncodeToString(privKey_ecdsaPtr.Y.Bytes())
+	privKey.D = base64.StdEncoding.EncodeToString(privKey_ecdsaPtr.D.Bytes())
+	privKey.X = base64.StdEncoding.EncodeToString(privKey_ecdsaPtr.X.Bytes())
+	privKey.Y = base64.StdEncoding.EncodeToString(privKey_ecdsaPtr.Y.Bytes())
 
 	//privKey_ecdsaPtr.ECDH()
 
@@ -77,8 +77,8 @@ func GenerateKeyPair(keyUse KeyUse) (*JWK, *JWK, error) {
 		return nil, nil, fmt.Errorf("Unrecognized keyUse. Must be 'ECDSA', or 'ECDH.'")
 	}
 
-	pubKey.X = base64.URLEncoding.EncodeToString(privKey_ecdsaPtr.X.Bytes())
-	pubKey.Y = base64.URLEncoding.EncodeToString(privKey_ecdsaPtr.Y.Bytes())
+	pubKey.X = base64.StdEncoding.EncodeToString(privKey_ecdsaPtr.X.Bytes())
+	pubKey.Y = base64.StdEncoding.EncodeToString(privKey_ecdsaPtr.Y.Bytes())
 
 	return &privKey, &pubKey, nil
 }
@@ -96,13 +96,13 @@ func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 	pubKey := new(ecdsa.PublicKey)
 	pubKey.Curve = elliptic.P256()
 
-	bsX, err := base64.URLEncoding.DecodeString(jwk.X)
+	bsX, err := base64.StdEncoding.DecodeString(jwk.X)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to interpret jwk.X coordinate as byte slice: %w", err)
 	}
 	pubKey.X = new(big.Int).SetBytes(bsX)
 
-	bsY, err := base64.URLEncoding.DecodeString(jwk.Y)
+	bsY, err := base64.StdEncoding.DecodeString(jwk.Y)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to interpret jwk.Y coordinate as byte slice: %w", err)
 	}
@@ -124,7 +124,7 @@ func (jwk *JWK) ExportKeyAsGoType() (interface{}, error) {
 	privKey := new(ecdsa.PrivateKey)
 	if privateFlag {
 		privKey.PublicKey = *pubKey
-		bsD, err := base64.URLEncoding.DecodeString(jwk.D)
+		bsD, err := base64.StdEncoding.DecodeString(jwk.D)
 		if err != nil {
 			return nil, fmt.Errorf("Unable to interpret jwk.D coordinate as byte slice: %w", err)
 		}
@@ -158,17 +158,17 @@ func (jwk *JWK) Equal(pk interface{}) bool {
 		if !slices.Contains(jwk.Key_ops, "sign") ||
 			jwk.Kty != "EC" ||
 			jwk.Crv != key.Params().Name ||
-			jwk.X != base64.URLEncoding.EncodeToString(key.PublicKey.X.Bytes()) ||
-			jwk.Y != base64.URLEncoding.EncodeToString(key.PublicKey.Y.Bytes()) ||
-			jwk.D != base64.URLEncoding.EncodeToString(key.D.Bytes()) {
+			jwk.X != base64.StdEncoding.EncodeToString(key.PublicKey.X.Bytes()) ||
+			jwk.Y != base64.StdEncoding.EncodeToString(key.PublicKey.Y.Bytes()) ||
+			jwk.D != base64.StdEncoding.EncodeToString(key.D.Bytes()) {
 			return false
 		}
 	case *ecdsa.PublicKey:
 		if !slices.Contains(jwk.Key_ops, "verify") ||
 			jwk.Kty != "EC" ||
 			jwk.Crv != key.Params().Name ||
-			jwk.X != base64.URLEncoding.EncodeToString(key.X.Bytes()) ||
-			jwk.Y != base64.URLEncoding.EncodeToString(key.Y.Bytes()) ||
+			jwk.X != base64.StdEncoding.EncodeToString(key.X.Bytes()) ||
+			jwk.Y != base64.StdEncoding.EncodeToString(key.Y.Bytes()) ||
 			jwk.D != "" {
 			return false
 		}
@@ -177,9 +177,9 @@ func (jwk *JWK) Equal(pk interface{}) bool {
 		if !slices.Contains(jwk.Key_ops, "deriveKey") ||
 			jwk.Kty != "EC" ||
 			jwk.Crv != fmt.Sprint(key.Curve()) ||
-			jwk.X != base64.URLEncoding.EncodeToString(key.PublicKey().Bytes()[1:33]) ||
-			jwk.Y != base64.URLEncoding.EncodeToString(key.PublicKey().Bytes()[33:]) ||
-			jwk.D != base64.URLEncoding.EncodeToString(key.Bytes()) {
+			jwk.X != base64.StdEncoding.EncodeToString(key.PublicKey().Bytes()[1:33]) ||
+			jwk.Y != base64.StdEncoding.EncodeToString(key.PublicKey().Bytes()[33:]) ||
+			jwk.D != base64.StdEncoding.EncodeToString(key.Bytes()) {
 			return false
 		}
 
@@ -187,8 +187,8 @@ func (jwk *JWK) Equal(pk interface{}) bool {
 		if !slices.Contains(jwk.Key_ops, "deriveKey") ||
 			jwk.Kty != "EC" ||
 			jwk.Crv != fmt.Sprint(key.Curve()) ||
-			jwk.X != base64.URLEncoding.EncodeToString(key.Bytes()[1:33]) ||
-			jwk.Y != base64.URLEncoding.EncodeToString(key.Bytes()[33:]) ||
+			jwk.X != base64.StdEncoding.EncodeToString(key.Bytes()[1:33]) ||
+			jwk.Y != base64.StdEncoding.EncodeToString(key.Bytes()[33:]) ||
 			jwk.D != "" {
 			return false
 		}
@@ -304,7 +304,7 @@ func (privateKey *JWK) GetECDHSharedSecret(publicKey *JWK) (*JWK, error) {
 		Key_ops: []string{"encrypt", "decrypt"},
 		Kid:     "shared_" + privateKey.Kid[4:],
 		Crv:     privateKey.Crv,
-		X:       base64.URLEncoding.EncodeToString(ss),
+		X:       base64.StdEncoding.EncodeToString(ss),
 	}
 
 	// convert the result to a JWK.
@@ -316,7 +316,7 @@ func (ss *JWK) SymmetricEncrypt(data []byte) ([]byte, error) {
 		return nil, fmt.Errorf("Receiver Key_ops must include 'encrypt' ")
 	}
 
-	ssBS, err := base64.URLEncoding.DecodeString(ss.X)
+	ssBS, err := base64.StdEncoding.DecodeString(ss.X)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to interpret ss.X coordinate as byte slice: %w", err)
 	}
@@ -347,7 +347,7 @@ func (ss *JWK) SymmetricDecrypt(ciphertext []byte) ([]byte, error) {
 		return nil, fmt.Errorf("Receiver Key_ops must include 'decrypt' ")
 	}
 
-	ssBS, err := base64.URLEncoding.DecodeString(ss.X)
+	ssBS, err := base64.StdEncoding.DecodeString(ss.X)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to interpret ss.X coordinate as byte slice: %w", err)
 	}
@@ -441,11 +441,11 @@ func (JWK *JWK) ExportAsBase64() (string, error) {
 		return "", fmt.Errorf("Failure to export JWK as Base64 %w", err.Error())
 	}
 
-	return base64.URLEncoding.EncodeToString(marshalled), nil
+	return base64.StdEncoding.EncodeToString(marshalled), nil
 }
 
 func B64ToJWK(userPubJWK string) (*JWK, error) {
-	userPubJWK_BS, err := base64.URLEncoding.DecodeString(userPubJWK)
+	userPubJWK_BS, err := base64.StdEncoding.DecodeString(userPubJWK)
 	if err != nil {
 		return nil, fmt.Errorf("Failure to decode userPubJWK", err.Error())
 	}

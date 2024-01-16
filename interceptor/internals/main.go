@@ -81,7 +81,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 	}
 
 	data, err = json.Marshal(map[string]interface{}{
-		"data": base64.URLEncoding.EncodeToString(data),
+		"data": base64.StdEncoding.EncodeToString(data),
 	})
 
 	if err != nil {
@@ -158,7 +158,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 		return 500, resByte
 	}
 
-	decoded, err := base64.URLEncoding.DecodeString(toDecode)
+	decoded, err := base64.StdEncoding.DecodeString(toDecode)
 	if err != nil {
 		res := &utils.Response{
 			Status:     500,

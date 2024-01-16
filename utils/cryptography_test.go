@@ -337,7 +337,7 @@ func Test_Converting_PrivKeyECDH(t *testing.T) {
 	D_bigInt := new(big.Int).SetBytes(D_bytes)
 
 	// Get the D coordinate of the JWK
-	coorD_BS, err := base64.URLEncoding.DecodeString(privKey_ECDH.D)
+	coorD_BS, err := base64.StdEncoding.DecodeString(privKey_ECDH.D)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
@@ -356,11 +356,11 @@ func Test_Converting_PrivKeyECDH(t *testing.T) {
 	*  03, which is the same, except you select the y coordinate with a 1 lsbit. The compressed formats are about half as long (saving space), but requires more computation (a modular square root) to use if you perform an operation that requires the y coordinate.
 	* This is why the first byte is removed.
 	 */
-	if pubKey_ECDH.X != base64.URLEncoding.EncodeToString(pubKey_BS[1:33]) {
+	if pubKey_ECDH.X != base64.StdEncoding.EncodeToString(pubKey_BS[1:33]) {
 		t.Errorf("X coordinate of the public keys did not match.")
 	}
 
-	if pubKey_ECDH.Y != base64.URLEncoding.EncodeToString(pubKey_BS[33:]) {
+	if pubKey_ECDH.Y != base64.StdEncoding.EncodeToString(pubKey_BS[33:]) {
 		t.Errorf("Y coordinate of the public keys did not match.")
 	}
 }

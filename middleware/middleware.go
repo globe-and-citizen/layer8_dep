@@ -156,7 +156,7 @@ func doECDHWithClient(request, response js.Value) {
 // 		return nil
 // 	}
 
-// 	data, err := base64.URLEncoding.DecodeString(jsBody.Get("data").String())
+// 	data, err := base64.StdEncoding.DecodeString(jsBody.Get("data").String())
 // 	if err != nil {
 // 		println("error decoding request:", err.Error())
 // 		res.Set("statusCode", 500)
@@ -260,7 +260,7 @@ func doECDHWithClient(request, response js.Value) {
 // 		res.Set("statusMessage", jres.StatusText)
 // 		res.Call("set", js.ValueOf(resHeaders))
 // 		res.Call("end", js.Global().Get("JSON").Call("stringify", js.ValueOf(map[string]interface{}{
-// 			"data": base64.URLEncoding.EncodeToString(b),
+// 			"data": base64.StdEncoding.EncodeToString(b),
 // 		})))
 // 		return nil
 // 	}))
@@ -346,7 +346,7 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 
 		object := js.Global().Get("JSON").Call("parse", jsBody)
 
-		data, err := base64.URLEncoding.DecodeString(object.Get("data").String())
+		data, err := base64.StdEncoding.DecodeString(object.Get("data").String())
 		if err != nil {
 			println("error decoding request:", err.Error())
 			res.Set("statusCode", 500)
@@ -452,7 +452,7 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 			res.Set("statusMessage", jres.StatusText)
 			res.Call("set", js.ValueOf(resHeaders))
 			res.Call("end", js.Global().Get("JSON").Call("stringify", js.ValueOf(map[string]interface{}{
-				"data": base64.URLEncoding.EncodeToString(b),
+				"data": base64.StdEncoding.EncodeToString(b),
 			})))
 			return nil
 		}))

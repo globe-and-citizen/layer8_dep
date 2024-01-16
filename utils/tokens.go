@@ -29,7 +29,7 @@ func GenerateRandomString(count int) (string, error) {
 		return "", fmt.Errorf("could not generate random bytes: %s", err)
 	}
 
-	return base64.URLEncoding.EncodeToString(buf), nil
+	return base64.StdEncoding.EncodeToString(buf), nil
 }
 
 // GenerateAuthCode generates a JWT self-encoded auth code

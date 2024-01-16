@@ -184,8 +184,8 @@ func RegisterClientHandler(w http.ResponseWriter, r *http.Request) {
 	clientUUID := utils.GenerateUUID()
 	clientSecret := utils.GenerateSecret(utils.SecretSize)
 
-	db := config.SetupDatabaseConnection()
-	defer config.CloseDatabaseConnection(db)
+	// db := config.SetupDatabaseConnection()
+	// defer config.CloseDatabaseConnection(db)
 
 	client := models.Client{
 		ID: clientUUID,
@@ -194,7 +194,7 @@ func RegisterClientHandler(w http.ResponseWriter, r *http.Request) {
 		RedirectURI: req.RedirectURI,
 	}
 
-	if err := db.Create(&client).Error; err != nil {
+	if err := config.DB.Create(&client).Error; err != nil {
 		handleError(w, http.StatusBadRequest, "Failed to register client", err)
 		return
 	}
@@ -407,11 +407,11 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 func GetClientData(w http.ResponseWriter, r *http.Request) {
 	clientName := r.Header.Get("Name")
 
-	db := config.SetupDatabaseConnection()
-	defer config.CloseDatabaseConnection(db)
+	// db := config.SetupDatabaseConnection()
+	// defer config.CloseDatabaseConnection(db)
 	
 	var client models.Client
-	if err := db.Where("name = ?", clientName).First(&client).Error; err != nil {
+	if err := config.DB.Where("name = ?", clientName).First(&client).Error; err != nil {
 		handleError(w, http.StatusBadRequest, "Failed to get client profile", err)
 		return
 	}

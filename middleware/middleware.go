@@ -278,8 +278,15 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 	res := args[1]
 	next := args[2]
 
-	// Decide if this is a redirect to ECDH init.
 	headers := req.Get("headers")
+
+	// proceed to next middleware/handler request is not a layer8 request
+	if headers.String() == "<undefined>" || headers.Get("x-tunnel").String() == "<undefined>" {
+		next.Invoke()
+		return nil
+	}
+
+	// Decide if this is a redirect to ECDH init.
 	isECDHInit := headers.Get("x-ecdh-init").String()
 	if isECDHInit != "<undefined>" {
 		doECDHWithClient(req, res)

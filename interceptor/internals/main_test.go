@@ -4,7 +4,6 @@ package internals
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"globe-and-citizen/layer8/utils"
 	"io"
 	"net/http"
@@ -27,9 +26,7 @@ func TestClientDo(t *testing.T) {
 		}
 		token.Claims = claims
 		tokenString, err := token.SignedString([]byte(secretKey))
-		if err != nil {
-			return "", fmt.Errorf("could not generate standard token: %s", err)
-		}
+		assert.NoError(t, err)
 		return tokenString, nil
 	}
 

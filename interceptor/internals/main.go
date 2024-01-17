@@ -5,9 +5,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"globe-and-citizen/layer8/utils"
+
+	// "globe-and-citizen/layer8/utils" (Dep)
 	"net/http"
 	"net/url"
+
+	utils "github.com/globe-and-citizen/layer8-utils"
 )
 
 type Client struct {
@@ -136,6 +139,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 		resByte, _ := res.ToJSON()
 		return 500, resByte
 	}
+
 	defer res.Body.Close()
 
 	buf := new(bytes.Buffer)

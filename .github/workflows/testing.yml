@@ -1,8 +1,8 @@
 name: simple_unit_tests
 
 on:
-  # push:
-  #   branches: ['stravid87/addingYML']
+  push:
+    branches: ['stravid87/addingYML']
   workflow_dispatch:
   pull_request:
     types:

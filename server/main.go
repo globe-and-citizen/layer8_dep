@@ -55,7 +55,7 @@ func main() {
 
 func Server(port int) {
 
-	repo, err := repository.CreateRepository("inmemory")
+	repo, err := repository.CreateRepository("postgres")
 	if err != nil {
 		log.Fatal(err)
 	}

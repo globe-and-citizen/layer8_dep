@@ -61,7 +61,7 @@ type (
 		Create() (Repository, error)
 	}
 
-	// RepositoryFactoryFunc is a function that implements RepositoryFactory.
+	// RepositoryFactoryFunc is an adapter that implements RepositoryFactory.
 	RepositoryFactoryFunc func() (Repository, error)
 
 	// RepositoryFactoryRegistry is a registry of repository factories.
@@ -121,6 +121,10 @@ func MustCreateRepository(name string) Repository {
 
 func init() {
 	// Register the memory repository factory
+	RegisterRepositoryFactory("in_memory", RepositoryFactoryFunc(func() (Repository, error) {
+		return TheInMemoryRepository, nil
+	}))
+
 	RegisterRepositoryFactory("postgres", RepositoryFactoryFunc(func() (Repository, error) {
 		return NewPostgresRepository(), nil
 	}))

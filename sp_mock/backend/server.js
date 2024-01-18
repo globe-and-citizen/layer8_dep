@@ -18,6 +18,7 @@ const LAYER8_URL = process.env.LAYER8_URL;
 // const LAYER8_URL = "http://localhost:5001"
 const LAYER8_CALLBACK_URL = `${FRONTEND_URL}/oauth2/callback`;
 const LAYER8_RESOURCE_URL = `${LAYER8_URL}/api/user`;
+
 const layer8Auth = new ClientOAuth2({
   clientId: "notanid",
   clientSecret: "absolutelynotasecret!",
@@ -114,6 +115,7 @@ app.post("/api/login/layer8/auth", async (req, res) => {
       console.log("err: ", err);
     });
 
+  console.log("user: ", user)
   const isEmailVerified = user.is_email_verified.value;
   let displayName = "";
   let countryName = "";

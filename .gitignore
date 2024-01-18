@@ -159,3 +159,7 @@ go.work.sum
 
 proxy/certificates
 resource_server/backend/certificates
+
+.idea
+
+interceptor*.json

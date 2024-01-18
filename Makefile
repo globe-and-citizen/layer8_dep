@@ -3,7 +3,7 @@ npm_install_all:
 	cd sp_mock/frontend && npm install && cd ../backend && npm install && cd ../../server/resource_server/frontend && npm install
 
 go_mod_tidy_all:
-	cd interceptor && go mod tidy && cd ../middleware && go mod tidy && cd ../server && go mod tidy && cd ../utils && go mod tidy
+	cd interceptor && go mod tidy && cd ../middleware && go mod tidy && cd ../server && go mod tidy
 
 ## Interceptor Calls
 build_interceptor: ## must do from a bash terminal ..
@@ -16,6 +16,7 @@ build_interceptor: ## must do from a bash terminal ..
 ## Build Middleware
 build_middleware:
 	cd ./middleware/ && GOARCH=wasm GOOS=js go build -o ./dist/middleware.wasm && cp ./dist/middleware.wasm ../sp_mock/backend/dist/middleware.wasm
+	
 ## Generate Resource Server build
 generate_rs_dist:
 	cd server/resource_server/frontend && npm run build

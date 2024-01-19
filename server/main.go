@@ -103,6 +103,10 @@ func Server(port int) {
 				http.StripPrefix("/assets-v1", http.FileServer(http.Dir("./assets-v1"))).ServeHTTP(w, r)
 
 			// Resource Server endpoints
+			case path == "/":
+				Ctl.IndexHandler(w, r)
+			case path == "/user":
+				Ctl.UserHandler(w, r)
 			case path == "/api/v1/register-user":
 				Ctl.RegisterUserHandler(w, r)
 			case path == "/api/v1/register-client":
@@ -128,10 +132,6 @@ func Server(port int) {
 				httpFS.ServeHTTP(w, r)
 
 			// Proxy Server endpoints
-			case path == "/":
-				Ctl.IndexHandler(w, r)
-			case path == "/user":
-				Ctl.UserHandler(w, r)
 			case path == "/init-tunnel":
 				handlers.InitTunnel(w, r)
 			case path == "/error":

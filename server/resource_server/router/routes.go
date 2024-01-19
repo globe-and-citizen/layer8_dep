@@ -3,7 +3,7 @@ package routes
 import (
 	"net/http"
 
-	Ctl "globe-and-citizen/layer8/proxy/resource_server/controller"
+	Ctl "globe-and-citizen/layer8/server/resource_server/controller"
 )
 
 func RegisterRoutes() http.HandlerFunc {

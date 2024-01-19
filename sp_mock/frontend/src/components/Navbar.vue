@@ -11,6 +11,7 @@ async function persistenceCheckHandler (){
 
 async function ping8000 () {
   try {
+    // let response = await layer8.fetch("https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/", {
     let response = await layer8.fetch("http://localhost:8000/", {
         method: "POST",  
         headers: {

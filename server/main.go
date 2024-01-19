@@ -4,10 +4,10 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"globe-and-citizen/layer8/proxy/config"
-	"globe-and-citizen/layer8/proxy/handlers"
-	"globe-and-citizen/layer8/proxy/internals/repository"
-	"globe-and-citizen/layer8/proxy/internals/usecases"
+	"globe-and-citizen/layer8/server/config"
+	"globe-and-citizen/layer8/server/handlers"
+	"globe-and-citizen/layer8/server/internals/repository"
+	"globe-and-citizen/layer8/server/internals/usecases"
 	"io/fs"
 	"log"
 	"net/http"
@@ -15,12 +15,12 @@ import (
 	"strconv"
 	"strings"
 
-	Ctl "globe-and-citizen/layer8/proxy/resource_server/controller"
+	Ctl "globe-and-citizen/layer8/server/resource_server/controller"
 
 	"github.com/joho/godotenv"
 )
 
-//go:embed dist/*
+// go:embed dist
 var StaticFiles embed.FS
 
 var workingDirectory string
@@ -89,6 +89,8 @@ func Server(port int) {
 			// Authorization Server endpoints
 			case path == "/login":
 				handlers.Login(w, r)
+			// case path == "/register":
+			// 	handlers.Register(w, r)
 			case path == "/authorize":
 				handlers.Authorize(w, r)
 			case path == "/error":
@@ -103,6 +105,12 @@ func Server(port int) {
 			// Resource Server endpoints
 			case path == "/api/v1/register-user":
 				Ctl.RegisterUserHandler(w, r)
+			case path == "/api/v1/register-client":
+				Ctl.RegisterClientHandler(w, r)
+			case path == "/register":
+				Ctl.ClientHandler(w, r)
+			case path == "/api/v1/getClient":
+				Ctl.GetClientData(w, r)
 			case path == "/api/v1/login-precheck":
 				Ctl.LoginPrecheckHandler(w, r)
 			case path == "/api/v1/login-user":
@@ -122,6 +130,8 @@ func Server(port int) {
 			// Proxy Server endpoints
 			case path == "/":
 				Ctl.IndexHandler(w, r)
+			case path == "/user":
+				Ctl.UserHandler(w, r)
 			case path == "/init-tunnel":
 				handlers.InitTunnel(w, r)
 			case path == "/error":

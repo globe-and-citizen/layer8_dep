@@ -2,7 +2,7 @@ package usecases
 
 import (
 	"fmt"
-	"globe-and-citizen/layer8/proxy/models"
+	"globe-and-citizen/layer8/server/models"
 )
 
 func (u *UseCase) GetClient(id string) (*models.Client, error) {

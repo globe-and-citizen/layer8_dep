@@ -58,6 +58,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 		// fmt.Println("header pairs going to SP: ", k, v)
 	}
 
+	req.Header["x-tunnel"] = []string{"true"}
 	req.Header["mp_jwt"] = []string{mpJWT}
 
 	fmt.Println("req.Header: ", req.Header)
@@ -169,6 +170,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 		req.Header[k] = v
 		fmt.Println("header pairs from client (Interceptor): ", k, v)
 	}
+	req.Header["x-tunnel"] = []string{"true"}
 
 	// Get up_JWT from request header and verify it
 	upJWT := r.Header.Get("up_JWT") // RAVI!

@@ -1,4 +1,4 @@
-module globe-and-citizen/layer8/proxy
+module globe-and-citizen/layer8/server
 
 go 1.21.4
 

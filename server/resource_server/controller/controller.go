@@ -11,10 +11,10 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 
-	"globe-and-citizen/layer8/proxy/resource_server/config"
-	"globe-and-citizen/layer8/proxy/resource_server/dto"
-	"globe-and-citizen/layer8/proxy/resource_server/models"
-	"globe-and-citizen/layer8/proxy/resource_server/utils"
+	"globe-and-citizen/layer8/server/config"
+	"globe-and-citizen/layer8/server/resource_server/dto"
+	"globe-and-citizen/layer8/server/resource_server/models"
+	"globe-and-citizen/layer8/server/resource_server/utils"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -38,21 +38,57 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	getPwd()
-	var relativePathFavicon = "dist/index.html"
-	faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
-	fmt.Println("faviconPath: ", faviconPath)
-	if r.URL.Path == "/favicon.ico" {
-		http.ServeFile(w, r, faviconPath)
-		return
-	}
-	var relativePathIndex = "dist/index.html"
+	// var relativePathFavicon = "dist/index.html"
+	// faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
+	// fmt.Println("faviconPath: ", faviconPath)
+	// if r.URL.Path == "/favicon.ico" {
+	// 	http.ServeFile(w, r, faviconPath)
+	// 	return
+	// }
+
+	var relativePathIndex = "assets-v1/templates/homeView.html"
 	indexPath := filepath.Join(workingDirectory, relativePathIndex)
 	fmt.Println("indexPath: ", indexPath)
-	indexPath2 := filepath.Join(workingDirectory, "dist/index.html")
-	// http.ServeFile(w, r, "C:\\Ottawa_DT_Dev\\Learning_Computers\\layer8\\resource_server\\frontend\\dist\\index.html")
-	fmt.Println("indexPath: ", indexPath2)
-	http.ServeFile(w, r, indexPath2)
+	http.ServeFile(w, r, indexPath)
 
+}
+
+func UserHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintln(w, http.StatusText(http.StatusMethodNotAllowed))
+		return
+	}
+
+	getPwd()
+	// var relativePathFavicon = "dist/index.html"
+	// faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
+	// fmt.Println("faviconPath: ", faviconPath)
+	// if r.URL.Path == "/favicon.ico" {
+	// 	http.ServeFile(w, r, faviconPath)
+	// 	return
+	// }
+
+	var relativePathUser = "assets-v1/templates/userView.html"
+	userPath := filepath.Join(workingDirectory, relativePathUser)
+	fmt.Println("userPath: ", userPath)
+	http.ServeFile(w, r, userPath)
+}
+func ClientHandler(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintln(w, http.StatusText(http.StatusMethodNotAllowed))
+		return
+	}
+
+	getPwd()
+
+	var relativePathUser = "assets-v1/templates/registerClient.html"
+	userPath := filepath.Join(workingDirectory, relativePathUser)
+	fmt.Println("userPath: ", userPath)
+	http.ServeFile(w, r, userPath)
 }
 
 // RegisterUserHandler handles user registration requests
@@ -81,10 +117,6 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 	rmSalt := utils.GenerateRandomSalt(utils.SaltSize)
 	HashedAndSaltedPass := utils.SaltAndHashPassword(req.Password, rmSalt)
 
-	// Make connection to database
-	db := config.SetupDatabaseConnection()
-	// Close connection database
-	defer config.CloseDatabaseConnection(db)
 	// Save user to database
 	user := models.User{
 		Email:     req.Email,
@@ -94,7 +126,7 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		LastName:  req.LastName,
 		Salt:      rmSalt,
 	}
-	if err := db.Create(&user).Error; err != nil {
+	if err := config.DB.Create(&user).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to register user", err.Error(), utils.EmptyObj{})
 		if err := json.NewEncoder(w).Encode(res); err != nil {
@@ -119,8 +151,8 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 			Value:  req.DisplayName,
 		},
 	}
-	if err := db.Create(&userMetadata).Error; err != nil {
-		db.Delete(&user)
+	if err := config.DB.Create(&userMetadata).Error; err != nil {
+		config.DB.Delete(&user)
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to register user", err.Error(), utils.EmptyObj{})
 		json.NewEncoder(w).Encode(res)
@@ -132,6 +164,44 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to register user", err.Error(), utils.EmptyObj{})
 		json.NewEncoder(w).Encode(res)
+		return
+	}
+}
+
+//Register Client
+func RegisterClientHandler(w http.ResponseWriter, r *http.Request) {
+	var req dto.RegisterClientDTO
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		handleError(w, http.StatusBadRequest, "Failed to register client", err)
+		return
+	}
+
+	if err := validator.New().Struct(req); err != nil {
+		handleError(w, http.StatusBadRequest, "Failed to register client", err)
+		return
+	}
+
+	clientUUID := utils.GenerateUUID()
+	clientSecret := utils.GenerateSecret(utils.SecretSize)
+
+	// db := config.SetupDatabaseConnection()
+	// defer config.CloseDatabaseConnection(db)
+
+	client := models.Client{
+		ID: clientUUID,
+		Secret: clientSecret,
+		Name: req.Name,
+		RedirectURI: req.RedirectURI,
+	}
+
+	if err := config.DB.Create(&client).Error; err != nil {
+		handleError(w, http.StatusBadRequest, "Failed to register client", err)
+		return
+	}
+
+	res := utils.BuildResponse(true, "OK!", "Client registered successfully")
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		handleError(w, http.StatusBadRequest, "Failed to register client", err)
 		return
 	}
 }
@@ -158,13 +228,9 @@ func LoginPrecheckHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	// Make connection to database
-	db := config.SetupDatabaseConnection()
-	// Close connection database
-	defer config.CloseDatabaseConnection(db)
 	// Using the username, find the user in the database
 	var user models.User
-	if err := db.Where("username = ?", req.Username).First(&user).Error; err != nil {
+	if err := config.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to perform login precheck", err.Error(), utils.EmptyObj{})
 		if err := json.NewEncoder(w).Encode(res); err != nil {
@@ -205,13 +271,9 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	// Make connection to database
-	db := config.SetupDatabaseConnection()
-	// Close connection database
-	defer config.CloseDatabaseConnection(db)
 	// Using the username, find the user in the database
 	var user models.User
-	if err := db.Where("username = ?", req.Username).First(&user).Error; err != nil {
+	if err := config.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to login user", err.Error(), utils.EmptyObj{})
 		if err := json.NewEncoder(w).Encode(res); err != nil {
@@ -296,10 +358,8 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := config.SetupDatabaseConnection()
-	defer config.CloseDatabaseConnection(db)
 	var user models.User
-	if err := db.Where("id = ?", claims.UserID).First(&user).Error; err != nil {
+	if err := config.DB.Where("id = ?", claims.UserID).First(&user).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to get user profile", err.Error(), utils.EmptyObj{})
 		if err := json.NewEncoder(w).Encode(res); err != nil {
@@ -310,7 +370,7 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Get user metadata from the database
 	var userMetadata []models.UserMetadata
-	if err := db.Where("user_id = ?", claims.UserID).Find(&userMetadata).Error; err != nil {
+	if err := config.DB.Where("user_id = ?", claims.UserID).Find(&userMetadata).Error; err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to get user profile", err.Error(), utils.EmptyObj{})
 		json.NewEncoder(w).Encode(res)
@@ -344,6 +404,30 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+func GetClientData(w http.ResponseWriter, r *http.Request) {
+	clientName := r.Header.Get("Name")
+
+	// db := config.SetupDatabaseConnection()
+	// defer config.CloseDatabaseConnection(db)
+	
+	var client models.Client
+	if err := config.DB.Where("name = ?", clientName).First(&client).Error; err != nil {
+		handleError(w, http.StatusBadRequest, "Failed to get client profile", err)
+		return
+	}
+
+	resp := models.ClientResponseOutput{
+		ID:     client.ID,
+		Secret:  client.Secret,
+		Name: client.Name,
+		RedirectURI:  client.RedirectURI,
+	}
+
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		handleError(w, http.StatusBadRequest, "Failed to get client profile", err)
+		return
+	}
+}
 
 func VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -370,10 +454,7 @@ func VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := config.SetupDatabaseConnection()
-	defer config.CloseDatabaseConnection(db)
-
-	err = db.Model(&models.UserMetadata{}).Where("user_id = ? AND key = ?", claims.UserID, "email_verified").Update("value", "true").Error
+	err = config.DB.Model(&models.UserMetadata{}).Where("user_id = ? AND key = ?", claims.UserID, "email_verified").Update("value", "true").Error
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to verify email", err.Error(), utils.EmptyObj{})
@@ -431,10 +512,7 @@ func UpdateDisplayNameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db := config.SetupDatabaseConnection()
-	defer config.CloseDatabaseConnection(db)
-
-	err = db.Model(&models.UserMetadata{}).Where("user_id = ? AND key = ?", claims.UserID, "display_name").Update("value", req.DisplayName).Error
+	err = config.DB.Model(&models.UserMetadata{}).Where("user_id = ? AND key = ?", claims.UserID, "display_name").Update("value", req.DisplayName).Error
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to update display name", err.Error(), utils.EmptyObj{})
@@ -450,3 +528,12 @@ func UpdateDisplayNameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func handleError(w http.ResponseWriter, status int, message string, err error) {
+	w.WriteHeader(status)
+	res := utils.BuildErrorResponse(message, err.Error(), utils.EmptyObj{})
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf("Error sending response: %v", err)
+	}
+}
+

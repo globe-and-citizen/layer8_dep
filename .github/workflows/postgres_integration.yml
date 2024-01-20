@@ -10,6 +10,9 @@ on:
       - development
       - master
   push:
+    branches:
+      - stravid87/postgres-action
+
 
 jobs:
   # Label of the runner job
@@ -27,7 +30,6 @@ jobs:
         env:
           POSTGRES_PASSWORD: 1234
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
           POSTGRES_DBNAME: postgres # local_rs
 
         # Set health checks to wait until postgres has started

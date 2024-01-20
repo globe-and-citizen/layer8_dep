@@ -7,6 +7,7 @@ require (
 	github.com/globe-and-citizen/layer8-utils v0.0.0-20230927121854-b5403af080d8
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/google/uuid v1.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/xdg-go/pbkdf2 v1.0.0

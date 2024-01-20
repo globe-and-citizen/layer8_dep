@@ -17,7 +17,7 @@ var (
 
 func InitDB() {
 	errEnv := godotenv.Load()
-	if errEnv != nil {
+	if errEnv != nil && os.Getenv("ENVIRONMENT") != "testing" {
 		panic(errEnv)
 	}
 

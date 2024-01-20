@@ -10,6 +10,9 @@ on:
       - development
       - master
   push:
+    branches:
+      - stravid87/postgres-action
+
 
 jobs:
   # Label of the runner job
@@ -27,7 +30,6 @@ jobs:
         env:
           POSTGRES_PASSWORD: 1234
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
           POSTGRES_DBNAME: postgres # local_rs
 
         # Set health checks to wait until postgres has started
@@ -50,6 +52,20 @@ jobs:
           go-version: '1.21'
       - name: "Run Unit Tests"
         run: go test -v globe-and-citizen/layer8/server
+        env: 
+          ENVIRONMENT: "testing"
+          DB_PORT: 5432 # YOUR DB MAY DIFFER!
+          DB_USER: postgres
+          DB_USER: postgres # YOUR DB MAY DIFFER!
+          DB_PASS: 1234 # YOUR DB MAY DIFFER!
+          DB_NAME: postgres # YOUR DB MAY DIFFER!
+          SSL_MODE: disable
+          SSL_ROOT_CERT: 
+          DB_HOST: localhost
+          JWT_SECRET_KEY: secret
+          SERVER_PORT: 5001
+          UP_999_SECRET_KEY: 
+          MP_123_SECRET_KEY: 
 
       # # Performs a clean installation of all dependencies in the `package.json` file
       # # For more information, see https://docs.npmjs.com/cli/ci.html

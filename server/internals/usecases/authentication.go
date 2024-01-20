@@ -2,9 +2,9 @@ package usecases
 
 import (
 	"fmt"
-	"globe-and-citizen/layer8/proxy/config"
-	"globe-and-citizen/layer8/proxy/models"
-	"globe-and-citizen/layer8/proxy/utils"
+	"globe-and-citizen/layer8/server/config"
+	"globe-and-citizen/layer8/server/models"
+	"globe-and-citizen/layer8/server/utils"
 
 	utilities "github.com/globe-and-citizen/layer8-utils"
 )

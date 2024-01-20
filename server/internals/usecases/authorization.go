@@ -3,8 +3,8 @@ package usecases
 import (
 	"encoding/json"
 	"fmt"
-	"globe-and-citizen/layer8/proxy/constants"
-	"globe-and-citizen/layer8/proxy/entities"
+	"globe-and-citizen/layer8/server/constants"
+	"globe-and-citizen/layer8/server/entities"
 	"strings"
 	"time"
 

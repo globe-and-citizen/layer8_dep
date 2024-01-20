@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"globe-and-citizen/layer8/proxy/config"
-	"globe-and-citizen/layer8/proxy/models"
+	"globe-and-citizen/layer8/server/config"
+	"globe-and-citizen/layer8/server/models"
 	"strings"
 	"time"
 

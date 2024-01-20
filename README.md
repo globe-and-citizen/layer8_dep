@@ -50,7 +50,7 @@ CREATE TABLE user_metadata (
 2) Install the GNU Make utility program by running `$winget install GnuWin32.Make`. You will need to add `C:\Program Files (x86)\GnuWin32\bin` to your environment Path variable.
 
 ## Run the sp_mock frontend & backend
-1) In any terminal, run make `$make npm_instal_all`
+1) In any terminal, run make `$make npm_install_all`
 2) In any terminal, run make `$make go_mod_tidy_all`
 3) In a bash terminal, run make `$make build_middleware`
 4) Clone `.env.dev` to `.env` in `sp_mock/backend`

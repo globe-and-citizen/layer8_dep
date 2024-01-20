@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"globe-and-citizen/layer8/proxy/internals/usecases"
+	"globe-and-citizen/layer8/server/internals/usecases"
 	"log"
 	"net/http"
 	"strings"

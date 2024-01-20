@@ -7,9 +7,11 @@ import (
 	"strings"
 
 	"github.com/xdg-go/pbkdf2"
+	"github.com/google/uuid"
 )
 
 const SaltSize = 32
+const SecretSize = 32
 
 // Response is used for static shape json return
 type Response struct {
@@ -62,4 +64,21 @@ func BuildErrorResponse(message string, err string, data interface{}) Response {
 	}
 
 	return res
+}
+
+func GenerateUUID() string {
+	newUUID := uuid.New()
+
+	return newUUID.String()
+}
+func GenerateSecret(secretSize int) string {
+	var randomBytes = make([]byte, secretSize)
+
+	_, err := rand.Read(randomBytes[:])
+
+	if err != nil {
+		panic(err)
+	}
+
+	return hex.EncodeToString(randomBytes[:])
 }

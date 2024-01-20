@@ -44,22 +44,28 @@ jobs:
       # Downloads a copy of the code in your repository before running CI tests
       - name: Check out repository code
         uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.21'
+      - name: "Run Unit Tests"
+        run: go test -v globe-and-citizen/layer8/server
 
-      # Performs a clean installation of all dependencies in the `package.json` file
-      # For more information, see https://docs.npmjs.com/cli/ci.html
-      - name: Install dependencies
-        run: npm ci
+      # # Performs a clean installation of all dependencies in the `package.json` file
+      # # For more information, see https://docs.npmjs.com/cli/ci.html
+      # - name: Install dependencies
+      #   run: npm ci
 
-      - name: Connect to PostgreSQL
-        # Runs a script that creates a PostgreSQL table, populates
-        # the table with data, and then retrieves the data
-        run: node client.js
-        # Environment variables used by the `client.js` script to create
-        # a new PostgreSQL table.
-        env:
-          # The hostname used to communicate with the PostgreSQL service container
-          POSTGRES_HOST: localhost
-          # The default PostgreSQL port
-          POSTGRES_PORT: 5432
+      # - name: Connect to PostgreSQL
+      #   # Runs a script that creates a PostgreSQL table, populates
+      #   # the table with data, and then retrieves the data
+      #   run: node client.js
+      #   # Environment variables used by the `client.js` script to create
+      #   # a new PostgreSQL table.
+      #   env:
+      #     # The hostname used to communicate with the PostgreSQL service container
+      #     POSTGRES_HOST: localhost
+      #     # The default PostgreSQL port
+      #     POSTGRES_PORT: 5432
 
 

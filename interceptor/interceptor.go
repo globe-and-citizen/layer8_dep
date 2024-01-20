@@ -124,7 +124,7 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 		// ProxyURL := fmt.Sprintf("%s/init-tunnel?backend=%s", Layer8LightsailURL, backend)
 		fmt.Println(ProxyURL)
 		client := &http.Client{}
-		req, err := http.NewRequest("GET", ProxyURL, bytes.NewBuffer([]byte{}))
+		req, err := http.NewRequest("POST", ProxyURL, bytes.NewBuffer([]byte(b64PubJWK)))
 		if err != nil {
 			fmt.Println(err.Error())
 			ETunnelFlag = false

@@ -4,7 +4,9 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/hex"
+	"encoding/json"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 
@@ -76,6 +78,14 @@ func BuildErrorResponse(message string, err string, data interface{}) Response {
 	}
 
 	return res
+}
+
+func HandleError(w http.ResponseWriter, status int, message string, err error) {
+	w.WriteHeader(status)
+	res := BuildErrorResponse(message, err.Error(), EmptyObj{})
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		log.Printf("Error sending response: %v", err)
+	}
 }
 
 func GenerateUUID() string {

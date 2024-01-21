@@ -116,24 +116,24 @@ func Server(port int, service interfaces.IService) {
 				Ctl.IndexHandler(w, r)
 			case path == "/user":
 				Ctl.UserHandler(w, r)
+			case path == "/register":
+				Ctl.ClientHandler(w, r)
 			case path == "/api/v1/register-user":
 				Ctl.RegisterUserHandler(w, r, service)
 			case path == "/api/v1/register-client":
-				Ctl.RegisterClientHandler(w, r)
-			case path == "/register":
-				Ctl.ClientHandler(w, r)
+				Ctl.RegisterClientHandler(w, r, service)
 			case path == "/api/v1/getClient":
-				Ctl.GetClientData(w, r)
+				Ctl.GetClientData(w, r, service)
 			case path == "/api/v1/login-precheck":
-				Ctl.LoginPrecheckHandler(w, r)
+				Ctl.LoginPrecheckHandler(w, r, service)
 			case path == "/api/v1/login-user":
-				Ctl.LoginUserHandler(w, r)
+				Ctl.LoginUserHandler(w, r, service)
 			case path == "/api/v1/profile":
-				Ctl.ProfileHandler(w, r)
+				Ctl.ProfileHandler(w, r, service)
 			case path == "/api/v1/verify-email":
-				Ctl.VerifyEmailHandler(w, r)
+				Ctl.VerifyEmailHandler(w, r, service)
 			case path == "/api/v1/change-display-name":
-				Ctl.UpdateDisplayNameHandler(w, r)
+				Ctl.UpdateDisplayNameHandler(w, r, service)
 			case path == "/favicon.ico":
 				faviconPath := workingDirectory + "/dist/favicon.ico"
 				http.ServeFile(w, r, faviconPath)

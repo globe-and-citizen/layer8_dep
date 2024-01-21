@@ -99,23 +99,20 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request, service interfa
 }
 
 // Register Client
-func RegisterClientHandler(w http.ResponseWriter, r *http.Request) {
+func RegisterClientHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
 	var req dto.RegisterClientDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		handleError(w, http.StatusBadRequest, "Failed to register client", err)
+		utils.HandleError(w, http.StatusBadRequest, "Failed to register client", err)
 		return
 	}
 
 	if err := validator.New().Struct(req); err != nil {
-		handleError(w, http.StatusBadRequest, "Failed to register client", err)
+		utils.HandleError(w, http.StatusBadRequest, "Failed to register client", err)
 		return
 	}
 
 	clientUUID := utils.GenerateUUID()
 	clientSecret := utils.GenerateSecret(utils.SecretSize)
-
-	// db := config.SetupDatabaseConnection()
-	// defer config.CloseDatabaseConnection(db)
 
 	client := models.Client{
 		ID:          clientUUID,
@@ -125,19 +122,19 @@ func RegisterClientHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := config.DB.Create(&client).Error; err != nil {
-		handleError(w, http.StatusBadRequest, "Failed to register client", err)
+		utils.HandleError(w, http.StatusBadRequest, "Failed to register client", err)
 		return
 	}
 
 	res := utils.BuildResponse(true, "OK!", "Client registered successfully")
 	if err := json.NewEncoder(w).Encode(res); err != nil {
-		handleError(w, http.StatusBadRequest, "Failed to register client", err)
+		utils.HandleError(w, http.StatusBadRequest, "Failed to register client", err)
 		return
 	}
 }
 
 // LoginPrecheckHandler handles login precheck requests and get the salt of the user from the database using the username from the request URL
-func LoginPrecheckHandler(w http.ResponseWriter, r *http.Request) {
+func LoginPrecheckHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
 
 	var req dto.LoginPrecheckDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -180,7 +177,7 @@ func LoginPrecheckHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
+func LoginUserHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
 
 	var req dto.LoginUserDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -259,7 +256,7 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func ProfileHandler(w http.ResponseWriter, r *http.Request) {
+func ProfileHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
 
 	// Get the token from the request header
 	tokenString := r.Header.Get("Authorization")
@@ -334,15 +331,12 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-func GetClientData(w http.ResponseWriter, r *http.Request) {
+func GetClientData(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
 	clientName := r.Header.Get("Name")
-
-	// db := config.SetupDatabaseConnection()
-	// defer config.CloseDatabaseConnection(db)
 
 	var client models.Client
 	if err := config.DB.Where("name = ?", clientName).First(&client).Error; err != nil {
-		handleError(w, http.StatusBadRequest, "Failed to get client profile", err)
+		utils.HandleError(w, http.StatusBadRequest, "Failed to get client profile", err)
 		return
 	}
 
@@ -354,12 +348,12 @@ func GetClientData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		handleError(w, http.StatusBadRequest, "Failed to get client profile", err)
+		utils.HandleError(w, http.StatusBadRequest, "Failed to get client profile", err)
 		return
 	}
 }
 
-func VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
+func VerifyEmailHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
 
 	// Get the token from the request header
 	tokenString := r.Header.Get("Authorization")
@@ -401,7 +395,7 @@ func VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func UpdateDisplayNameHandler(w http.ResponseWriter, r *http.Request) {
+func UpdateDisplayNameHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
 
 	var req dto.UpdateDisplayNameDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -456,13 +450,5 @@ func UpdateDisplayNameHandler(w http.ResponseWriter, r *http.Request) {
 		res := utils.BuildErrorResponse("Failed to update display name", err.Error(), utils.EmptyObj{})
 		json.NewEncoder(w).Encode(res)
 		return
-	}
-}
-
-func handleError(w http.ResponseWriter, status int, message string, err error) {
-	w.WriteHeader(status)
-	res := utils.BuildErrorResponse(message, err.Error(), utils.EmptyObj{})
-	if err := json.NewEncoder(w).Encode(res); err != nil {
-		log.Printf("Error sending response: %v", err)
 	}
 }

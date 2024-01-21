@@ -20,16 +20,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-var workingDirectory string
-
-func getPwd() {
-	dir, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	workingDirectory = dir
-}
-
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
@@ -38,17 +28,10 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	getPwd()
-	// var relativePathFavicon = "dist/index.html"
-	// faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
-	// fmt.Println("faviconPath: ", faviconPath)
-	// if r.URL.Path == "/favicon.ico" {
-	// 	http.ServeFile(w, r, faviconPath)
-	// 	return
-	// }
+	utils.GetPwd()
 
 	var relativePathIndex = "assets-v1/templates/homeView.html"
-	indexPath := filepath.Join(workingDirectory, relativePathIndex)
+	indexPath := filepath.Join(utils.WorkingDirectory, relativePathIndex)
 	fmt.Println("indexPath: ", indexPath)
 	http.ServeFile(w, r, indexPath)
 
@@ -62,17 +45,10 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	getPwd()
-	// var relativePathFavicon = "dist/index.html"
-	// faviconPath := filepath.Join(workingDirectory, relativePathFavicon)
-	// fmt.Println("faviconPath: ", faviconPath)
-	// if r.URL.Path == "/favicon.ico" {
-	// 	http.ServeFile(w, r, faviconPath)
-	// 	return
-	// }
+	utils.GetPwd()
 
 	var relativePathUser = "assets-v1/templates/userView.html"
-	userPath := filepath.Join(workingDirectory, relativePathUser)
+	userPath := filepath.Join(utils.WorkingDirectory, relativePathUser)
 	fmt.Println("userPath: ", userPath)
 	http.ServeFile(w, r, userPath)
 }
@@ -84,10 +60,10 @@ func ClientHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	getPwd()
+	utils.GetPwd()
 
 	var relativePathUser = "assets-v1/templates/registerClient.html"
-	userPath := filepath.Join(workingDirectory, relativePathUser)
+	userPath := filepath.Join(utils.WorkingDirectory, relativePathUser)
 	fmt.Println("userPath: ", userPath)
 	http.ServeFile(w, r, userPath)
 }

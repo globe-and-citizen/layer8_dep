@@ -4,14 +4,18 @@ import (
 	"crypto/rand"
 	"crypto/sha1"
 	"encoding/hex"
+	"log"
+	"os"
 	"strings"
 
-	"github.com/xdg-go/pbkdf2"
 	"github.com/google/uuid"
+	"github.com/xdg-go/pbkdf2"
 )
 
 const SaltSize = 32
 const SecretSize = 32
+
+var WorkingDirectory string
 
 // Response is used for static shape json return
 type Response struct {
@@ -22,6 +26,14 @@ type Response struct {
 }
 
 type EmptyObj struct{}
+
+func GetPwd() {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	WorkingDirectory = dir
+}
 
 func GenerateRandomSalt(saltSize int) string {
 	var salt = make([]byte, saltSize)

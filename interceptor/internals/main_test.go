@@ -50,16 +50,16 @@ func TestClientDo(t *testing.T) {
 		})
 	)
 
-	// generate a key pair for the server
 	var sharedkey *utils.JWK
+	
+	// generate a key pair for the server
 	sPri, sPub, err := utils.GenerateKeyPair(utils.ECDH)
 	assert.NoError(t, err)
 	assert.NotNil(t, sPri)
 	assert.NotNil(t, sPub)
 
 	// Create a mock server
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
+	mockProxyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/init-tunnel":
 			token, err := genToken("mock_secret")
@@ -144,7 +144,7 @@ func TestClientDo(t *testing.T) {
 			w.Write(resData)
 		}
 	}))
-	defer mockServer.Close()
+	defer mockProxyServer.Close()
 
 	// init tunnel
 	pri, pub, err := utils.GenerateKeyPair(utils.ECDH)
@@ -159,7 +159,7 @@ func TestClientDo(t *testing.T) {
 	uuid := uuid.New().String()
 
 	iClient := &http.Client{}
-	iReq, err := http.NewRequest("GET", mockServer.URL+"/init-tunnel", nil)
+	iReq, err := http.NewRequest("GET", mockProxyServer.URL+"/init-tunnel", nil)
 	assert.NoError(t, err)
 
 	iReq.Header.Add("x-ecdh-init", b64)
@@ -186,7 +186,7 @@ func TestClientDo(t *testing.T) {
 
 	// tunnel
 	client := &Client{
-		proxyURL: mockServer.URL,
+		proxyURL: mockProxyServer.URL,
 	}
 
 	res := client.Do(RequestURL, utils.NewRequest(RequestMethod, RequestHeaders, RequestPayload), symmkey)

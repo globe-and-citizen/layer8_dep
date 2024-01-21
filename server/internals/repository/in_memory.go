@@ -2,7 +2,7 @@ package repository
 
 import (
 	"fmt"
-	"globe-and-citizen/layer8/proxy/models"
+	"globe-and-citizen/layer8/server/models"
 	"time"
 
 	uuid "github.com/google/uuid"

@@ -8,6 +8,8 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"globe-and-citizen/layer8/server/models"
 )
 
 var (
@@ -45,5 +47,49 @@ func InitDB() {
 	if err != nil {
 		panic(err)
 	}
+
 	DB = db
+
+	// Configure tables:
+	var user models.User
+	if err := DB.Where("username = ?", "").First(&user).Error; err != nil {
+		configureDatabase()
+	}
+}
+
+func configureDatabase() {
+	DB.Exec(`CREATE TABLE users (
+		id SERIAL PRIMARY KEY,
+		email VARCHAR(255) UNIQUE NOT NULL,
+		username VARCHAR(50) UNIQUE NOT NULL,
+		password VARCHAR(255) NOT NULL,
+		first_name VARCHAR(50) NOT NULL,
+		last_name VARCHAR(50) NOT NULL,
+		-- phone_number VARCHAR(50) NOT NULL,
+		-- address VARCHAR(255) NOT NULL,
+		-- email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+		-- phone_number_verified BOOLEAN NOT NULL DEFAULT FALSE,
+		-- location_verified BOOLEAN NOT NULL DEFAULT FALSE,
+		-- national_id_verified BOOLEAN NOT NULL DEFAULT FALSE,
+		salt VARCHAR(255) NOT NULL DEFAULT 'ThisIsARandomSalt123!@#',
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+	);`)
+
+	DB.Exec(`CREATE TABLE clients (
+		id VARCHAR(36) PRIMARY KEY,
+		secret VARCHAR NOT NULL,
+		name VARCHAR(255) NOT NULL,
+		redirect_uri VARCHAR(255) NOT NULL
+	);`)
+
+	DB.Exec(`CREATE TABLE user_metadata (
+		id SERIAL PRIMARY KEY,
+		user_id INTEGER NOT NULL,
+		key VARCHAR(255) NOT NULL,
+		value VARCHAR(255) NOT NULL,
+		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		FOREIGN KEY (user_id) REFERENCES users(id)
+	);`)
 }

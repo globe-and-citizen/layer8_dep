@@ -45,7 +45,7 @@ func GenerateStandardToken(secretKey string) (string, error) {
 }
 
 func B64ToJWK(userPubJWK string) (*JWK, error) {
-	userPubJWK_BS, err := base64.URLEncoding.DecodeString(userPubJWK)
+	userPubJWK_BS, err := base64.StdEncoding.DecodeString(userPubJWK)
 	if err != nil {
 		return nil, fmt.Errorf("Failure to decode userPubJWK", err.Error())
 	}

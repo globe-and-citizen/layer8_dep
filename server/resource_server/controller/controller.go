@@ -13,6 +13,7 @@ import (
 
 	"globe-and-citizen/layer8/server/config"
 	"globe-and-citizen/layer8/server/resource_server/dto"
+	"globe-and-citizen/layer8/server/resource_server/interfaces"
 	"globe-and-citizen/layer8/server/resource_server/models"
 	"globe-and-citizen/layer8/server/resource_server/utils"
 
@@ -92,7 +93,7 @@ func ClientHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // RegisterUserHandler handles user registration requests
-func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
+func RegisterUserHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
 
 	var req dto.RegisterUserDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -104,55 +105,8 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// validate request
-	if err := validator.New().Struct(req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		res := utils.BuildErrorResponse("Failed to register user", err.Error(), utils.EmptyObj{})
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.Printf("Error sending response: %v", err)
-		}
-		return
-	}
-
-	rmSalt := utils.GenerateRandomSalt(utils.SaltSize)
-	HashedAndSaltedPass := utils.SaltAndHashPassword(req.Password, rmSalt)
-
-	// Save user to database
-	user := models.User{
-		Email:     req.Email,
-		Username:  req.Username,
-		Password:  HashedAndSaltedPass,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Salt:      rmSalt,
-	}
-	if err := config.DB.Create(&user).Error; err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		res := utils.BuildErrorResponse("Failed to register user", err.Error(), utils.EmptyObj{})
-		if err := json.NewEncoder(w).Encode(res); err != nil {
-			log.Printf("Error sending response: %v", err)
-		}
-		return
-	}
-	userMetadata := []models.UserMetadata{
-		{
-			UserID: user.ID,
-			Key:    "email_verified",
-			Value:  "false",
-		},
-		{
-			UserID: user.ID,
-			Key:    "country",
-			Value:  req.Country,
-		},
-		{
-			UserID: user.ID,
-			Key:    "display_name",
-			Value:  req.DisplayName,
-		},
-	}
-	if err := config.DB.Create(&userMetadata).Error; err != nil {
-		config.DB.Delete(&user)
+	err := service.RegisterUser(req)
+	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		res := utils.BuildErrorResponse("Failed to register user", err.Error(), utils.EmptyObj{})
 		json.NewEncoder(w).Encode(res)
@@ -168,7 +122,7 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//Register Client
+// Register Client
 func RegisterClientHandler(w http.ResponseWriter, r *http.Request) {
 	var req dto.RegisterClientDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -188,9 +142,9 @@ func RegisterClientHandler(w http.ResponseWriter, r *http.Request) {
 	// defer config.CloseDatabaseConnection(db)
 
 	client := models.Client{
-		ID: clientUUID,
-		Secret: clientSecret,
-		Name: req.Name,
+		ID:          clientUUID,
+		Secret:      clientSecret,
+		Name:        req.Name,
 		RedirectURI: req.RedirectURI,
 	}
 
@@ -409,7 +363,7 @@ func GetClientData(w http.ResponseWriter, r *http.Request) {
 
 	// db := config.SetupDatabaseConnection()
 	// defer config.CloseDatabaseConnection(db)
-	
+
 	var client models.Client
 	if err := config.DB.Where("name = ?", clientName).First(&client).Error; err != nil {
 		handleError(w, http.StatusBadRequest, "Failed to get client profile", err)
@@ -417,10 +371,10 @@ func GetClientData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := models.ClientResponseOutput{
-		ID:     client.ID,
-		Secret:  client.Secret,
-		Name: client.Name,
-		RedirectURI:  client.RedirectURI,
+		ID:          client.ID,
+		Secret:      client.Secret,
+		Name:        client.Name,
+		RedirectURI: client.RedirectURI,
 	}
 
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
@@ -536,4 +490,3 @@ func handleError(w http.ResponseWriter, status int, message string, err error) {
 		log.Printf("Error sending response: %v", err)
 	}
 }
-

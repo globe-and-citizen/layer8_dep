@@ -16,6 +16,11 @@ import (
 	"strings"
 
 	Ctl "globe-and-citizen/layer8/server/resource_server/controller"
+	"globe-and-citizen/layer8/server/resource_server/interfaces"
+
+	repo "globe-and-citizen/layer8/server/resource_server/repository"
+
+	svc "globe-and-citizen/layer8/server/resource_server/service"
 
 	"github.com/joho/godotenv"
 )
@@ -49,11 +54,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	Server(proxyServerPortInt)
+	// Register repository
+	repository := repo.NewRepository(config.DB)
+
+	// Register service(usecase)
+	service := svc.NewService(repository)
+
+	Server(proxyServerPortInt, service)
 
 }
 
-func Server(port int) {
+func Server(port int, service interfaces.IService) {
 
 	repo, err := repository.CreateRepository("postgres")
 	if err != nil {
@@ -89,8 +100,6 @@ func Server(port int) {
 			// Authorization Server endpoints
 			case path == "/login":
 				handlers.Login(w, r)
-			// case path == "/register":
-			// 	handlers.Register(w, r)
 			case path == "/authorize":
 				handlers.Authorize(w, r)
 			case path == "/error":
@@ -108,7 +117,7 @@ func Server(port int) {
 			case path == "/user":
 				Ctl.UserHandler(w, r)
 			case path == "/api/v1/register-user":
-				Ctl.RegisterUserHandler(w, r)
+				Ctl.RegisterUserHandler(w, r, service)
 			case path == "/api/v1/register-client":
 				Ctl.RegisterClientHandler(w, r)
 			case path == "/register":

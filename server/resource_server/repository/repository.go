@@ -63,3 +63,66 @@ func (r *Repository) RegisterUser(req dto.RegisterUserDTO) error {
 
 	return nil
 }
+
+func (r *Repository) RegisterClient(req dto.RegisterClientDTO) error {
+
+	clientUUID := utils.GenerateUUID()
+	clientSecret := utils.GenerateSecret(utils.SecretSize)
+
+	client := models.Client{
+		ID:          clientUUID,
+		Secret:      clientSecret,
+		Name:        req.Name,
+		RedirectURI: req.RedirectURI,
+	}
+
+	if err := config.DB.Create(&client).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repository) GetClientData(clientName string) (models.Client, error) {
+	var client models.Client
+	if err := config.DB.Where("name = ?", clientName).First(&client).Error; err != nil {
+		return models.Client{}, err
+	}
+	return client, nil
+}
+
+func (r *Repository) LoginPreCheckUser(req dto.LoginPrecheckDTO) (string, string, error) {
+	var user models.User
+	if err := config.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
+		return "", "", err
+	}
+	return user.Username, user.Salt, nil
+}
+
+func (r *Repository) LoginUser(req dto.LoginUserDTO) (models.User, error) {
+	var user models.User
+	if err := config.DB.Where("username = ?", req.Username).First(&user).Error; err != nil {
+		return models.User{}, err
+	}
+	return user, nil
+}
+
+func (r *Repository) ProfileUser(userID uint) (models.User, []models.UserMetadata, error) {
+	var user models.User
+	if err := config.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		return models.User{}, []models.UserMetadata{}, err
+	}
+	var userMetadata []models.UserMetadata
+	if err := config.DB.Where("user_id = ?", userID).Find(&userMetadata).Error; err != nil {
+		return models.User{}, []models.UserMetadata{}, err
+	}
+	return user, userMetadata, nil
+}
+
+func (r *Repository) VerifyEmail(userID uint) error {
+	return config.DB.Model(&models.UserMetadata{}).Where("user_id = ? AND key = ?", userID, "email_verified").Update("value", "true").Error
+}
+
+func (r *Repository) UpdateDisplayName(userID uint, req dto.UpdateDisplayNameDTO) error {
+	return config.DB.Model(&models.UserMetadata{}).Where("user_id = ? AND key = ?", userID, "display_name").Update("value", req.DisplayName).Error
+}

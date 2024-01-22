@@ -7,11 +7,11 @@ import (
 
 type IService interface {
 	RegisterUser(req dto.RegisterUserDTO) error
-	LoginPreCheckUser(req dto.LoginPrecheckDTO) error
-	LoginUser(req dto.LoginUserDTO) (string, error)
+	LoginPreCheckUser(req dto.LoginPrecheckDTO) (models.LoginPrecheckResponseOutput, error)
+	LoginUser(req dto.LoginUserDTO) (models.LoginUserResponseOutput, error)
 	ProfileUser(userID uint) (models.ProfileResponseOutput, error)
 	VerifyEmail(userID uint) error
 	UpdateDisplayName(userID uint, req dto.UpdateDisplayNameDTO) error
 	RegisterClient(req dto.RegisterClientDTO) error
-	GetClientData(clientName string) (models.Client, error)
+	GetClientData(clientName string) (models.ClientResponseOutput, error)
 }

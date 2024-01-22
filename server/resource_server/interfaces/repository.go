@@ -7,9 +7,9 @@ import (
 
 type IRepository interface {
 	RegisterUser(req dto.RegisterUserDTO) error
-	LoginPreCheckUser(req dto.LoginPrecheckDTO) error
-	LoginUser(req dto.LoginUserDTO) (string, error)
-	ProfileUser(userID uint) (models.ProfileResponseOutput, error)
+	LoginPreCheckUser(req dto.LoginPrecheckDTO) (string, string, error)
+	LoginUser(req dto.LoginUserDTO) (models.User, error)
+	ProfileUser(userID uint) (models.User, []models.UserMetadata, error)
 	VerifyEmail(userID uint) error
 	UpdateDisplayName(userID uint, req dto.UpdateDisplayNameDTO) error
 	RegisterClient(req dto.RegisterClientDTO) error

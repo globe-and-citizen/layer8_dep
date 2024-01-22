@@ -91,6 +91,7 @@ func Server(port int, service interfaces.IService) {
 			}
 
 			r = r.WithContext(context.WithValue(r.Context(), "usecase", usecase))
+			r = r.WithContext(context.WithValue(r.Context(), "service", service))
 
 			staticFS, _ := fs.Sub(StaticFiles, "dist")
 			httpFS := http.FileServer(http.FS(staticFS))
@@ -119,21 +120,21 @@ func Server(port int, service interfaces.IService) {
 			case path == "/register":
 				Ctl.ClientHandler(w, r)
 			case path == "/api/v1/register-user":
-				Ctl.RegisterUserHandler(w, r, service)
+				Ctl.RegisterUserHandler(w, r)
 			case path == "/api/v1/register-client":
-				Ctl.RegisterClientHandler(w, r, service)
+				Ctl.RegisterClientHandler(w, r)
 			case path == "/api/v1/getClient":
-				Ctl.GetClientData(w, r, service)
+				Ctl.GetClientData(w, r)
 			case path == "/api/v1/login-precheck":
-				Ctl.LoginPrecheckHandler(w, r, service)
+				Ctl.LoginPrecheckHandler(w, r)
 			case path == "/api/v1/login-user":
-				Ctl.LoginUserHandler(w, r, service)
+				Ctl.LoginUserHandler(w, r)
 			case path == "/api/v1/profile":
-				Ctl.ProfileHandler(w, r, service)
+				Ctl.ProfileHandler(w, r)
 			case path == "/api/v1/verify-email":
-				Ctl.VerifyEmailHandler(w, r, service)
+				Ctl.VerifyEmailHandler(w, r)
 			case path == "/api/v1/change-display-name":
-				Ctl.UpdateDisplayNameHandler(w, r, service)
+				Ctl.UpdateDisplayNameHandler(w, r)
 			case path == "/favicon.ico":
 				faviconPath := workingDirectory + "/dist/favicon.ico"
 				http.ServeFile(w, r, faviconPath)

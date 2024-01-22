@@ -59,15 +59,15 @@ func ClientHandler(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, userPath)
 }
 
-func RegisterUserHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
-
+func RegisterUserHandler(w http.ResponseWriter, r *http.Request) {
+	newService := r.Context().Value("service").(interfaces.IService)
 	var req dto.RegisterUserDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to get client profile", err)
 		return
 	}
 
-	err := service.RegisterUser(req)
+	err := newService.RegisterUser(req)
 	if err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to get client profile", err)
 		return
@@ -80,14 +80,15 @@ func RegisterUserHandler(w http.ResponseWriter, r *http.Request, service interfa
 	}
 }
 
-func RegisterClientHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
+func RegisterClientHandler(w http.ResponseWriter, r *http.Request) {
+	newService := r.Context().Value("service").(interfaces.IService)
 	var req dto.RegisterClientDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to register client", err)
 		return
 	}
 
-	err := service.RegisterClient(req)
+	err := newService.RegisterClient(req)
 	if err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to get client profile", err)
 		return
@@ -101,15 +102,15 @@ func RegisterClientHandler(w http.ResponseWriter, r *http.Request, service inter
 }
 
 // LoginPrecheckHandler handles login precheck requests and get the salt of the user from the database using the username from the request URL
-func LoginPrecheckHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
-
+func LoginPrecheckHandler(w http.ResponseWriter, r *http.Request) {
+	newService := r.Context().Value("service").(interfaces.IService)
 	var req dto.LoginPrecheckDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to get client profile", err)
 		return
 	}
 
-	loginPrecheckResp, err := service.LoginPreCheckUser(req)
+	loginPrecheckResp, err := newService.LoginPreCheckUser(req)
 	if err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to get client profile", err)
 		return
@@ -121,15 +122,15 @@ func LoginPrecheckHandler(w http.ResponseWriter, r *http.Request, service interf
 	}
 }
 
-func LoginUserHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
-
+func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
+	newService := r.Context().Value("service").(interfaces.IService)
 	var req dto.LoginUserDTO
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to get client profile", err)
 		return
 	}
 
-	tokenResp, err := service.LoginUser(req)
+	tokenResp, err := newService.LoginUser(req)
 	if err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to get client profile", err)
 		return
@@ -141,8 +142,8 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request, service interfaces
 	}
 }
 
-func ProfileHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
-
+func ProfileHandler(w http.ResponseWriter, r *http.Request) {
+	newService := r.Context().Value("service").(interfaces.IService)
 	tokenString := r.Header.Get("Authorization")
 	tokenString = tokenString[7:] // Remove the "Bearer " prefix
 	userID, err := utils.ValidateToken(tokenString)
@@ -151,7 +152,7 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request, service interfaces.I
 		return
 	}
 
-	profileResp, err := service.ProfileUser(userID)
+	profileResp, err := newService.ProfileUser(userID)
 	if err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to get user profile", err)
 		return
@@ -163,10 +164,11 @@ func ProfileHandler(w http.ResponseWriter, r *http.Request, service interfaces.I
 	}
 }
 
-func GetClientData(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
+func GetClientData(w http.ResponseWriter, r *http.Request) {
+	newService := r.Context().Value("service").(interfaces.IService)
 	clientName := r.Header.Get("Name")
 
-	clientModel, err := service.GetClientData(clientName)
+	clientModel, err := newService.GetClientData(clientName)
 	if err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to get client profile", err)
 		return
@@ -178,8 +180,8 @@ func GetClientData(w http.ResponseWriter, r *http.Request, service interfaces.IS
 	}
 }
 
-func VerifyEmailHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
-
+func VerifyEmailHandler(w http.ResponseWriter, r *http.Request) {
+	newService := r.Context().Value("service").(interfaces.IService)
 	tokenString := r.Header.Get("Authorization")
 	tokenString = tokenString[7:] // Remove the "Bearer " prefix
 	userID, err := utils.ValidateToken(tokenString)
@@ -188,7 +190,7 @@ func VerifyEmailHandler(w http.ResponseWriter, r *http.Request, service interfac
 		return
 	}
 
-	err = service.VerifyEmail(userID)
+	err = newService.VerifyEmail(userID)
 	if err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to verify email", err)
 		return
@@ -201,8 +203,8 @@ func VerifyEmailHandler(w http.ResponseWriter, r *http.Request, service interfac
 	}
 }
 
-func UpdateDisplayNameHandler(w http.ResponseWriter, r *http.Request, service interfaces.IService) {
-
+func UpdateDisplayNameHandler(w http.ResponseWriter, r *http.Request) {
+	newService := r.Context().Value("service").(interfaces.IService)
 	tokenString := r.Header.Get("Authorization")
 	tokenString = tokenString[7:] // Remove the "Bearer " prefix
 	userID, err := utils.ValidateToken(tokenString)
@@ -217,7 +219,7 @@ func UpdateDisplayNameHandler(w http.ResponseWriter, r *http.Request, service in
 		return
 	}
 
-	err = service.UpdateDisplayName(userID, req)
+	err = newService.UpdateDisplayName(userID, req)
 	if err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to update display name", err)
 		return

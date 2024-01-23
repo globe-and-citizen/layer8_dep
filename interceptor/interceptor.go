@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/interceptor/internals"
 
-	// "globe-and-citizen/layer8/utils" (Dep)
 	"net/http"
 	"strings"
 	"syscall/js"
@@ -38,9 +37,8 @@ var (
 var L8Client = internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port)
 
 func main() {
-	//fmt.Print("recompile please...")
 	// Create channel to keep the Go thread alive
-	c := make(chan struct{}, 0)
+	c := make(chan struct{})
 
 	// Initialize global variables
 	Layer8Version = "1.0.0"
@@ -59,12 +57,8 @@ func main() {
 		"testWASM":            js.FuncOf(testWASM),
 		"persistenceCheck":    js.FuncOf(persistenceCheck),
 		"InitEncryptedTunnel": js.FuncOf(initializeECDHTunnel),
-		// "genericPost":       js.FuncOf(genericPost),
-		"fetch": js.FuncOf(fetch),
+		"fetch":               js.FuncOf(fetch),
 	}))
-
-	// Initialize the encrypted tunnel
-	// initializeECDHTunnel()
 
 	// Developer Warnings:
 	fmt.Println("WARNING: wasm_exec.js is versioned and has some breaking changes. Ensure you are using the correct version.")
@@ -130,7 +124,7 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 		// ProxyURL := fmt.Sprintf("%s/init-tunnel?backend=%s", Layer8LightsailURL, backend)
 		fmt.Println(ProxyURL)
 		client := &http.Client{}
-		req, err := http.NewRequest("GET", ProxyURL, bytes.NewBuffer([]byte{}))
+		req, err := http.NewRequest("POST", ProxyURL, bytes.NewBuffer([]byte(b64PubJWK)))
 		if err != nil {
 			fmt.Println(err.Error())
 			ETunnelFlag = false
@@ -138,8 +132,6 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 		}
 		uuid := uuid.New()
 		UUID = uuid.String()
-		// For debugging purposes
-		fmt.Println("uuid: ", uuid.String())
 		req.Header.Add("x-ecdh-init", b64PubJWK)
 		req.Header.Add("x-client-uuid", uuid.String())
 
@@ -156,16 +148,6 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 			ETunnelFlag = false
 			return
 		}
-
-		// upJWT := resp.Header.Get("up_JWT")
-		// fmt.Println("up_JWT: ", upJWT)
-
-		// TODO: For some reason I am unable to put (or access?) custom response headers coming from
-		// either the backend OR the proxy... Therefore, I've sent along the backend's public key in the
-		// response's body.
-		// for k, v := range resp.Header {
-		// 	fmt.Println("header pairs from SP:", k, v)
-		// }
 
 		Respbody := utils.ReadResponseBody(resp.Body)
 
@@ -197,7 +179,6 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 			ETunnelFlag = false
 			return
 		}
-		fmt.Println("userSymmetricKey: ", userSymmetricKey)
 
 		// TODO: Send an encrypted ping / confirmation to the server using the shared secret
 		// just like the 1. Syn 2. Syn/Ack 3. Ack flow in a TCP handshake

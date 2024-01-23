@@ -16,6 +16,11 @@ import (
 	"strings"
 
 	Ctl "globe-and-citizen/layer8/server/resource_server/controller"
+	"globe-and-citizen/layer8/server/resource_server/interfaces"
+
+	repo "globe-and-citizen/layer8/server/resource_server/repository"
+
+	svc "globe-and-citizen/layer8/server/resource_server/service"
 
 	"github.com/joho/godotenv"
 )
@@ -49,11 +54,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	Server(proxyServerPortInt)
+	// Register repository
+	repository := repo.NewRepository(config.DB)
+
+	// Register service(usecase)
+	service := svc.NewService(repository)
+
+	Server(proxyServerPortInt, service)
 
 }
 
-func Server(port int) {
+func Server(port int, service interfaces.IService) {
 
 	repo, err := repository.CreateRepository("postgres")
 	if err != nil {
@@ -80,6 +91,7 @@ func Server(port int) {
 			}
 
 			r = r.WithContext(context.WithValue(r.Context(), "usecase", usecase))
+			r = r.WithContext(context.WithValue(r.Context(), "service", service))
 
 			staticFS, _ := fs.Sub(StaticFiles, "dist")
 			httpFS := http.FileServer(http.FS(staticFS))
@@ -89,8 +101,6 @@ func Server(port int) {
 			// Authorization Server endpoints
 			case path == "/login":
 				handlers.Login(w, r)
-			// case path == "/register":
-			// 	handlers.Register(w, r)
 			case path == "/authorize":
 				handlers.Authorize(w, r)
 			case path == "/error":
@@ -107,12 +117,12 @@ func Server(port int) {
 				Ctl.IndexHandler(w, r)
 			case path == "/user":
 				Ctl.UserHandler(w, r)
+			case path == "/register":
+				Ctl.ClientHandler(w, r)
 			case path == "/api/v1/register-user":
 				Ctl.RegisterUserHandler(w, r)
 			case path == "/api/v1/register-client":
 				Ctl.RegisterClientHandler(w, r)
-			case path == "/register":
-				Ctl.ClientHandler(w, r)
 			case path == "/api/v1/getClient":
 				Ctl.GetClientData(w, r)
 			case path == "/api/v1/login-precheck":

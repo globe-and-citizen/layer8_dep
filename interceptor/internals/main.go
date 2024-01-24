@@ -43,17 +43,15 @@ func (c *Client) Do(url string, req *utils.Request, sharedSecret *utils.JWK) *ut
 
 // transfer sends the request to the remote server through the layer8 proxy server
 func (c *Client) transfer(sharedSecret *utils.JWK, req *utils.Request, url string) (*utils.Response, error) {
-	// encode request body
-	b, err := req.ToJSON()
-	if err != nil {
-		return nil, fmt.Errorf("could not encode request: %w", err)
-	}
 	// send the request
-	_, res := c.do(b, sharedSecret, url, req.Headers)
+	res := c.do(req, sharedSecret, url, req.Headers)
 	// decode response body
 	resData, err := utils.FromJSONResponse(res)
 	if err != nil {
-		return nil, fmt.Errorf("could not decode response: %w", err)
+		return &utils.Response{
+			Status:     500,
+			StatusText: err.Error(),
+		}, nil
 	}
 
 	// Perhaps it's here that you'll rehydrate the headers from the service provider?
@@ -66,12 +64,23 @@ func (c *Client) transfer(sharedSecret *utils.JWK, req *utils.Request, url strin
 
 // do sends the request to the remote server through the layer8 proxy server
 // returns a status code and response body
-func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, headers map[string]string) (int, []byte) {
+func (c *Client) do(req *utils.Request, sharedSecret *utils.JWK, backendUrl string, headers map[string]string) []byte {
 	// encrypt request body if a secret is provided
 	// if secret != nil {
 	// 	data, err = utils.Dep_SymmetricEncrypt(data, secret)
 
 	var err error
+
+	data, err := req.ToJSON()
+	if err != nil {
+		res := &utils.Response{
+			Status:     500,
+			StatusText: fmt.Sprintf("Error marshalling request: %s", err.Error()),
+		}
+		resByte, _ := res.ToJSON()
+		return resByte
+	}
+
 	data, err = sharedSecret.SymmetricEncrypt(data)
 	if err != nil {
 		res := &utils.Response{
@@ -80,7 +89,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
-		return 500, resByte
+		return resByte
 	}
 
 	data, err = json.Marshal(map[string]interface{}{
@@ -94,7 +103,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
-		return 500, resByte
+		return resByte
 	}
 
 	parsedURL, err := url.Parse(backendUrl)
@@ -105,8 +114,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
-		return 500, resByte
-		// return 500, []byte{}
+		return resByte
 	}
 	// create request
 	client := &http.Client{}
@@ -118,7 +126,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
-		return 500, resByte
+		return resByte
 	}
 	// add headers
 	r.Header.Add("X-Forwarded-Host", parsedURL.Host)
@@ -137,7 +145,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
-		return 500, resByte
+		return resByte
 	}
 
 	defer res.Body.Close()
@@ -159,7 +167,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
-		return 500, resByte
+		return resByte
 	}
 
 	decoded, err := base64.URLEncoding.DecodeString(toDecode)
@@ -170,7 +178,7 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
-		return 500, resByte
+		return resByte
 	}
 
 	fmt.Println("decoded: ", decoded)
@@ -183,9 +191,17 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 			Headers:    make(map[string]string),
 		}
 		resByte, _ := res.ToJSON()
-		return 500, resByte
+		return resByte
 	}
 
 	// At this point the proxy's headers have been stripped and you have the SP's response as bufByte
-	return res.StatusCode, bufByte
+	return bufByte
+}
+
+// DoForm sends the formdata requests (e.g. multipart/form-data, application/x-www-form-urlencoded) 
+// which includes files to the remote server through the layer8 proxy server
+func (c *Client) DoForm(url string, req *utils.Request, sharedSecret *utils.JWK) *utils.Response {
+	fmt.Println(req.Body)
+
+	return nil
 }

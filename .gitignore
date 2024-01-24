@@ -163,3 +163,4 @@ resource_server/backend/certificates
 .idea
 
 interceptor*.json
+uploads/

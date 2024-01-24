@@ -155,6 +155,9 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
 	fmt.Println("Ravi Adds Path: ", r.URL.Path)
 
+	// TODO:
+	// The backendURL should be dynamic and come from the client as they're 
+	// the only ones who know where they are making the request to
 	backendURL := fmt.Sprintf(os.Getenv("VITE_BACKEND")+"%s", r.URL)
 
 	// create the request

@@ -2,9 +2,13 @@ package main
 
 import (
 	"encoding/base64"
-	"encoding/binary"
+	// "encoding/binary"
+	// "encoding/json"
 	"encoding/json"
 	"fmt"
+	"strings"
+
+	// "strings"
 
 	// "globe-and-citizen/layer8/utils" (Dep)
 	"syscall/js"
@@ -327,143 +331,173 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 		return nil
 	}
 
-	// Parse the data into an object.
-	// Note, this must take place inside a callback.
+	var body string
+
 	req.Call("on", "data", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-		var uint8array []byte
-		js.Global().Get("Object").Call("values", args[0]).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-			theInt := args[0].Int()
-			uint8array = binary.AppendUvarint(uint8array, uint64(theInt))
-			return nil
-		}))
+		body += args[0].Call("toString").String()
+		return nil
+	}))
 
-		req.Set("body", js.ValueOf(string(uint8array)))
+	req.Call("on", "end", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		// parse body and decrypt the "data" field
+		var enc map[string]interface{}
+		json.Unmarshal([]byte(body), &enc)
 
-		jsBody := req.Get("body")
-		if jsBody.String() == "<undefined>" {
-			println("body not defined")
-			res.Set("statusCode", 400)
-			res.Set("statusMessage", "Invalid request")
-			return nil
-		}
-
-		object := js.Global().Get("JSON").Call("parse", jsBody)
-
-		data, err := base64.URLEncoding.DecodeString(object.Get("data").String())
+		data, err := base64.URLEncoding.DecodeString(enc["data"].(string))
 		if err != nil {
-			println("error decoding request:", err.Error())
+			fmt.Println("error decoding request:", err.Error())
+			res.Set("statusText", "Could not decode request: "+err.Error())
 			res.Set("statusCode", 500)
-			res.Set("statusMessage", "Internal server error")
 			return nil
 		}
 
 		b, err := spSymmetricKey.SymmetricDecrypt(data)
 		if err != nil {
-			println("error decrypting request:", err.Error())
-			res.Set("statusCode", 400)
-			res.Set("statusMessage", "Could not decrypt request")
+			fmt.Println("error decrypting request:", err.Error())
+			res.Set("statusText", "Could not decrypt request: "+err.Error())
+			res.Set("statusCode", 500)
 			return nil
 		}
 
+		// parse the decrypted data into a request object
 		jreq, err := utils.FromJSONRequest(b)
 		if err != nil {
-			println("error serializing json request:", err.Error())
-			res.Set("statusCode", 400)
-			res.Set("statusMessage", "Could not decode request")
+			fmt.Println("error serializing json request:", err.Error())
+			res.Set("statusText", "Could not decode request: "+err.Error())
+			res.Set("statusCode", 500)
 			return nil
 		}
 
+		switch strings.ToLower(jreq.Headers["Content-Type"]) {
+		case "application/layer8.buffer+json":
+			var reqBody map[string]interface{}
+			json.Unmarshal(jreq.Body, &reqBody)
+
+			buff, err := base64.StdEncoding.DecodeString(reqBody["buff"].(string))
+			if err != nil {
+				fmt.Println("error decoding file buffer:", err.Error())
+				res.Set("statusCode", 500)
+				res.Set("statusMessage", "Could not decode file buffer: "+err.Error())
+				return nil
+			}
+
+			// converting the byte array to a uint8array so that it can be sent to the next 
+			// handler as a file object
+			uInt8Array := js.Global().Get("Uint8Array").New(reqBody["size"].(float64))
+			js.CopyBytesToJS(uInt8Array, buff)
+
+			file := js.Global().Get("File").New(
+				[]interface{}{uInt8Array},
+				reqBody["name"].(string),
+				map[string]interface{}{"type": reqBody["type"].(string)},
+			)
+			// the file object is then appended to a FormData object and sent to the next handler
+			// with the content-type set to multipart/form-data
+			formData := js.Global().Get("FormData").New()
+			formData.Call("append", "file", file)
+
+			req.Set("body", formData)
+			headers.Set("content-type", "multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW")
+		default:
+			var reqBody map[string]interface{}
+			json.Unmarshal(jreq.Body, &reqBody)
+
+			req.Set("body", reqBody)
+			headers.Set("content-type", "application/json")
+		}
+
+		// set the method and headers
 		req.Set("method", jreq.Method)
 		for k, v := range jreq.Headers {
+			if strings.ToLower(k) == "content-type" {
+				continue
+			}
 			headers.Set(k, v)
 		}
 
-		var reqBody map[string]interface{}
-		json.Unmarshal(jreq.Body, &reqBody)
-		req.Set("body", reqBody)
-
-		// Headers not working
-
-		// OVERWRITE THE SEND FUNCTION
-		res.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-			// convert body to readable format
-			data := args[0]
-			var b []byte
-
-			if data.Type() == js.TypeObject {
-				switch data.Get("constructor").Get("name").String() {
-				case "Object":
-					b, err = json.Marshal(parseJSObjectToMap(data))
-					if err != nil {
-						println("error serializing json response:", err.Error())
-						res.Set("statusCode", 500)
-						res.Set("statusMessage", "Could not encode response")
-						return nil
-					}
-				case "Array":
-					b, err = json.Marshal(parseJSObjectToSlice(data))
-					if err != nil {
-						println("error serializing json response:", err.Error())
-						res.Set("statusCode", 500)
-						res.Set("statusMessage", "Could not encode response")
-						return nil
-					}
-				default:
-					b = []byte(data.String())
-				}
-			} else {
-				b = []byte(data.String())
-			}
-
-			// Encrypt response
-			jres := utils.Response{}
-			jres.Body = b
-			jres.Status = res.Get("statusCode").Int()
-			jres.StatusText = res.Get("statusMessage").String()
-			jres.Headers = make(map[string]string)
-			if res.Get("headers").String() == "<undefined>" {
-				res.Set("headers", js.ValueOf(map[string]interface{}{}))
-			}
-			js.Global().Get("Object").Call("keys", res.Get("headers")).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-				jres.Headers[args[0].String()] = args[1].String()
-				return nil
-			}))
-			b, err = jres.ToJSON()
-			if err != nil {
-				println("error serializing json response:", err.Error())
-				res.Set("statusCode", 500)
-				res.Set("statusMessage", "Could not encode response")
-				return nil
-			}
-
-			b, err := spSymmetricKey.SymmetricEncrypt(b)
-
-			if err != nil {
-				println("error encrypting response:", err.Error())
-				res.Set("statusCode", 500)
-				res.Set("statusMessage", "Could not encrypt response")
-				return nil
-			}
-
-			resHeaders := make(map[string]interface{})
-			for k, v := range jres.Headers {
-				resHeaders[k] = v
-			}
-			resHeaders["mp_JWT"] = MpJWT
-			// Send response
-			res.Set("statusCode", jres.Status)
-			res.Set("statusMessage", jres.StatusText)
-			res.Call("set", js.ValueOf(resHeaders))
-			res.Call("end", js.Global().Get("JSON").Call("stringify", js.ValueOf(map[string]interface{}{
-				"data": base64.URLEncoding.EncodeToString(b),
-			})))
-			return nil
-		}))
-
-		// Continue to next middleware/handler
+		// continue to next middleware/handler
 		next.Invoke()
 		return nil
 	}))
+
+	// OVERWRITE THE SEND FUNCTION
+	res.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		var (
+			data = args[0]
+			b []byte
+			err error
+		)
+
+		if data.Type() == js.TypeObject {
+			switch data.Get("constructor").Get("name").String() {
+			case "Object":
+				b, err = json.Marshal(parseJSObjectToMap(data))
+				if err != nil {
+					println("error serializing json response:", err.Error())
+					res.Set("statusCode", 500)
+					res.Set("statusMessage", "Could not encode response")
+					return nil
+				}
+			case "Array":
+				b, err = json.Marshal(parseJSObjectToSlice(data))
+				if err != nil {
+					println("error serializing json response:", err.Error())
+					res.Set("statusCode", 500)
+					res.Set("statusMessage", "Could not encode response")
+					return nil
+				}
+			default:
+				b = []byte(data.String())
+			}
+		} else {
+			b = []byte(data.String())
+		}
+
+		// Encrypt response
+		jres := utils.Response{}
+		jres.Body = b
+		jres.Status = res.Get("statusCode").Int()
+		jres.StatusText = res.Get("statusMessage").String()
+		jres.Headers = make(map[string]string)
+		if res.Get("headers").String() == "<undefined>" {
+			res.Set("headers", js.ValueOf(map[string]interface{}{}))
+		}
+		js.Global().Get("Object").Call("keys", res.Get("headers")).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+			jres.Headers[args[0].String()] = args[1].String()
+			return nil
+		}))
+		b, err = jres.ToJSON()
+		if err != nil {
+			println("error serializing json response:", err.Error())
+			res.Set("statusCode", 500)
+			res.Set("statusMessage", "Could not encode response")
+			return nil
+		}
+
+		b, err = spSymmetricKey.SymmetricEncrypt(b)
+		if err != nil {
+			println("error encrypting response:", err.Error())
+			res.Set("statusCode", 500)
+			res.Set("statusMessage", "Could not encrypt response")
+			return nil
+		}
+
+		resHeaders := make(map[string]interface{})
+		for k, v := range jres.Headers {
+			resHeaders[k] = v
+		}
+		resHeaders["mp_JWT"] = MpJWT
+		// Send response
+		res.Set("statusCode", jres.Status)
+		res.Set("statusMessage", jres.StatusText)
+		res.Call("set", js.ValueOf(resHeaders))
+		res.Call("end", js.Global().Get("JSON").Call("stringify", js.ValueOf(map[string]interface{}{
+			"data": base64.URLEncoding.EncodeToString(b),
+		})))
+
+		return nil
+	}))
+
 	return nil
 }
 

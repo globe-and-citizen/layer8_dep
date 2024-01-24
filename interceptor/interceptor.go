@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"globe-and-citizen/layer8/interceptor/internals"
@@ -256,12 +257,6 @@ func fetch(this js.Value, args []js.Value) interface{} {
 		// set the UUID to the headers
 		headers.Set("x-client-uuid", UUID)
 
-		// setting the body to an empty string if it's undefined
-		body := options.Get("body").String()
-		if body == "<undefined>" {
-			body = ""
-		}
-
 		headersMap := make(map[string]string)
 		js.Global().Get("Object").Call("entries", headers).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 			headersMap[args[0].Index(0).String()] = args[0].Index(1).String()
@@ -273,11 +268,89 @@ func fetch(this js.Value, args []js.Value) interface{} {
 			fmt.Println("Encrypted Headers from the SP: ", k, v)
 		}
 
+		// set the content-type to application/json if it's undefined
+		if _, ok := headersMap["Content-Type"]; !ok {
+			headersMap["Content-Type"] = "application/json"
+		}
+		
 		go func() {
-			// forward request to the layer8 proxy server
-			fmt.Println("userSymmetricKey", userSymmetricKey)
-			res := L8Client.
-				Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
+			var res  *utils.Response
+		
+			switch strings.ToLower(headersMap["Content-Type"]) {
+			case "application/json":
+				// setting the body to an empty string if it's undefined
+				body := options.Get("body")
+				if body.String() == "<undefined>" {
+					body = js.ValueOf(map[string]interface{}{})
+				}
+
+				// convert the body to a map
+				bodyMap := map[string]interface{}{}
+				js.Global().Get("Object").Call("entries", body).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+					bodyMap[args[0].Index(0).String()] = args[0].Index(1).String()
+					return nil
+				}))
+
+				// encode the body to json
+				bodyByte, err := json.Marshal(bodyMap)
+				if err != nil {
+					reject.Invoke(js.Global().Get("Error").New(err.Error()))
+					return
+				}
+				
+				// forward request to the layer8 proxy server
+				res = L8Client.
+					Do(url, utils.NewRequest(method, headersMap, bodyByte), userSymmetricKey)
+			case "application/layer8.buffer+json":
+				requirements := []string{"name", "size", "type", "buff"}
+
+				body := options.Get("body")
+				if body.String() == "<undefined>" || body.String() == "null" {
+					reject.Invoke(js.Global().Get("Error").New("No body provided to fetch call."))
+					return
+				}
+
+				// check if the body has all the required fields
+				notFound := []string{}
+				for _, v := range requirements {
+					fmt.Println("jv: ", body.Get(v).String())
+					if jv := body.Get(v); jv.String() == "<undefined>" || jv.String() == "null" {
+						notFound = append(notFound, v)
+					}
+				}
+				if len(notFound) > 0 {
+					reject.Invoke(js.Global().Get("Error").New(fmt.Sprintf("The following fields are required in the body: %v", notFound)))
+					return
+				}
+
+				// convert arraybuffer to Go byte array
+				buff := make([]byte, body.Get("size").Int())
+				js.CopyBytesToGo(buff, js.Global().Get("Uint8Array").New(body.Get("buff")))
+
+				// convert the body to a map
+				bodyMap := map[string]interface{}{
+					"name": body.Get("name").String(),
+					"size": body.Get("size").Int(),
+					"type": body.Get("type").String(),
+					"buff": base64.StdEncoding.EncodeToString(buff),
+				}
+				
+				// encode the body to json
+				bodyByte, err := json.Marshal(bodyMap)
+				if err != nil {
+					reject.Invoke(js.Global().Get("Error").New(err.Error()))
+					return
+				}
+
+				// forward request to the layer8 proxy server
+				res = L8Client.
+					Do(url, utils.NewRequest(method, headersMap, bodyByte), userSymmetricKey)
+			default:
+				res = &utils.Response{
+					Status:     400,
+					StatusText: "Content-Type not supported",
+				}
+			}
 
 			if res.Status >= 100 || res.Status < 300 { // Handle Success & Default Rejection
 				resHeaders := js.Global().Get("Headers").New()

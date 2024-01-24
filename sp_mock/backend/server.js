@@ -9,6 +9,8 @@ const SECRET_KEY = "my_very_secret_key";
 // TODO: For future, use a layer8 npm published package for initialising the client and variables
 const popsicle = require("popsicle");
 const ClientOAuth2 = require("client-oauth2");
+const fs = require("fs");
+
 require("dotenv").config();
 const port = process.env.PORT;
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -80,7 +82,7 @@ app.post("/api/login", async (req, res) => {
     console.log("token", token);
     res.status(200).json({ token });
   } else {
-    res.status(401).send("Invalid credentials!");
+    res.status(401).json({ message: "Invalid credentials!" });
   }
 });
 
@@ -136,6 +138,14 @@ app.post("/api/login/layer8/auth", async (req, res) => {
   );
   res.status(200).json({ token });
 });
+
+app.post("/api/upload", async (req, res) => {
+  const file = req.body.get('file');
+  const uint8Array = new Uint8Array(await file.arrayBuffer());
+  fs.writeFileSync(`./uploads/${file.name}`, uint8Array);
+  res.status(200).json({ message: "File uploaded successfully!" });
+});
+
 // Layer8 Components end here
 
 app.listen(port, () => {

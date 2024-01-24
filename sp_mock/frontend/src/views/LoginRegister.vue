@@ -12,6 +12,11 @@ const isRegister = ref(false);
 const isLoggedIn = computed(() => SpToken.value !== null);
 const isContinueAnonymously = ref(false);
 const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
+
+// ----
+// TODO:
+// Keep the backend URL in the .env file
+// ----
 //const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com";
 const BackendURL = "http://localhost:5001";
 
@@ -116,6 +121,24 @@ const loginWithLayer8Popup = async () => {
     }
   });
 }
+
+const uploadFile = async (e) => {
+  e.preventDefault();
+
+  const file = e.target.files[0];
+  await layer8.fetch(BackendURL + "/api/upload", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/layer8.buffer+json",
+    },
+    body: {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      buff: await file.arrayBuffer(),
+    },
+  });
+};
 // Layer8 Components end here
 </script>
 
@@ -128,6 +151,10 @@ const loginWithLayer8Popup = async () => {
           <h2 class="text-lg font-bold ">Register</h2>
           <input v-model="registerEmail" placeholder="Email" class="input input-bordered input-primary w-full max-w-xs"/>
           <input v-model="registerPassword" type="password" placeholder="Password"  class="input input-bordered input-primary w-full max-w-xs"/>
+          <hr />
+          <h1 class="text-dark pb-4 font-bold">Upload Image</h1>
+          <input type="file" @change="uploadFile" />
+          <hr />
           <button class="btn btn-primary max-w-xs" @click="registerUser">Register</button>
           <a class="block" @click="isRegister = false">Already registered? Login</a>
         </div>
@@ -136,6 +163,10 @@ const loginWithLayer8Popup = async () => {
           <h2  class="text-lg font-bold">Login</h2>
           <input v-model="loginEmail" placeholder="Email" class="input input-bordered input-primary w-full max-w-xs"/>
           <input v-model="loginPassword" type="password" placeholder="Password" class="input input-bordered input-primary w-full max-w-xs" />
+          <hr />
+          <h1 class="text-dark pb-4 font-bold">Upload Image</h1>
+          <input type="file" @change="uploadFile" />
+          <hr />
           <button class="btn btn-primary max-w-xs" @click="loginUser">Login</button>
           <a class="block" @click="isRegister = true">Don't have an account? Register</a>
         </div>

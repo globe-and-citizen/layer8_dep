@@ -2,13 +2,9 @@ package main
 
 import (
 	"encoding/base64"
-	// "encoding/binary"
-	// "encoding/json"
 	"encoding/json"
 	"fmt"
 	"strings"
-
-	// "strings"
 
 	// "globe-and-citizen/layer8/utils" (Dep)
 	"syscall/js"

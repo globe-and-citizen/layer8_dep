@@ -197,11 +197,3 @@ func (c *Client) do(req *utils.Request, sharedSecret *utils.JWK, backendUrl stri
 	// At this point the proxy's headers have been stripped and you have the SP's response as bufByte
 	return bufByte
 }
-
-// DoForm sends the formdata requests (e.g. multipart/form-data, application/x-www-form-urlencoded) 
-// which includes files to the remote server through the layer8 proxy server
-func (c *Client) DoForm(url string, req *utils.Request, sharedSecret *utils.JWK) *utils.Response {
-	fmt.Println(req.Body)
-
-	return nil
-}

@@ -10,7 +10,8 @@ import (
 	"os"
 
 	"globe-and-citizen/layer8/server/resource_server/utils"
-	utilities "globe-and-citizen/layer8/server/utils"
+
+	utilities "github.com/globe-and-citizen/layer8-utils"
 )
 
 // Tunnel forwards the request to the service provider's backend
@@ -37,7 +38,10 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("mpJWT: ", mpJWT)
+	reqData := utilities.ReadResponseBody(r.Body)
+	b64PubJWK := string(reqData)
+	fmt.Println("b64PubJWK: ", b64PubJWK)
+	fmt.Println("x-ecdh-init: ", r.Header.Get("x-ecdh-init"))
 
 	backendURL := fmt.Sprintf("http://%s", backend)
 	fmt.Println("User agent is attempting to initialize this backend SP: ", backendURL)
@@ -50,23 +54,14 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("Checkpoint 1")
-
 	// add headers
 	for k, v := range r.Header {
 		req.Header[k] = v
-		// fmt.Println("header pairs going to SP: ", k, v)
 	}
 
 	req.Header["x-tunnel"] = []string{"true"}
 	req.Header["mp_jwt"] = []string{mpJWT}
 
-	fmt.Println("req.Header: ", req.Header)
-	for k, v := range req.Header {
-		fmt.Println("header pairs going to SP: ", k, v)
-	}
-
-	fmt.Println("Checkpoint 2")
 	// send the request
 	res, err := http.DefaultClient.Do(req)
 
@@ -75,8 +70,6 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	fmt.Println("Checkpoint 3")
 
 	// Make a buffer to hold response body
 	var resBodyTemp bytes.Buffer
@@ -88,20 +81,11 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 
 	resBodyTempBytes := []byte(resBodyTemp.String())
 
-	fmt.Println("resBodyTempBytes: ", string(resBodyTempBytes))
-
 	// Make a copy of the response body to send back to client
 	res.Body = io.NopCloser(bytes.NewBuffer(resBodyTemp.Bytes()))
 
 	fmt.Println("\nReceived response from 8000:", backendURL, " of code: ", res.StatusCode)
 
-	// copy response back
-	// for k, v := range res.Header {
-	// 	w.Header()[k] = v
-	// 	fmt.Println("header pairs from SP: ", k, v)
-	// }
-
-	// RAVI!
 	upJWT, err := utilities.GenerateStandardToken(os.Getenv("UP_999_SECRET_KEY"))
 	if err != nil {
 		fmt.Println(err.Error())
@@ -109,19 +93,12 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header()["up_JWT"] = []string{upJWT}
-	w.Header().Set("up_JWT", upJWT)
-	// fmt.Println("w.Headers (Going back to client): ", w.Header())
-	// Headers not being sent back to client for some reason...
-
 	server_pubKeyECDH, err := utilities.B64ToJWK(string(resBodyTempBytes))
 	if err != nil {
 		fmt.Println(err.Error())
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	fmt.Println("server_pubKeyECDH: ", server_pubKeyECDH)
 
 	// // Make a json response of server_pubKeyECDH and up_JWT and send it back to client
 	data := map[string]interface{}{
@@ -138,13 +115,6 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// io.Copy(w, bytes.NewBufferString(dataToSendB64))
-
-	// io.Copy(w, strings.NewReader(dataToSendB64))
-
-	// io.Copy(w, dataIoReader)
-
-	// io.CopyBuffer(w, bytes.NewBufferString(dataToSendB64), []byte(dataToSendB64))
 	w.Write(datatoSend)
 
 }

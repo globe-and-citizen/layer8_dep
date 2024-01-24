@@ -18,16 +18,7 @@ import (
 
 const VERSION = "1.0.3"
 
-// Unused
-// type KeyPair struct {
-// 	PublicKey  crypto.PublicKey
-// 	PrivateKey crypto.PrivateKey
-// }
-
 var (
-	// InstanceKey    *KeyPair   // Unused
-	// spSymmetricKey *utils.JWK // TODO: Array of *utils.JWK (Symmetric keys)
-	// MpJWT          string // TODO: Array of strings (JWTs)
 	privKey_ECDH  *utils.JWK
 	pubKey_ECDH   *utils.JWK
 	UUIDMapOfKeys []map[string]*utils.JWK
@@ -60,20 +51,14 @@ func doECDHWithClient(request, response js.Value) {
 	userPubJWKConverted, err := utils.B64ToJWK(userPubJWK)
 	if err != nil {
 		fmt.Println("Failure to decode userPubJWK", err.Error())
-		// response set "statusCode", 50x
-		// response set "statusMessage", "err.Error()"
 		return
 	}
 
 	clientUUID := headers.Get("x-client-uuid").String()
-	// For testing purposes
-	fmt.Println("clientUUID: ", clientUUID)
 
 	ss, err := privKey_ECDH.GetECDHSharedSecret(userPubJWKConverted)
 	if err != nil {
 		fmt.Println("Unable to get ECDH shared secret", err.Error())
-		// response set "statusCode", 50x
-		// response set "statusMessage", "err.Error()"
 		return
 	}
 
@@ -85,17 +70,24 @@ func doECDHWithClient(request, response js.Value) {
 	ss_b64, err := ss.ExportAsBase64()
 	if err != nil {
 		fmt.Println("Unable to export shared secret as base64", err.Error())
-		// response set "statusCode", 50x
-		// response set "statusMessage", "err.Error()"
 		return
 	}
 
-	// Get mp_JWT from headers
-	// Use a uuid
 	MpJWT := headers.Get("mp_jwt").String()
 	fmt.Println("MpJWT at SP BE (Middleware): ", MpJWT)
 
 	UUIDMapOfJWTs = append(UUIDMapOfJWTs, map[string]string{clientUUID: MpJWT})
+
+	// jsBody := request.Get("body")
+	// if jsBody.String() == "<undefined>" {
+	// 	println("body not defined")
+	// 	return
+	// }
+
+	// object := js.Global().Get("JSON").Call("parse", jsBody)
+
+	// data := object.Get("data").String()
+	// fmt.Println("data: ", data)
 
 	response.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		// encrypt response

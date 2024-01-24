@@ -6,6 +6,8 @@ COPY ./server /build
 
 WORKDIR /build
 
+RUN go get github.com/globe-and-citizen/layer8-utils
+
 RUN go mod tidy
 
 RUN go build -o main .

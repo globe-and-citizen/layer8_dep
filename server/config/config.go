@@ -50,40 +50,38 @@ func InitDB() {
 
 	DB = db
 
-	// Configure tables:
+	configureDatabase()
+
 	var user models.User
-	if err := DB.Where("username = ?", "").First(&user).Error; err != nil {
-		configureDatabase()
+	if err := DB.Where("username = ?", "admin").First(&user).Error; err != nil {
+		configureTables()
+		DB.Where("username = ?", "admin").First(&user)
+		fmt.Println("Test user created.")
 	}
+	fmt.Println("Use username: admin, password: 12345 for testing.")
 }
 
 func configureDatabase() {
-	DB.Exec(`CREATE TABLE users (
+	DB.Exec(`CREATE TABLE IF NOT EXISTS users (
 		id SERIAL PRIMARY KEY,
 		email VARCHAR(255) UNIQUE NOT NULL,
 		username VARCHAR(50) UNIQUE NOT NULL,
 		password VARCHAR(255) NOT NULL,
 		first_name VARCHAR(50) NOT NULL,
 		last_name VARCHAR(50) NOT NULL,
-		-- phone_number VARCHAR(50) NOT NULL,
-		-- address VARCHAR(255) NOT NULL,
-		-- email_verified BOOLEAN NOT NULL DEFAULT FALSE,
-		-- phone_number_verified BOOLEAN NOT NULL DEFAULT FALSE,
-		-- location_verified BOOLEAN NOT NULL DEFAULT FALSE,
-		-- national_id_verified BOOLEAN NOT NULL DEFAULT FALSE,
 		salt VARCHAR(255) NOT NULL DEFAULT 'ThisIsARandomSalt123!@#',
 		created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 	);`)
 
-	DB.Exec(`CREATE TABLE clients (
+	DB.Exec(`CREATE TABLE IF NOT EXISTS clients (
 		id VARCHAR(36) PRIMARY KEY,
 		secret VARCHAR NOT NULL,
 		name VARCHAR(255) NOT NULL,
 		redirect_uri VARCHAR(255) NOT NULL
 	);`)
 
-	DB.Exec(`CREATE TABLE user_metadata (
+	DB.Exec(`CREATE TABLE IF NOT EXISTS user_metadata (
 		id SERIAL PRIMARY KEY,
 		user_id INTEGER NOT NULL,
 		key VARCHAR(255) NOT NULL,
@@ -92,4 +90,14 @@ func configureDatabase() {
 		updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 		FOREIGN KEY (user_id) REFERENCES users(id)
 	);`)
+}
+
+func configureTables() {
+	DB.Exec(`INSERT INTO users (email, username, password, first_name, last_name) VALUES ('admin@gcitizen.com', 'admin', '12345', 'Admin', 'User');`)
+
+	DB.Exec(`INSERT INTO user_metadata (user_id, key, value) VALUES (1, 'email_verified', 'true');`)
+	DB.Exec(`INSERT INTO user_metadata (user_id, key, value) VALUES (1, 'country', 'Globe');`)
+	DB.Exec(`INSERT INTO user_metadata (user_id, key, value) VALUES (1, 'display_name', 'Admin User');`)
+
+	DB.Exec(`INSERT INTO clients (id, secret, name, redirect_uri) VALUES ('notanid', 'absolutelynotasecret!', 'Ex-C', 'http://localhost:5173/oauth2/callback');`)
 }

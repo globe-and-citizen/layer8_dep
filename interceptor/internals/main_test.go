@@ -3,13 +3,14 @@ package internals
 import (
 	"encoding/base64"
 	"encoding/json"
-	"globe-and-citizen/layer8/utils"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
+
+	utils "github.com/globe-and-citizen/layer8-utils"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"

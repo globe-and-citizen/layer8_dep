@@ -3,7 +3,6 @@ module globe-and-citizen/layer8/server
 go 1.21.4
 
 require (
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/globe-and-citizen/layer8-utils v0.0.0-20230927121854-b5403af080d8
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
@@ -19,6 +18,7 @@ require (
 require (
 	github.com/aead/ecdh v0.2.0 // indirect
 	github.com/andybalholm/brotli v1.0.5 // indirect
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect

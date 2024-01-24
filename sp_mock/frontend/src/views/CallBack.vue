@@ -7,8 +7,8 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const code = ref(new URLSearchParams(window.location.search).get("code"))
 const token = ref(localStorage.getItem("token") || null)
-// const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com";
-const BackendURL = "http://localhost:5001";
+const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com";
+// const BackendURL = "http://localhost:5001";
 
 
 onMounted(() => {

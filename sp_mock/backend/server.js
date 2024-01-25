@@ -39,6 +39,7 @@ app.get("/healthcheck", (req, res) => {
 const Layer8 = require("./dist/loadWASM.js");
 app.use(Layer8);
 app.use(cors());
+app.use('/media', express.static('uploads'));
 
 app.post("/", (req, res) => {
   console.log("Enpoint for testing");
@@ -57,32 +58,25 @@ app.get("/nextpoem", (req, res) => {
 });
 
 app.post("/api/register", async (req, res) => {
-  console.log("req.body: ", req.body);
-  const { password, email } = req.body;
-  console.log(password, email);
+  const { password, email, profile_image } = req.body;
   try {
-    hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
+    users.push({ email, password: hashedPassword, profile_image });
+    res.status(200).send("User registered successfully!");
   } catch (err) {
     console.log("err: ", err);
+    res.status(500).send({ error: "Something went wrong!" });
   }
-  users.push({ email, password: hashedPassword });
-  console.log("users: ", users);
-  res.status(200).send("User registered successfully!");
 });
 
 app.post("/api/login", async (req, res) => {
-  console.log("res.custom_test_prop: ", res.custom_test_prop);
-  console.log("req.body: ", req.body);
-  console.log("users: ", users);
   const { email, password } = req.body;
   const user = users.find((u) => u.email === email);
-  console.log("user: ", user);
   if (user && (await bcrypt.compare(password, user.password))) {
     const token = jwt.sign({ email }, SECRET_KEY);
-    console.log("token", token);
-    res.status(200).json({ token });
+    res.status(200).json({ user, token });
   } else {
-    res.status(401).json({ message: "Invalid credentials!" });
+    res.status(401).json({ error: "Invalid credentials!" });
   }
 });
 
@@ -139,11 +133,14 @@ app.post("/api/login/layer8/auth", async (req, res) => {
   res.status(200).json({ token });
 });
 
-app.post("/api/upload", async (req, res) => {
+app.post("/api/profile/upload", async (req, res) => {
   const file = req.body.get('file');
   const uint8Array = new Uint8Array(await file.arrayBuffer());
   fs.writeFileSync(`./uploads/${file.name}`, uint8Array);
-  res.status(200).json({ message: "File uploaded successfully!" });
+  res.status(200).json({ 
+    message: "File uploaded successfully!",
+    url: `${req.protocol}://${req.get('host')}/media/${file.name}`
+  });
 });
 
 // Layer8 Components end here

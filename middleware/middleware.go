@@ -369,7 +369,7 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 				return nil
 			}
 
-			// converting the byte array to a uint8array so that it can be sent to the next 
+			// converting the byte array to a uint8array so that it can be sent to the next
 			// handler as a file object
 			uInt8Array := js.Global().Get("Uint8Array").New(reqBody["size"].(float64))
 			js.CopyBytesToJS(uInt8Array, buff)
@@ -412,8 +412,8 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 	res.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 		var (
 			data = args[0]
-			b []byte
-			err error
+			b    []byte
+			err  error
 		)
 
 		if data.Type() == js.TypeObject {

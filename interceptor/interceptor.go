@@ -253,10 +253,10 @@ func fetch(this js.Value, args []js.Value) interface{} {
 		if _, ok := headersMap["Content-Type"]; !ok {
 			headersMap["Content-Type"] = "application/json"
 		}
-		
+
 		go func() {
-			var res  *utils.Response
-		
+			var res *utils.Response
+
 			switch strings.ToLower(headersMap["Content-Type"]) {
 			case "application/json":
 				// setting the body to an empty string if it's undefined
@@ -267,10 +267,11 @@ func fetch(this js.Value, args []js.Value) interface{} {
 
 				// convert the body to a map
 				bodyMap := map[string]interface{}{}
-				js.Global().Get("Object").Call("entries", body).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-					bodyMap[args[0].Index(0).String()] = args[0].Index(1).String()
-					return nil
-				}))
+				err := json.Unmarshal([]byte(body.String()), &bodyMap)
+				if err != nil {
+					reject.Invoke(js.Global().Get("Error").New(err.Error()))
+					return
+				}
 
 				// encode the body to json
 				bodyByte, err := json.Marshal(bodyMap)
@@ -278,7 +279,7 @@ func fetch(this js.Value, args []js.Value) interface{} {
 					reject.Invoke(js.Global().Get("Error").New(err.Error()))
 					return
 				}
-				
+
 				// forward request to the layer8 proxy server
 				res = L8Client.
 					Do(url, utils.NewRequest(method, headersMap, bodyByte), userSymmetricKey)
@@ -315,7 +316,7 @@ func fetch(this js.Value, args []js.Value) interface{} {
 					"type": body.Get("type").String(),
 					"buff": base64.StdEncoding.EncodeToString(buff),
 				}
-				
+
 				// encode the body to json
 				bodyByte, err := json.Marshal(bodyMap)
 				if err != nil {

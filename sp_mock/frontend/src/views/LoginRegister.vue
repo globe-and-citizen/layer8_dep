@@ -8,10 +8,14 @@ const registerEmail = ref("");
 const registerPassword = ref("");
 const loginEmail = ref("");
 const loginPassword = ref("");
+const profileImage = ref(null);
 const isRegister = ref(false);
 const isLoggedIn = computed(() => SpToken.value !== null);
 const isContinueAnonymously = ref(false);
 const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
+const user = ref(localStorage.getItem("_user") ? JSON.parse(localStorage.getItem("_user")) : null);
+
+const isLoaded = ref(false);
 
 // ----
 // TODO:
@@ -31,6 +35,7 @@ const registerUser = async () => {
       body: JSON.stringify({
         email: registerEmail.value,
         password: registerPassword.value,
+        profile_image: profileImage.value,
       }),
     });
     alert("Registration successful!");
@@ -61,12 +66,16 @@ const loginUser = async () => {
     });
 
     const data = await response.json();
+    if (response.status !== 200) {
+      throw new Error(data.error);
+    }
     SpToken.value = data.token;
+    user.value = data.user;
     localStorage.setItem("SP_TOKEN", data.token);
+    localStorage.setItem("_user", JSON.stringify(data.user));
     alert("Login successful!");
   } catch (error) {
-    console.error(error);
-    alert("Login failed!");
+    alert(error.message);
   }
 };
 
@@ -79,16 +88,9 @@ const continueAnonymously = () => {
 const logoutUser = () => {
   SpToken.value = null;
   localStorage.removeItem("SP_TOKEN");
+  localStorage.removeItem("_user");
   isContinueAnonymously.value = false;
 };
-
-const userName = computed(() => {
-  if (SpToken.value && SpToken.value.split(".").length > 1) {
-    const payload = JSON.parse(atob(SpToken.value.split(".")[1]));
-    return payload.email;
-  }
-  return "";
-});
 
 // Layer8 Components start here
 const loginWithLayer8Popup = async () => {
@@ -122,11 +124,13 @@ const loginWithLayer8Popup = async () => {
   });
 }
 
-const uploadFile = async (e) => {
+const uploadProfilePicture = async (e) => {
   e.preventDefault();
 
+  isLoaded.value = true;
+
   const file = e.target.files[0];
-  await layer8.fetch(BackendURL + "/api/upload", {
+  layer8.fetch(BackendURL + "/api/profile/upload", {
     method: "POST",
     headers: {
       "Content-Type": "application/layer8.buffer+json",
@@ -137,7 +141,15 @@ const uploadFile = async (e) => {
       type: file.type,
       buff: await file.arrayBuffer(),
     },
-  });
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      profileImage.value = data.url;
+    })
+    .catch((err) => console.log(err))
+    .finally(() => {
+      isLoaded.value = false;
+    });
 };
 // Layer8 Components end here
 </script>
@@ -152,10 +164,15 @@ const uploadFile = async (e) => {
           <input v-model="registerEmail" placeholder="Email" class="input input-bordered input-primary w-full max-w-xs"/>
           <input v-model="registerPassword" type="password" placeholder="Password"  class="input input-bordered input-primary w-full max-w-xs"/>
           <hr />
-          <h1 class="text-dark pb-4 font-bold">Upload Image</h1>
-          <input type="file" @change="uploadFile" />
+          <h1 class="text-dark pb-4 font-bold">Upload Profile Picture</h1>
+          <input type="file" @change="uploadProfilePicture" />
+          <div v-if="profileImage">
+            <img :src="profileImage" />
+          </div>
           <hr />
-          <button class="btn btn-primary max-w-xs" @click="registerUser">Register</button>
+          <button class="btn btn-primary max-w-xs" @click="registerUser" :disabled="isLoaded">
+            <div v-if="isLoaded" class="loading"></div>Register
+          </button>
           <a class="block" @click="isRegister = false">Already registered? Login</a>
         </div>
 
@@ -163,10 +180,6 @@ const uploadFile = async (e) => {
           <h2  class="text-lg font-bold">Login</h2>
           <input v-model="loginEmail" placeholder="Email" class="input input-bordered input-primary w-full max-w-xs"/>
           <input v-model="loginPassword" type="password" placeholder="Password" class="input input-bordered input-primary w-full max-w-xs" />
-          <hr />
-          <h1 class="text-dark pb-4 font-bold">Upload Image</h1>
-          <input type="file" @change="uploadFile" />
-          <hr />
           <button class="btn btn-primary max-w-xs" @click="loginUser">Login</button>
           <a class="block" @click="isRegister = true">Don't have an account? Register</a>
         </div>
@@ -174,8 +187,14 @@ const uploadFile = async (e) => {
 
       <div v-if="isLoggedIn" class="card w-auto bg-base-100 shadow-xl p-8 max-w-xs">
         <h1 class="text-dark pb-4 font-bold">
-          Welcome {{ userName }}!
+          Welcome {{ user?.email }}!
         </h1>
+        <div v-if="user?.profile_image">
+          <img :src="user?.profile_image" />
+          <br />
+          <hr />
+          <br />
+        </div>
         <div class="flex flex-col gap-4" v-if="!isContinueAnonymously">
           <button class="btn " @click="continueAnonymously">
             Login Anonymously

@@ -15,7 +15,7 @@ const isContinueAnonymously = ref(false);
 const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
 const user = ref(localStorage.getItem("_user") ? JSON.parse(localStorage.getItem("_user")) : null);
 
-const isLoaded = ref(false);
+const isLoading = ref(false);
 
 // ----
 // TODO:
@@ -127,7 +127,7 @@ const loginWithLayer8Popup = async () => {
 const uploadProfilePicture = async (e) => {
   e.preventDefault();
 
-  isLoaded.value = true;
+  isLoading.value = true;
 
   const file = e.target.files[0];
   layer8.fetch(BackendURL + "/api/profile/upload", {
@@ -148,7 +148,7 @@ const uploadProfilePicture = async (e) => {
     })
     .catch((err) => console.log(err))
     .finally(() => {
-      isLoaded.value = false;
+      isLoading.value = false;
     });
 };
 // Layer8 Components end here
@@ -170,8 +170,8 @@ const uploadProfilePicture = async (e) => {
             <img :src="profileImage" />
           </div>
           <hr />
-          <button class="btn btn-primary max-w-xs" @click="registerUser" :disabled="isLoaded">
-            <div v-if="isLoaded" class="loading"></div>Register
+          <button class="btn btn-primary max-w-xs" @click="registerUser" :disabled="isLoading">
+            <div v-if="isLoading" class="loading"></div>Register
           </button>
           <a class="block" @click="isRegister = false">Already registered? Login</a>
         </div>

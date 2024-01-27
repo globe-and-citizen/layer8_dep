@@ -1,4 +1,5 @@
-FROM golang:1.21.4-alpine3.17
+# FROM golang:1.21.4-alpine3.17
+FROM golang:1.21.6-alpine3.18
 
 RUN mkdir /build
 

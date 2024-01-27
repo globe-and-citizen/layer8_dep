@@ -51,6 +51,7 @@ func doECDHWithClient(request, response js.Value) {
 	}
 
 	clientUUID := headers.Get("x-client-uuid").String()
+	fmt.Println("clientUUID: ", clientUUID)
 
 	ss, err := privKey_ECDH.GetECDHSharedSecret(userPubJWKConverted)
 	if err != nil {
@@ -69,7 +70,7 @@ func doECDHWithClient(request, response js.Value) {
 		return
 	}
 
-	MpJWT := headers.Get("mp_jwt").String()
+	MpJWT := headers.Get("mp-jwt").String()
 	fmt.Println("MpJWT at SP BE (Middleware): ", MpJWT)
 
 	UUIDMapOfJWTs = append(UUIDMapOfJWTs, map[string]string{clientUUID: MpJWT})
@@ -441,7 +442,7 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 			for k, v := range jres.Headers {
 				resHeaders[k] = v
 			}
-			resHeaders["mp_JWT"] = MpJWT
+			resHeaders["mp-jwt"] = MpJWT
 			// Send response
 			res.Set("statusCode", jres.Status)
 			res.Set("statusMessage", jres.StatusText)

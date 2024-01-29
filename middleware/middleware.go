@@ -41,21 +41,18 @@ func init() {
 
 func main() {
 	c := make(chan struct{})
-	fmt.Printf("L8 WASM Middleware version %s loaded.\n\n", VERSION)
+	fmt.Printf("[L8Middleware] L8 WASM Middleware version %s loaded.\n\n", VERSION)
 	js.Global().Set("WASMMiddleware", js.FuncOf(WASMMiddleware_v2))
 	js.Global().Set("TestWASM", js.FuncOf(TestWASM))
 	<-c
 }
 
 func doECDHWithClient(request, response js.Value) {
-	fmt.Println("TOP: ", request)
 	headers := request.Get("headers")
-	fmt.Println("headers: ", headers)
 	userPubJWK := headers.Get("x-ecdh-init").String()
-	// fmt.Println("userPubJWK: ", userPubJWK)
 	userPubJWKConverted, err := utils.B64ToJWK(userPubJWK)
 	if err != nil {
-		fmt.Println("Failure to decode userPubJWK", err.Error())
+		fmt.Println("[L8Middleware] Failure to decode userPubJWK", err.Error())
 		// response set "statusCode", 50x
 		// response set "statusMessage", "err.Error()"
 		return
@@ -63,24 +60,21 @@ func doECDHWithClient(request, response js.Value) {
 
 	clientUUID := headers.Get("x-client-uuid").String()
 	// For testing purposes
-	fmt.Println("clientUUID: ", clientUUID)
+	fmt.Println("[L8Middleware] clientUUID: ", clientUUID)
 
 	ss, err := privKey_ECDH.GetECDHSharedSecret(userPubJWKConverted)
 	if err != nil {
-		fmt.Println("Unable to get ECDH shared secret", err.Error())
+		fmt.Println("[L8Middleware] Unable to get ECDH shared secret", err.Error())
 		// response set "statusCode", 50x
 		// response set "statusMessage", "err.Error()"
 		return
 	}
 
-	fmt.Println("shared secret: ", ss)
-	// spSymmetricKey = ss
-
 	UUIDMapOfKeys = append(UUIDMapOfKeys, map[string]*utils.JWK{clientUUID: ss})
 
 	ss_b64, err := ss.ExportAsBase64()
 	if err != nil {
-		fmt.Println("Unable to export shared secret as base64", err.Error())
+		fmt.Println("[L8Middleware] unable to export shared secret as base64", err.Error())
 		// response set "statusCode", 50x
 		// response set "statusMessage", "err.Error()"
 		return
@@ -89,7 +83,7 @@ func doECDHWithClient(request, response js.Value) {
 	// Get mp_JWT from headers
 	// Use a uuid
 	MpJWT := headers.Get("mp_jwt").String()
-	fmt.Println("MpJWT at SP BE (Middleware): ", MpJWT)
+	fmt.Println("[L8Middleware] MpJWT at SP BE (Middleware): ", MpJWT)
 
 	UUIDMapOfJWTs = append(UUIDMapOfJWTs, map[string]string{clientUUID: MpJWT})
 
@@ -116,7 +110,7 @@ func doECDHWithClient(request, response js.Value) {
 		server_pubKeyECDH, _ := pubKey_ECDH.ExportAsBase64()
 
 		response.Call("end", server_pubKeyECDH)
-		fmt.Println("SS_Server: ", ss)
+
 		return nil
 	}))
 
@@ -124,156 +118,10 @@ func doECDHWithClient(request, response js.Value) {
 	response.Call("setHeader", "x-shared-secret", ss_b64)
 	// response.Call("setHeader", "mp_JWT", MpJWT)
 	result := response.Call("hasHeader", "x-shared-secret")
-	fmt.Println("result: ", result)
+	fmt.Println("[L8Middleware] result: ", result)
 	response.Call("send")
 	return
 }
-
-// func WASMMiddleware(this js.Value, args []js.Value) interface{} {
-// 	// get the request and response objects and the next function
-// 	req := args[0]
-// 	res := args[1]
-// 	next := args[2]
-
-// 	//fmt.Println("Get Rdy to Error out...")
-
-// 	// check for layer8 request
-// 	headers := req.Get("headers")
-// 	if headers.String() == "<undefined>" {
-// 		next.Invoke()
-// 		return nil
-// 	}
-
-// 	isECDHInit := headers.Get("x-ecdh-init").String()
-// 	if isECDHInit != "<undefined>" {
-// 		doECDHWithClient(req, res)
-// 		return nil
-// 	}
-
-// 	// get the body. This depends on the express.json
-// 	jsBody := req.Get("body")
-// 	if jsBody.String() == "<undefined>" {
-// 		println("body not defined")
-// 		res.Set("statusCode", 400)
-// 		res.Set("statusMessage", "Invalid request")
-// 		return nil
-// 	}
-
-// 	data, err := base64.URLEncoding.DecodeString(jsBody.Get("data").String())
-// 	if err != nil {
-// 		println("error decoding request:", err.Error())
-// 		res.Set("statusCode", 500)
-// 		res.Set("statusMessage", "Internal server error")
-// 		return nil
-// 	}
-
-// 	b, err := spSymmetricKey.SymmetricDecrypt(data)
-// 	if err != nil {
-// 		println("error decrypting request:", err.Error())
-// 		res.Set("statusCode", 400)
-// 		res.Set("statusMessage", "Could not decrypt request")
-// 		return nil
-// 	}
-
-// 	jreq, err := utils.FromJSONRequest(b)
-// 	if err != nil {
-// 		println("error serializing json request:", err.Error())
-// 		res.Set("statusCode", 400)
-// 		res.Set("statusMessage", "Could not decode request")
-// 		return nil
-// 	}
-
-// 	req.Set("method", jreq.Method)
-// 	for k, v := range jreq.Headers {
-// 		headers.Set(k, v)
-// 	}
-// 	var reqBody map[string]interface{}
-// 	json.Unmarshal(jreq.Body, &reqBody)
-// 	req.Set("body", reqBody)
-
-// 	// OVERWRITE THE SEND FUNCTION
-// 	res.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-// 		// convert body to readable format
-// 		data := args[0]
-// 		var b []byte
-
-// 		if data.Type() == js.TypeObject {
-// 			switch data.Get("constructor").Get("name").String() {
-// 			case "Object":
-// 				b, err = json.Marshal(parseJSObjectToMap(data))
-// 				if err != nil {
-// 					println("error serializing json response:", err.Error())
-// 					res.Set("statusCode", 500)
-// 					res.Set("statusMessage", "Could not encode response")
-// 					return nil
-// 				}
-// 			case "Array":
-// 				b, err = json.Marshal(parseJSObjectToSlice(data))
-// 				if err != nil {
-// 					println("error serializing json response:", err.Error())
-// 					res.Set("statusCode", 500)
-// 					res.Set("statusMessage", "Could not encode response")
-// 					return nil
-// 				}
-// 			default:
-// 				b = []byte(data.String())
-// 			}
-// 		} else {
-// 			b = []byte(data.String())
-// 		}
-
-// 		// encrypt response
-// 		jres := utils.Response{}
-// 		jres.Body = b
-// 		jres.Status = res.Get("statusCode").Int()
-// 		jres.StatusText = res.Get("statusMessage").String()
-// 		jres.Headers = make(map[string]string)
-// 		if res.Get("headers").String() == "<undefined>" {
-// 			res.Set("headers", js.ValueOf(map[string]interface{}{}))
-// 		}
-// 		js.Global().Get("Object").Call("keys", res.Get("headers")).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
-// 			jres.Headers[args[0].String()] = args[1].String()
-// 			return nil
-// 		}))
-// 		b, err = jres.ToJSON()
-// 		if err != nil {
-// 			println("error serializing json response:", err.Error())
-// 			res.Set("statusCode", 500)
-// 			res.Set("statusMessage", "Could not encode response")
-// 			return nil
-// 		}
-
-// 		//b, err = utils.Dep_SymmetricEncrypt(b, secret)
-// 		b, err := spSymmetricKey.SymmetricEncrypt(b)
-// 		//fmt.Println("b: ", b)
-// 		if err != nil {
-// 			println("error encrypting response:", err.Error())
-// 			res.Set("statusCode", 500)
-// 			res.Set("statusMessage", "Could not encrypt response")
-// 			return nil
-// 		}
-
-// 		resHeaders := make(map[string]interface{})
-// 		for k, v := range jres.Headers {
-// 			resHeaders[k] = v
-// 		}
-
-// 		// send response
-// 		res.Set("statusCode", jres.Status)
-// 		res.Set("statusMessage", jres.StatusText)
-// 		res.Call("set", js.ValueOf(resHeaders))
-// 		res.Call("end", js.Global().Get("JSON").Call("stringify", js.ValueOf(map[string]interface{}{
-// 			"data": base64.URLEncoding.EncodeToString(b),
-// 		})))
-// 		return nil
-// 	}))
-
-// 	// continue to next middleware/handler
-// 	next.Invoke()
-// 	return nil
-// }
-
-// WASM Middleware Version 2 Does not depend on the Express Body Parser//
 
 func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 	// Get the request and response objects and the next function
@@ -297,7 +145,7 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 	}
 
 	clientUUID := headers.Get("x-client-uuid").String()
-	fmt.Println("clientUUID: ", clientUUID)
+	fmt.Println("[L8Middleware] clientUUID: ", clientUUID)
 	if clientUUID == "<undefined>" {
 		doECDHWithClient(req, res)
 		return nil
@@ -521,14 +369,13 @@ func parseJSObjectToSlice(obj js.Value) []interface{} {
 }
 
 func async_test_WASM(this js.Value, args []js.Value) interface{} {
-	fmt.Println("Fisrt argument: ", args[0])
-	fmt.Println("Second argument: ", args[1])
+	fmt.Println("[L8Middleware] Fisrt argument: ", args[0])
+	fmt.Println("[L8Middleware] Second argument: ", args[1])
 	var resolve_reject_internals = func(this js.Value, args []js.Value) interface{} {
 		resolve := args[0]
 		//reject := args[1]
 		go func() {
 			// Main function body
-			//fmt.Println(string(args[2]))
 			resolve.Invoke(js.ValueOf(fmt.Sprintf("WASM Middleware version %s successfully loaded.", VERSION)))
 			//reject.Invoke()
 		}()
@@ -540,6 +387,152 @@ func async_test_WASM(this js.Value, args []js.Value) interface{} {
 }
 
 func TestWASM(this js.Value, args []js.Value) interface{} {
-	fmt.Println("TestWasm Ran")
+	fmt.Println("[L8Middleware] TestWasm Ran")
 	return js.ValueOf("42")
 }
+
+// func WASMMiddleware(this js.Value, args []js.Value) interface{} {
+// 	// get the request and response objects and the next function
+// 	req := args[0]
+// 	res := args[1]
+// 	next := args[2]
+
+// 	//fmt.Println("Get Rdy to Error out...")
+
+// 	// check for layer8 request
+// 	headers := req.Get("headers")
+// 	if headers.String() == "<undefined>" {
+// 		next.Invoke()
+// 		return nil
+// 	}
+
+// 	isECDHInit := headers.Get("x-ecdh-init").String()
+// 	if isECDHInit != "<undefined>" {
+// 		doECDHWithClient(req, res)
+// 		return nil
+// 	}
+
+// 	// get the body. This depends on the express.json
+// 	jsBody := req.Get("body")
+// 	if jsBody.String() == "<undefined>" {
+// 		println("body not defined")
+// 		res.Set("statusCode", 400)
+// 		res.Set("statusMessage", "Invalid request")
+// 		return nil
+// 	}
+
+// 	data, err := base64.URLEncoding.DecodeString(jsBody.Get("data").String())
+// 	if err != nil {
+// 		println("error decoding request:", err.Error())
+// 		res.Set("statusCode", 500)
+// 		res.Set("statusMessage", "Internal server error")
+// 		return nil
+// 	}
+
+// 	b, err := spSymmetricKey.SymmetricDecrypt(data)
+// 	if err != nil {
+// 		println("error decrypting request:", err.Error())
+// 		res.Set("statusCode", 400)
+// 		res.Set("statusMessage", "Could not decrypt request")
+// 		return nil
+// 	}
+
+// 	jreq, err := utils.FromJSONRequest(b)
+// 	if err != nil {
+// 		println("error serializing json request:", err.Error())
+// 		res.Set("statusCode", 400)
+// 		res.Set("statusMessage", "Could not decode request")
+// 		return nil
+// 	}
+
+// 	req.Set("method", jreq.Method)
+// 	for k, v := range jreq.Headers {
+// 		headers.Set(k, v)
+// 	}
+// 	var reqBody map[string]interface{}
+// 	json.Unmarshal(jreq.Body, &reqBody)
+// 	req.Set("body", reqBody)
+
+// 	// OVERWRITE THE SEND FUNCTION
+// 	res.Set("send", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+// 		// convert body to readable format
+// 		data := args[0]
+// 		var b []byte
+
+// 		if data.Type() == js.TypeObject {
+// 			switch data.Get("constructor").Get("name").String() {
+// 			case "Object":
+// 				b, err = json.Marshal(parseJSObjectToMap(data))
+// 				if err != nil {
+// 					println("error serializing json response:", err.Error())
+// 					res.Set("statusCode", 500)
+// 					res.Set("statusMessage", "Could not encode response")
+// 					return nil
+// 				}
+// 			case "Array":
+// 				b, err = json.Marshal(parseJSObjectToSlice(data))
+// 				if err != nil {
+// 					println("error serializing json response:", err.Error())
+// 					res.Set("statusCode", 500)
+// 					res.Set("statusMessage", "Could not encode response")
+// 					return nil
+// 				}
+// 			default:
+// 				b = []byte(data.String())
+// 			}
+// 		} else {
+// 			b = []byte(data.String())
+// 		}
+
+// 		// encrypt response
+// 		jres := utils.Response{}
+// 		jres.Body = b
+// 		jres.Status = res.Get("statusCode").Int()
+// 		jres.StatusText = res.Get("statusMessage").String()
+// 		jres.Headers = make(map[string]string)
+// 		if res.Get("headers").String() == "<undefined>" {
+// 			res.Set("headers", js.ValueOf(map[string]interface{}{}))
+// 		}
+// 		js.Global().Get("Object").Call("keys", res.Get("headers")).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+// 			jres.Headers[args[0].String()] = args[1].String()
+// 			return nil
+// 		}))
+// 		b, err = jres.ToJSON()
+// 		if err != nil {
+// 			println("error serializing json response:", err.Error())
+// 			res.Set("statusCode", 500)
+// 			res.Set("statusMessage", "Could not encode response")
+// 			return nil
+// 		}
+
+// 		//b, err = utils.Dep_SymmetricEncrypt(b, secret)
+// 		b, err := spSymmetricKey.SymmetricEncrypt(b)
+// 		//fmt.Println("b: ", b)
+// 		if err != nil {
+// 			println("error encrypting response:", err.Error())
+// 			res.Set("statusCode", 500)
+// 			res.Set("statusMessage", "Could not encrypt response")
+// 			return nil
+// 		}
+
+// 		resHeaders := make(map[string]interface{})
+// 		for k, v := range jres.Headers {
+// 			resHeaders[k] = v
+// 		}
+
+// 		// send response
+// 		res.Set("statusCode", jres.Status)
+// 		res.Set("statusMessage", jres.StatusText)
+// 		res.Call("set", js.ValueOf(resHeaders))
+// 		res.Call("end", js.Global().Get("JSON").Call("stringify", js.ValueOf(map[string]interface{}{
+// 			"data": base64.URLEncoding.EncodeToString(b),
+// 		})))
+// 		return nil
+// 	}))
+
+// 	// continue to next middleware/handler
+// 	next.Invoke()
+// 	return nil
+// }
+
+// WASM Middleware Version 2 Does not depend on the Express Body Parser//

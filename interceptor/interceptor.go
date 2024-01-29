@@ -38,7 +38,6 @@ var (
 var L8Client = internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port)
 
 func main() {
-	//fmt.Print("recompile please...")
 	// Create channel to keep the Go thread alive
 	c := make(chan struct{}, 0)
 
@@ -67,7 +66,7 @@ func main() {
 	// initializeECDHTunnel()
 
 	// Developer Warnings:
-	fmt.Println("WARNING: wasm_exec.js is versioned and has some breaking changes. Ensure you are using the correct version.")
+	fmt.Println("[L8Interceptor] WARNING: wasm_exec.js is versioned and has some breaking changes. Ensure you are using the correct version.")
 
 	// Wait indefinitely
 	<-c
@@ -97,7 +96,7 @@ func persistenceCheck(this js.Value, args []js.Value) interface{} {
 		resolve := resolve_reject[0]
 		go func() {
 			Counter++
-			fmt.Println("WASM Counter: ", Counter)
+			fmt.Println("[L8Interceptor] WASM Counter: ", Counter)
 			resolve.Invoke(js.ValueOf(Counter))
 		}()
 		return nil
@@ -114,57 +113,54 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 		var err error
 		privJWK_ecdh, pubJWK_ecdh, err = utils.GenerateKeyPair(utils.ECDH)
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println("[L8Interceptor] ", err.Error())
 			ETunnelFlag = false
 			return
 		}
 
 		b64PubJWK, err := pubJWK_ecdh.ExportAsBase64()
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println("[L8Interceptor] ", err.Error())
 			ETunnelFlag = false
 			return
 		}
 
 		ProxyURL := fmt.Sprintf("%s://%s:%s/init-tunnel?backend=%s", Layer8Scheme, Layer8Host, Layer8Port, backend)
 		// ProxyURL := fmt.Sprintf("%s/init-tunnel?backend=%s", Layer8LightsailURL, backend)
-		fmt.Println(ProxyURL)
+		fmt.Println("[L8Interceptor] ", ProxyURL)
 		client := &http.Client{}
 		req, err := http.NewRequest("GET", ProxyURL, bytes.NewBuffer([]byte{}))
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println("[L8Interceptor] ", err.Error())
 			ETunnelFlag = false
 			return
 		}
 		uuid := uuid.New()
 		UUID = uuid.String()
 		// For debugging purposes
-		fmt.Println("uuid: ", uuid.String())
+		fmt.Println("[L8Interceptor] uuid: ", uuid.String())
 		req.Header.Add("x-ecdh-init", b64PubJWK)
 		req.Header.Add("x-client-uuid", uuid.String())
 
 		// send request
 		resp, err := client.Do(req)
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println("[L8Interceptor] ", err.Error())
 			ETunnelFlag = false
 			return
 		}
 
 		if resp.StatusCode == 401 {
-			fmt.Printf("User not authorized\n")
+			fmt.Printf("[L8Interceptor] User not authorized\n")
 			ETunnelFlag = false
 			return
 		}
-
-		// upJWT := resp.Header.Get("up_JWT")
-		// fmt.Println("up_JWT: ", upJWT)
 
 		// TODO: For some reason I am unable to put (or access?) custom response headers coming from
 		// either the backend OR the proxy... Therefore, I've sent along the backend's public key in the
 		// response's body.
 		// for k, v := range resp.Header {
-		// 	fmt.Println("header pairs from SP:", k, v)
+		// 	fmt.Println("[L8Interceptor] header pairs from SP:", k, v)
 		// }
 
 		Respbody := utils.ReadResponseBody(resp.Body)
@@ -174,9 +170,9 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 		err = json.Unmarshal(Respbody, &data)
 		if err != nil {
 			if strings.Contains(err.Error(), "unexpected end of JSON input") {
-				fmt.Println("JSON data might be incomplete or improperly formatted.")
+				fmt.Println("[L8Interceptor] JSON data might be incomplete or improperly formatted.")
 			} else {
-				fmt.Println(err.Error())
+				fmt.Println("[L8Interceptor] ", err.Error())
 			}
 			ETunnelFlag = false
 			return
@@ -186,23 +182,22 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 
 		server_pubKeyECDH, err := utils.JWKFromMap(data)
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println("[L8Interceptor] ", err.Error())
 			ETunnelFlag = false
 			return
 		}
 
 		userSymmetricKey, err = privJWK_ecdh.GetECDHSharedSecret(server_pubKeyECDH)
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println("[L8Interceptor] ", err.Error())
 			ETunnelFlag = false
 			return
 		}
-		fmt.Println("userSymmetricKey: ", userSymmetricKey)
 
 		// TODO: Send an encrypted ping / confirmation to the server using the shared secret
 		// just like the 1. Syn 2. Syn/Ack 3. Ack flow in a TCP handshake
 		ETunnelFlag = true
-		fmt.Println("Encrypted tunnel successfully established.")
+		fmt.Println("[L8Interceptor] Encrypted tunnel successfully established.")
 		return
 	}()
 
@@ -270,12 +265,12 @@ func fetch(this js.Value, args []js.Value) interface{} {
 
 		// Print the headersMap for debugging purposes
 		for k, v := range headersMap {
-			fmt.Println("Encrypted Headers from the SP: ", k, v)
+			fmt.Println("[L8Interceptor] Encrypted Headers from the SP: ", k, v)
 		}
 
 		go func() {
 			// forward request to the layer8 proxy server
-			fmt.Println("userSymmetricKey", userSymmetricKey)
+			fmt.Println("[L8Interceptor] userSymmetricKey", userSymmetricKey)
 			res := L8Client.
 				Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
 
@@ -283,7 +278,6 @@ func fetch(this js.Value, args []js.Value) interface{} {
 				resHeaders := js.Global().Get("Headers").New()
 
 				for k, v := range res.Headers {
-					//fmt.Println("Encrypted Headers from the SP: ", k, v)
 					resHeaders.Call("append", js.ValueOf(k), js.ValueOf(v))
 				}
 
@@ -296,7 +290,7 @@ func fetch(this js.Value, args []js.Value) interface{} {
 			}
 
 			reject.Invoke(js.Global().Get("Error").New(res.StatusText))
-			fmt.Println("status:", res.Status, res.StatusText)
+			fmt.Println("[L8Interceptor] status:", res.Status, res.StatusText)
 			return
 		}()
 		return nil

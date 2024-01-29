@@ -60,7 +60,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	req.Header["x-tunnel"] = []string{"true"}
-	req.Header["mp_jwt"] = []string{mpJWT}
+	req.Header["mp-jwt"] = []string{mpJWT}
 
 	// send the request
 	res, err := http.DefaultClient.Do(req)
@@ -124,8 +124,10 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Method) // > GET  | > POST
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
 	fmt.Println("Ravi Adds Path: ", r.URL.Path)
+	fmt.Println("Host:", r.Header.Get("X-Forwarded-Host"))
 
-	backendURL := fmt.Sprintf(os.Getenv("VITE_BACKEND")+"%s", r.URL)
+	// backendURL := fmt.Sprintf(os.Getenv("VITE_BACKEND")+"%s", r.URL)
+	backendURL := fmt.Sprintf("https://%s%s", r.Header.Get("X-Forwarded-Host"), r.URL)
 
 	// create the request
 	req, err := http.NewRequest(r.Method, backendURL, r.Body)
@@ -143,7 +145,8 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	req.Header["x-tunnel"] = []string{"true"}
 
 	// Get up_JWT from request header and verify it
-	upJWT := r.Header.Get("up_JWT") // RAVI!
+	upJWT := r.Header.Get("up-jwt") // RAVI!
+	fmt.Println("up-jwt coming from client: ", upJWT)
 
 	_, err = utilities.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
 	if err != nil {
@@ -164,7 +167,8 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("\nReceived response from:", backendURL, " of code: ", res.StatusCode)
 
 	// Get mp_JWT from response header and verify it
-	mpJWT := res.Header.Get("mp_JWT")
+	mpJWT := res.Header.Get("mp-jwt")
+	fmt.Println("mp_jwt coming from SP: ", mpJWT)
 
 	_, err = utilities.VerifyStandardToken(mpJWT, os.Getenv("MP_123_SECRET_KEY"))
 	if err != nil {

@@ -150,7 +150,6 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 	mapB := make(map[string]interface{})
 	json.Unmarshal(bufByte, &mapB)
 
-	fmt.Println("mapB: ", mapB)
 	toDecode, ok := mapB["data"].(string)
 	if !ok {
 		res := &utils.Response{
@@ -173,9 +172,8 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, backendUrl string, hea
 		return 500, resByte
 	}
 
-	fmt.Println("decoded: ", decoded)
 	bufByte, err = sharedSecret.SymmetricDecrypt(decoded)
-	fmt.Println("bufBytes: ", string(bufByte))
+
 	if err != nil {
 		res := &utils.Response{
 			Status:     500,

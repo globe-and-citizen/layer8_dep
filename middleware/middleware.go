@@ -1,7 +1,6 @@
 package main
 
 import (
-	// "bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
@@ -278,7 +277,6 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 	req := args[0]
 	res := args[1]
 	next := args[2]
-	_ = args[3] // stream
 
 	headers := req.Get("headers")
 
@@ -386,7 +384,7 @@ func WASMMiddleware_v2(this js.Value, args []js.Value) interface{} {
 				res.Set("statusMessage", "Could not generate random bytes: "+err.Error())
 				return nil
 			}
-			boundary := fmt.Sprintf("----WebKitFormBoundary%s", base64.StdEncoding.EncodeToString(randomBytes))
+			boundary := fmt.Sprintf("----Layer8FormBoundary%s", base64.StdEncoding.EncodeToString(randomBytes))
 
 			for k, v := range reqBody {
 				// formdata can have multiple entries with the same key
@@ -551,7 +549,6 @@ func static(this js.Value, args []js.Value) interface{} {
 		}
 	)
 
-	// check if the file exists
 	// get the file path
 	path := req.Get("url").String()
 	if path == "/" {
@@ -609,12 +606,13 @@ func static(this js.Value, args []js.Value) interface{} {
 	js.CopyBytesToGo(b, buffer)
 
 	// create a response object
-	jres := utils.Response{}
-	jres.Body = b
-	jres.Status = http.StatusOK
-	jres.StatusText = http.StatusText(http.StatusOK)
-	jres.Headers = map[string]string{
-		"content-type": http.DetectContentType(b),
+	jres := utils.Response{
+		Body:       b,
+		Status:     http.StatusOK,
+		StatusText: http.StatusText(http.StatusOK),
+		Headers: map[string]string{
+			"content-type": http.DetectContentType(b),
+		},
 	}
 
 	b, err = jres.ToJSON()

@@ -1,6 +1,5 @@
 const { Console } = require('console');
 const fs = require('fs');
-const stream = require('stream');
 const crypto = require("crypto").webcrypto;
 globalThis.crypto = crypto;
 require('./wasm_exec.js');
@@ -40,7 +39,7 @@ WebAssembly.instantiate(decode(encoded), importObject).then(async (results) => {
 
 module.exports = {
     tunnel: (req, res, next) => {
-        WASMMiddleware(req, res, next, stream);
+        WASMMiddleware(req, res, next);
     },
     static: (dir) => {
         return (req, res, next) => {

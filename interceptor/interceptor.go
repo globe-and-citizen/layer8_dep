@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"globe-and-citizen/layer8/interceptor/internals"
+	"time"
 
 	"net/http"
 	"strings"
@@ -59,6 +60,7 @@ func main() {
 		"persistenceCheck":    js.FuncOf(persistenceCheck),
 		"InitEncryptedTunnel": js.FuncOf(initializeECDHTunnel),
 		"fetch":               js.FuncOf(fetch),
+		"static":              js.FuncOf(getStatic),
 	}))
 
 	// Developer Warnings:
@@ -232,22 +234,11 @@ func fetch(this js.Value, args []js.Value) interface{} {
 			headers = js.ValueOf(map[string]interface{}{})
 		}
 
-		// set the UpJWT to the headers
-		headers.Set("up_JWT", UpJWT)
-
-		// set the UUID to the headers
-		headers.Set("x-client-uuid", UUID)
-
 		headersMap := make(map[string]string)
 		js.Global().Get("Object").Call("entries", headers).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
 			headersMap[args[0].Index(0).String()] = args[0].Index(1).String()
 			return nil
 		}))
-
-		// Print the headersMap for debugging purposes
-		for k, v := range headersMap {
-			fmt.Println("Encrypted Headers from the SP: ", k, v)
-		}
 
 		// set the content-type to application/json if it's undefined
 		if _, ok := headersMap["Content-Type"]; !ok {
@@ -281,10 +272,11 @@ func fetch(this js.Value, args []js.Value) interface{} {
 				}
 
 				// forward request to the layer8 proxy server
-				res = L8Client.
-					Do(url, utils.NewRequest(method, headersMap, bodyByte), userSymmetricKey)
-			case "application/layer8.buffer+json":
-				requirements := []string{"name", "size", "type", "buff"}
+				res = L8Client.Do(
+					url, utils.NewRequest(method, headersMap, bodyByte),
+					userSymmetricKey, false, UpJWT, UUID)
+			case "multipart/form-data":
+				headersMap["Content-Type"] = "application/layer8.buffer+json"
 
 				body := options.Get("body")
 				if body.String() == "<undefined>" || body.String() == "null" {
@@ -292,41 +284,99 @@ func fetch(this js.Value, args []js.Value) interface{} {
 					return
 				}
 
-				// check if the body has all the required fields
-				notFound := []string{}
-				for _, v := range requirements {
-					fmt.Println("jv: ", body.Get(v).String())
-					if jv := body.Get(v); jv.String() == "<undefined>" || jv.String() == "null" {
-						notFound = append(notFound, v)
+				// get data from formdata
+				var (
+					dataLength = js.Global().Get("Array").Call("from", body.Call("keys")).Get("length").Int()
+					formdata   = make(map[string]interface{}, dataLength)
+				)
+
+				js.Global().Get("Array").Call("from", body.Call("keys")).Call("forEach", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+					var (
+						key       = args[0].String()
+						value     = body.Call("get", key)
+						valueType = value.Get("constructor").Get("name").String()
+					)
+
+					switch valueType {
+					case "File":
+						value.Call("arrayBuffer").Call("then", js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+							buff := make([]byte, value.Get("size").Int())
+							js.CopyBytesToGo(buff, js.Global().Get("Uint8Array").New(args[0]))
+
+							data := map[string]interface{}{
+								"_type": "File",
+								"name":  value.Get("name").String(),
+								"size":  value.Get("size").Int(),
+								"type":  value.Get("type").String(),
+								"buff":  base64.StdEncoding.EncodeToString(buff),
+							}
+
+							// because formdata can have multiple entries for the same key
+							// each key is an array of maps
+							if val, ok := formdata[key]; !ok {
+								formdata[key] = []map[string]interface{}{data}
+							} else {
+								formdata[key] = append(val.([]map[string]interface{}), data)
+							}
+							return nil
+						}))
+					case "String":
+						data := map[string]interface{}{
+							"_type": "String",
+							"value": value.String(),
+						}
+
+						if val, ok := formdata[key]; !ok {
+							formdata[key] = []map[string]interface{}{data}
+						} else {
+							formdata[key] = append(val.([]map[string]interface{}), data)
+						}
+					case "Number":
+						data := map[string]interface{}{
+							"_type": "Number",
+							"value": value.Float(),
+						}
+
+						if val, ok := formdata[key]; !ok {
+							formdata[key] = []map[string]interface{}{data}
+						} else {
+							formdata[key] = append(val.([]map[string]interface{}), data)
+						}
+					case "Boolean":
+						data := map[string]interface{}{
+							"_type": "Boolean",
+							"value": value.Bool(),
+						}
+
+						if val, ok := formdata[key]; !ok {
+							formdata[key] = []map[string]interface{}{data}
+						} else {
+							formdata[key] = append(val.([]map[string]interface{}), data)
+						}
+					default:
+						reject.Invoke(js.Global().Get("Error").New(fmt.Sprintf("Unsupported type: %s", valueType)))
+						return nil
 					}
-				}
-				if len(notFound) > 0 {
-					reject.Invoke(js.Global().Get("Error").New(fmt.Sprintf("The following fields are required in the body: %v", notFound)))
-					return
-				}
 
-				// convert arraybuffer to Go byte array
-				buff := make([]byte, body.Get("size").Int())
-				js.CopyBytesToGo(buff, js.Global().Get("Uint8Array").New(body.Get("buff")))
+					return nil
+				}))
 
-				// convert the body to a map
-				bodyMap := map[string]interface{}{
-					"name": body.Get("name").String(),
-					"size": body.Get("size").Int(),
-					"type": body.Get("type").String(),
-					"buff": base64.StdEncoding.EncodeToString(buff),
-				}
+				// wait for the formdata to be populated, this is a hacky way to do it, but it works for now
+				// having tried using a channel, it fails with a "fatal error: all goroutines are asleep - deadlock!"
+				// TODO: find a better way to do this
+				time.Sleep(100 * time.Millisecond)
 
 				// encode the body to json
-				bodyByte, err := json.Marshal(bodyMap)
+				bodyByte, err := json.Marshal(formdata)
 				if err != nil {
 					reject.Invoke(js.Global().Get("Error").New(err.Error()))
 					return
 				}
 
 				// forward request to the layer8 proxy server
-				res = L8Client.
-					Do(url, utils.NewRequest(method, headersMap, bodyByte), userSymmetricKey)
+				res = L8Client.Do(
+					url, utils.NewRequest(method, headersMap, bodyByte),
+					userSymmetricKey, false, UpJWT, UUID)
 			default:
 				res = &utils.Response{
 					Status:     400,
@@ -359,4 +409,37 @@ func fetch(this js.Value, args []js.Value) interface{} {
 	promiseConstructor := js.Global().Get("Promise")
 	promise := promiseConstructor.New(js.FuncOf(promise_logic))
 	return promise
+}
+
+func getStatic(this js.Value, args []js.Value) interface{} {
+	url := args[0].String()
+
+	return js.Global().Get("Promise").New(js.FuncOf(func(this js.Value, args []js.Value) interface{} {
+		resolve := args[0]
+
+		go func() {
+			resp := L8Client.Do(
+				url, utils.NewRequest("GET", make(map[string]string), nil),
+				userSymmetricKey, true, UpJWT, UUID)
+
+			// convert response body to js arraybuffer
+			jsBody := js.Global().Get("Uint8Array").New(len(resp.Body))
+			js.CopyBytesToJS(jsBody, resp.Body)
+
+			// create a map of the response headers
+			resHeaders := js.Global().Get("Headers").New()
+			for k, v := range resp.Headers {
+				resHeaders.Call("append", js.ValueOf(k), js.ValueOf(v))
+			}
+
+			blob := js.Global().Get("Blob").New([]interface{}{jsBody}, js.ValueOf(map[string]interface{}{
+				"type": resHeaders.Call("get", js.ValueOf("content-type")),
+			}))
+			objURL := js.Global().Get("URL").Call("createObjectURL", blob)
+
+			resolve.Invoke(objURL)
+		}()
+
+		return nil
+	}))
 }

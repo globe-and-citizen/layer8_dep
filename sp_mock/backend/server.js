@@ -9,7 +9,7 @@ const SECRET_KEY = "my_very_secret_key";
 // TODO: For future, use a layer8 npm published package for initialising the client and variables
 const popsicle = require("popsicle");
 const ClientOAuth2 = require("client-oauth2");
-const fs = require("fs");
+const layer8 = require("./dist/loadWASM.js");
 
 require("dotenv").config();
 const port = process.env.PORT;
@@ -30,16 +30,20 @@ const layer8Auth = new ClientOAuth2({
   scopes: ["read:user"],
 });
 
+const upload = layer8.multipart({ dest: "uploads" });
+
 app.get("/healthcheck", (req, res) => {
   console.log("Enpoint for testing");
   console.log("req.body: ", req.body);
   res.send("Bro, ur poems coming soon. Relax a little.");
 });
 
-const Layer8 = require("./dist/loadWASM.js");
-app.use(Layer8);
+app.use(layer8.tunnel);
 app.use(cors());
-app.use('/media', express.static('uploads'));
+app.use('/media', layer8.static('uploads'));
+app.use('/test', (req, res) => {
+  res.status(200).json({ message: 'Test endpoint' });
+});
 
 app.post("/", (req, res) => {
   console.log("Enpoint for testing");
@@ -133,13 +137,16 @@ app.post("/api/login/layer8/auth", async (req, res) => {
   res.status(200).json({ token });
 });
 
-app.post("/api/profile/upload", async (req, res) => {
-  const file = req.body.get('file');
-  const uint8Array = new Uint8Array(await file.arrayBuffer());
-  fs.writeFileSync(`./uploads/${file.name}`, uint8Array);
+app.post("/api/profile/upload", upload.single('file'), (req, res) => {
+  const uploadedFile = req.file;
+
+  if (!uploadedFile) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  
   res.status(200).json({ 
     message: "File uploaded successfully!",
-    url: `${req.protocol}://${req.get('host')}/media/${file.name}`
+    url: `${req.protocol}://${req.get('host')}/media/${req.file?.name}`
   });
 });
 

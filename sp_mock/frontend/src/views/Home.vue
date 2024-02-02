@@ -7,6 +7,7 @@ const router = useRouter();
 const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
 const L8Token = ref(localStorage.getItem("L8_TOKEN") || null);
 const isLoggedIn = computed(() => SpToken.value !== null);
+const user = ref(localStorage.getItem("_user") ? JSON.parse(localStorage.getItem("_user")) : null);
 let nextPoem = ref({});
 // const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com";
 const BackendURL = "http://localhost:5001";
@@ -64,6 +65,12 @@ const logoutUser = () => {
         v-if="isLoggedIn"
       >
         <h1>Welcome {{ userName }}!</h1>
+        <div v-if="user?.profile_image">
+          <img :src="user?.profile_image" />
+          <br />
+          <hr />
+          <br />
+        </div>
         <h3>Your MetaData:</h3>
         <h4 v-if="metaData.displayName">
           Username: {{ metaData.displayName }}

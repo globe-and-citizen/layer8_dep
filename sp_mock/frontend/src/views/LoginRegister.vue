@@ -20,6 +20,8 @@ const isLoading = ref(false);
 // ----
 // TODO:
 // Keep the backend URL in the .env file
+// The backend URL should not be pointing to the proxy server we should internally do that. 
+// Clients should only know of their own server and not layer8's proxy server
 // ----
 //const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com";
 const BackendURL = "http://localhost:5001";
@@ -130,21 +132,22 @@ const uploadProfilePicture = async (e) => {
   isLoading.value = true;
 
   const file = e.target.files[0];
+  const formdata = new FormData();
+  formdata.append("file", file);
+
   layer8.fetch(BackendURL + "/api/profile/upload", {
     method: "POST",
     headers: {
-      "Content-Type": "application/layer8.buffer+json",
+      "Content-Type": "multipart/form-data",
     },
-    body: {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      buff: await file.arrayBuffer(),
-    },
+    body: formdata,
   })
     .then((res) => res.json())
-    .then((data) => {
+    .then(async (data) => {
       profileImage.value = data.url;
+      const url = await layer8.static(data.url);
+      const element = document.getElementById("im");
+      element.src = url;
     })
     .catch((err) => console.log(err))
     .finally(() => {
@@ -167,7 +170,7 @@ const uploadProfilePicture = async (e) => {
           <h1 class="text-dark pb-4 font-bold">Upload Profile Picture</h1>
           <input type="file" @change="uploadProfilePicture" />
           <div v-if="profileImage">
-            <img :src="profileImage" />
+            <img id="im" />
           </div>
           <hr />
           <button class="btn btn-primary max-w-xs" @click="registerUser" :disabled="isLoading">

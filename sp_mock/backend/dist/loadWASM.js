@@ -1,10 +1,9 @@
 const { Console } = require('console');
 const fs = require('fs');
-
+const stream = require('stream');
 const crypto = require("crypto").webcrypto;
 globalThis.crypto = crypto;
 require('./wasm_exec.js');
-
 const wasmCode = fs.readFileSync("./dist/middleware.wasm");
 const encoded = Buffer.from(wasmCode, 'binary').toString('base64');
 
@@ -39,9 +38,32 @@ WebAssembly.instantiate(decode(encoded), importObject).then(async (results) => {
     console.log("Error running loadWASM script: ", err)
 });
 
-module.exports = function Layer8(req, res, next) { 
-    WASMMiddleware(req, res, next);
-};
+module.exports = {
+    tunnel: (req, res, next) => {
+        WASMMiddleware(req, res, next, stream);
+    },
+    static: (dir) => {
+        return (req, res, next) => {
+            ServeStatic(req, res, dir, fs);
+        }
+    },
+    multipart: (options) => {
+        return {
+            single: (name) => {
+                return (req, res, next) => {
+                    const multi = ProcessMultipart(options, fs)
+                    multi.single(req, res, next, name)
+                }
+            },
+            array: (name) => {
+                return (req, res, next) => {
+                    const multi = ProcessMultipart(options, fs)
+                    multi.array(req, res, next, name)
+                }
+            }
+        }
+    }
+}
 
 // module.exports = function Layer8(req, res, next) { 
 //     console.log(TestWASM())

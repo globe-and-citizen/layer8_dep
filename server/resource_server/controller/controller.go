@@ -21,11 +21,39 @@ func IndexHandler(w http.ResponseWriter, r *http.Request) {
 
 	utils.GetPwd()
 
-	var relativePathIndex = "assets-v1/templates/homeView.html"
+	// var relativePathIndex = "assets-v1/templates_copy/homeView.html"
+	var relativePathIndex = "assets-v1/templates_copy/public/welcome.html"
 	indexPath := filepath.Join(utils.WorkingDirectory, relativePathIndex)
 	fmt.Println("indexPath: ", indexPath)
 	http.ServeFile(w, r, indexPath)
+}
+func LoginUserPage(w http.ResponseWriter, r *http.Request) {
 
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintln(w, http.StatusText(http.StatusMethodNotAllowed))
+		return
+	}
+
+	utils.GetPwd()
+
+	var relativePathIndex = "assets-v1/templates_copy/src/pages/user_portal/login.html"
+	indexPath := filepath.Join(utils.WorkingDirectory, relativePathIndex)
+	http.ServeFile(w, r, indexPath)
+}
+func RegisterUserPage(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		fmt.Fprintln(w, http.StatusText(http.StatusMethodNotAllowed))
+		return
+	}
+
+	utils.GetPwd()
+
+	var relativePathIndex = "assets-v1/templates_copy/src/pages/user_portal/register.html"
+	indexPath := filepath.Join(utils.WorkingDirectory, relativePathIndex)
+	http.ServeFile(w, r, indexPath)
 }
 
 func UserHandler(w http.ResponseWriter, r *http.Request) {
@@ -38,7 +66,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 
 	utils.GetPwd()
 
-	var relativePathUser = "assets-v1/templates/userView.html"
+	var relativePathUser = "assets-v1/templates_copy/src/pages/user_portal/profile.html"
 	userPath := filepath.Join(utils.WorkingDirectory, relativePathUser)
 	fmt.Println("userPath: ", userPath)
 	http.ServeFile(w, r, userPath)
@@ -53,7 +81,7 @@ func ClientHandler(w http.ResponseWriter, r *http.Request) {
 
 	utils.GetPwd()
 
-	var relativePathUser = "assets-v1/templates/registerClient.html"
+	var relativePathUser = "assets-v1/templates_copy/registerClient.html"
 	userPath := filepath.Join(utils.WorkingDirectory, relativePathUser)
 	fmt.Println("userPath: ", userPath)
 	http.ServeFile(w, r, userPath)

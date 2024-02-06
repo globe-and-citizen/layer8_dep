@@ -117,6 +117,10 @@ func Server(port int, service interfaces.IService) {
 				Ctl.IndexHandler(w, r)
 			case path == "/user":
 				Ctl.UserHandler(w, r)
+			case path == "/user-login-page":
+				Ctl.LoginUserPage(w, r)
+			case path == "/user-register-page":
+				Ctl.RegisterUserPage(w, r)
 			case path == "/register":
 				Ctl.ClientHandler(w, r)
 			case path == "/api/v1/register-user":

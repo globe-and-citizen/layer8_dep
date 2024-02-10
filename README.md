@@ -52,7 +52,6 @@ CREATE TABLE user_metadata (
 ## Run the sp_mock frontend & backend
 1) In any terminal, run make `$make npm_install_all`
 2) In any terminal, run make `$make go_mod_tidy_all`
-3) In a bash terminal, run make `$make build_middleware`
 4) Clone `.env.dev` to `.env` in `sp_mock/backend`
 5) Navigate to the root directory. Run `$make run_backend`
 6) Clone `.env.dev` to `.env` in `interceptor`

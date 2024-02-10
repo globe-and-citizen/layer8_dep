@@ -52,6 +52,7 @@ CREATE TABLE user_metadata (
 ## Run the sp_mock frontend & backend
 1) In any terminal, run make `$make npm_install_all`
 2) In any terminal, run make `$make go_mod_tidy`
+3) Navigate to `./server` and run `go get "github.com/globe-and-citizen/layer8-utils"`
 4) Clone `.env.dev` to `.env` in `sp_mock/backend`
 5) Navigate to the root directory. Run `$make run_backend`
 4) Clone `.env.dev` to `.env` in `sp_mock/frontend`

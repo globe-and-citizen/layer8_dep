@@ -163,7 +163,7 @@ func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 			return
 		}
 
-		UpJWT = data["up_JWT"].(string)
+		UpJWT = data["up-JWT"].(string)
 
 		server_pubKeyECDH, err := utils.JWKFromMap(data)
 		if err != nil {

@@ -103,7 +103,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	// // Make a json response of server_pubKeyECDH and up_JWT and send it back to client
 	data := map[string]interface{}{
 		"server_pubKeyECDH": server_pubKeyECDH,
-		"up_JWT":            upJWT,
+		"up-JWT":            upJWT,
 	}
 
 	fmt.Println("data (Going back to client): ", data)
@@ -144,16 +144,16 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	}
 	req.Header["x-tunnel"] = []string{"true"}
 
-	// Get up_JWT from request header and verify it
-	// upJWT := r.Header.Get("up-jwt") // RAVI! LOOK HERE
-	// fmt.Println("up-jwt coming from client: ", upJWT)
+	// Get up-JWT from request header and verify it
+	upJWT := r.Header.Get("up-jwt") // RAVI! LOOK HERE
+	fmt.Println("up-jwt coming from client: ", upJWT)
 
-	// _, err = utilities.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
-	// if err != nil {
-	// 	fmt.Println("UP JWT verify error: ", err.Error())
-	// 	http.Error(w, err.Error(), http.StatusUnauthorized)
-	// 	return
-	// }
+	_, err = utilities.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
+	if err != nil {
+		fmt.Println("UP JWT verify error: ", err.Error())
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
 
 	// send the request
 	res, err := http.DefaultClient.Do(req) // Source of MapB Error
@@ -166,9 +166,9 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("\nReceived response from:", backendURL, " of code: ", res.StatusCode)
 
-	// Get mp_JWT from response header and verify it
+	// Get mp-JWT from response header and verify it
 	mpJWT := res.Header.Get("mp-jwt")
-	fmt.Println("mp_jwt coming from SP: ", mpJWT)
+	fmt.Println("mp-jwt coming from SP: ", mpJWT)
 
 	_, err = utilities.VerifyStandardToken(mpJWT, os.Getenv("MP_123_SECRET_KEY"))
 	if err != nil {

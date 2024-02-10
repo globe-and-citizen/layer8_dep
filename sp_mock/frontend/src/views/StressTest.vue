@@ -2,15 +2,22 @@
 import { ref } from "vue";
 import Navbar from "../components/Navbar.vue";
 const BackendURL = "http://localhost:5001";
+import layer8_interceptor from 'layer8_interceptor'
 
+const BACKEND_URL =  import.meta.env.VITE_BACKEND_URL
 const requestsSent = ref(0);
 const totalTimeSpent = ref(0);
 const numberOfRequest = ref(0)
 
+console.log("verdict 1: ", layer8_interceptor.checkEncryptedTunnel())
+setTimeout(()=>{
+  console.log("verdict 2: ", layer8_interceptor.checkEncryptedTunnel())
+}, 1000)
+
 async function testWASMHandler() {
   const startTime = performance.now();
   for (let i = 0; i < numberOfRequest.value; i++) {
-    const res = await layer8.testWASM(i, "42");
+    const res = await layer8_interceptor.testWASM(i, "42");
     requestsSent.value++;
     console.log(res);
   }
@@ -20,11 +27,10 @@ async function testWASMHandler() {
   console.log("Total time spent: ", totalTimeSpent.value, "ms")
 }
 
-
 async function getError(){
   try {
     console.log("Error Test")
-    await layer8.fetch(BackendURL + "/error", {
+    await layer8_interceptor.fetch(BackendURL + "/error", {
       method: "POST",
       headers: {
         "Content-Type": "Application/Json",
@@ -37,6 +43,24 @@ async function getError(){
     isRegister.value = true;
   }
 }
+
+let x = 0
+async function getNextPicture(){
+  let idx = x%7
+  const pictureURLs = [
+    'http://localhost:8000/media/1.png',
+    'http://localhost:8000/media/2.png',
+    'http://localhost:8000/media/3.png',
+    'http://localhost:8000/media/4.png',
+    'http://localhost:8000/media/5.png',
+  ]
+  console.log("idx: ", idx)
+  let url = await layer8_interceptor.static(pictureURLs[idx]);
+  const element = document.getElementById("pictureBox");
+  element.src = url;
+  x++
+}
+
 
 </script>
 
@@ -59,6 +83,13 @@ async function getError(){
       <div>
         <button @click="getError"> Get Error from "/error"</button>
       </div>
+
+      <div>
+        <button @click="getNextPicture"> Get Next Picture</button>
+      </div>
+      <hr>
+      <img id="pictureBox">
+
     </div>
   </div>
 </template>

@@ -3,17 +3,17 @@
 import { computed, ref } from "vue";
 import { onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import layer8_interceptor from 'layer8_interceptor'
 
 const router = useRouter()
 const code = ref(new URLSearchParams(window.location.search).get("code"))
 const token = ref(localStorage.getItem("token") || null)
-// const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com";
-const BackendURL = "http://localhost:5001";
+const BACKEND_URL =  import.meta.env.VITE_BACKEND_URL
 
 
 onMounted(() => {
     setTimeout(() => {
-        layer8.fetch(BackendURL + "/api/login/layer8/auth", {
+        layer8_interceptor.fetch(BACKEND_URL + "/api/login/layer8/auth", {
             method: "POST",
             headers: {
                 "Content-Type": "Application/Json"

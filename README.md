@@ -51,11 +51,10 @@ CREATE TABLE user_metadata (
 
 ## Run the sp_mock frontend & backend
 1) In any terminal, run make `$make npm_install_all`
-2) In any terminal, run make `$make go_mod_tidy_all`
+2) In any terminal, run make `$make go_mod_tidy`
 4) Clone `.env.dev` to `.env` in `sp_mock/backend`
 5) Navigate to the root directory. Run `$make run_backend`
-6) Clone `.env.dev` to `.env` in `interceptor`
-7) In a bash terminal run make `$make build_interceptor`
+4) Clone `.env.dev` to `.env` in `sp_mock/frontend`
 8) Navigate to the root directory. Run `$make run_frontend`
 9) Configure the `.env` in `/server` to connect to your local PG implementation
     Example: 
@@ -72,7 +71,7 @@ CREATE TABLE user_metadata (
     MP_123_SECRET_KEY=
     SSL_ROOT_CERT=
     ```
-10) With Golang installed, run `$make run_server`
+10) With Golang installed, run `$make run_server` from the root directory
 11) Navigate to `http://localhost:5001`. Register a new Layer8 user.
 12) Navigate to `http://localhost:5173` to register and login a user of the sp_mock.
 

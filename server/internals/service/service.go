@@ -1,21 +1,78 @@
-package usecases
+package service
 
 import (
 	"encoding/json"
 	"fmt"
+	"globe-and-citizen/layer8/server/config"
 	"globe-and-citizen/layer8/server/constants"
 	"globe-and-citizen/layer8/server/entities"
+	"globe-and-citizen/layer8/server/internals/repository"
+	"globe-and-citizen/layer8/server/models"
+	"globe-and-citizen/layer8/server/utils"
 	"strings"
 	"time"
 
 	utilities "github.com/globe-and-citizen/layer8-utils"
-
 	"golang.org/x/oauth2"
 )
 
+type Service struct {
+	Repo repository.Repository
+}
+
+func NewService(repo repository.Repository) *Service {
+	return &Service{
+		Repo: repo,
+	}
+}
+
+// GetUserByToken returns the user associated with the given token
+func (u *Service) GetUserByToken(token string) (*models.User, error) {
+	// verify token
+	userID, err := utilities.VerifyUserToken(config.SECRET_KEY, token)
+	if err != nil {
+		return nil, err
+	}
+	// get user
+	user, err := u.Repo.GetUserByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (u *Service) LoginUser(username, password string) (map[string]interface{}, error) {
+
+	userSalt, err := u.Repo.LoginUserPrecheck(username)
+	if err != nil {
+		return nil, err
+	}
+
+	HashedAndSaltedPass := utils.SaltAndHashPassword(password, userSalt)
+
+	user, err := u.Repo.GetUser(username)
+	if err != nil {
+		return nil, err
+	}
+
+	if user.Password != HashedAndSaltedPass {
+		return nil, fmt.Errorf("invalid password")
+	}
+
+	token, err := utilities.GenerateUserToken(config.SECRET_KEY, int64(user.ID))
+	if err != nil {
+		return nil, err
+	}
+
+	return map[string]interface{}{
+		"token": token,
+		"user":  user,
+	}, nil
+}
+
 // GenerateAuthorizationURL generates an authorization URL for the user to visit
 // and authorize the application to access their account.
-func (u *UseCase) GenerateAuthorizationURL(config *oauth2.Config, userID int64) (*entities.AuthURL, error) {
+func (u *Service) GenerateAuthorizationURL(config *oauth2.Config, userID int64) (*entities.AuthURL, error) {
 	// first, check that both client and user exist
 	client, err := u.GetClient(config.ClientID)
 	if err != nil {
@@ -58,7 +115,7 @@ func (u *UseCase) GenerateAuthorizationURL(config *oauth2.Config, userID int64) 
 }
 
 // ExchangeCodeForToken generates an access token from an authorization code.
-func (u *UseCase) ExchangeCodeForToken(config *oauth2.Config, code string) (*oauth2.Token, error) {
+func (u *Service) ExchangeCodeForToken(config *oauth2.Config, code string) (*oauth2.Token, error) {
 	// ensure that the secret is specified
 	if config.ClientSecret == "" {
 		return nil, fmt.Errorf("client secret is not specified")
@@ -92,7 +149,7 @@ func (u *UseCase) ExchangeCodeForToken(config *oauth2.Config, code string) (*oau
 
 // AccessResourcesWithToken returns the resources that the client has access to
 // with the given token.
-func (u *UseCase) AccessResourcesWithToken(token string) (map[string]interface{}, error) {
+func (u *Service) AccessResourcesWithToken(token string) (map[string]interface{}, error) {
 	// get the claims
 	res, err := u.Repo.GetTTL("token:" + token)
 	if err != nil {
@@ -141,4 +198,28 @@ func (u *UseCase) AccessResourcesWithToken(token string) (map[string]interface{}
 	}
 	fmt.Println("resources check:", resources)
 	return resources, nil
+}
+
+func (u *Service) GetClient(id string) (*models.Client, error) {
+	client, err := u.Repo.GetClient(fmt.Sprintf("client:%s", id))
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
+// this is only be used for testing purposes
+func (u *Service) AddTestClient() (*models.Client, error) {
+	client := &models.Client{
+		ID:          "notanid",
+		Secret:      "absolutelynotasecret!",
+		Name:        "Ex-C",
+		RedirectURI: "http://localhost:5173/oauth2/callback",
+	}
+	err := u.Repo.SetClient(client)
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }

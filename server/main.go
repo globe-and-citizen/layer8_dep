@@ -7,7 +7,6 @@ import (
 	"globe-and-citizen/layer8/server/config"
 	"globe-and-citizen/layer8/server/handlers"
 	"globe-and-citizen/layer8/server/internals/repository"
-	"globe-and-citizen/layer8/server/internals/usecases"
 	"io/fs"
 	"log"
 	"net/http"
@@ -21,6 +20,8 @@ import (
 	repo "globe-and-citizen/layer8/server/resource_server/repository"
 
 	svc "globe-and-citizen/layer8/server/resource_server/service"
+
+	OauthSvc "globe-and-citizen/layer8/server/internals/service"
 
 	"github.com/joho/godotenv"
 )
@@ -73,9 +74,9 @@ func Server(port int, service interfaces.IService) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	usecase := &usecases.UseCase{Repo: repo}
+	OauthService := &OauthSvc.Service{Repo: repo}
 
-	_, err = usecase.AddTestClient()
+	_, err = OauthService.AddTestClient()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,7 +94,7 @@ func Server(port int, service interfaces.IService) {
 				return
 			}
 
-			r = r.WithContext(context.WithValue(r.Context(), "usecase", usecase))
+			r = r.WithContext(context.WithValue(r.Context(), "Oauthservice", OauthService))
 			r = r.WithContext(context.WithValue(r.Context(), "service", service))
 
 			staticFS, _ := fs.Sub(StaticFiles, "dist")

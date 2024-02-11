@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"globe-and-citizen/layer8/server/internals/usecases"
+	svc "globe-and-citizen/layer8/server/internals/service"
 	"html/template"
 	"net/http"
 )
 
 func Login(w http.ResponseWriter, r *http.Request) {
-	usecase := r.Context().Value("usecase").(*usecases.UseCase)
+	service := r.Context().Value("Oauthservice").(*svc.Service)
 
 	switch r.Method {
 	case "GET":
@@ -18,7 +18,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		// check if the user is already logged in
 		token, err := r.Cookie("token")
 		if token != nil && err == nil {
-			user, err := usecase.GetUserByToken(token.Value)
+			user, err := service.GetUserByToken(token.Value)
 			if err == nil && user != nil {
 				http.Redirect(w, r, next, http.StatusSeeOther)
 				return
@@ -41,7 +41,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 		// login the user
-		rUser, err := usecase.LoginUser(username, password)
+		rUser, err := service.LoginUser(username, password)
 		if err != nil {
 			t, errT := template.ParseFiles("assets-v1/templates/login.html")
 			if errT != nil {
@@ -85,7 +85,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 func Register(w http.ResponseWriter, r *http.Request) {
-	usecase := r.Context().Value("usecase").(*usecases.UseCase)
+	service := r.Context().Value("OauthService").(*svc.Service)
 
 	switch r.Method {
 	case "GET":
@@ -96,7 +96,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		// check if the user is already logged in
 		token, err := r.Cookie("token")
 		if token != nil && err == nil {
-			user, err := usecase.GetUserByToken(token.Value)
+			user, err := service.GetUserByToken(token.Value)
 			if err == nil && user != nil {
 				http.Redirect(w, r, next, http.StatusSeeOther)
 				return
@@ -119,7 +119,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		username := r.FormValue("username")
 		password := r.FormValue("password")
 		// login the user
-		rUser, err := usecase.LoginUser(username, password)
+		rUser, err := service.LoginUser(username, password)
 		if err != nil {
 			t, errT := template.ParseFiles("assets-v1/templates/registerClient.html")
 			if errT != nil {

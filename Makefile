@@ -3,7 +3,8 @@ npm_install_all:
 	cd sp_mock/frontend && npm install && cd ../backend && npm install 
 go_mod_tidy_all:
 	cd interceptor && go mod tidy && cd ../middleware && go mod tidy && cd ../server && go mod tidy
-
+go_test:
+	cd server && go test ./... -v -cover
 copy_wasm_exec_js:
 	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./interceptor/dist/wasm_exec.js
 	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./middleware/dist/wasm_exec.js

@@ -64,11 +64,11 @@ func main() {
 	// Register service(usecase)
 	service := svc.NewService(repository)
 
-	Server(proxyServerPortInt, service)
+	Server(proxyServerPortInt, service, repository)
 
 }
 
-func Server(port int, service interfaces.IService) {
+func Server(port int, service interfaces.IService, MemoryRepository interfaces.IRepository) {
 
 	repo, err := repository.CreateRepository("postgres")
 	if err != nil {

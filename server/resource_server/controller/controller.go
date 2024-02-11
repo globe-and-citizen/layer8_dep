@@ -43,6 +43,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("userPath: ", userPath)
 	http.ServeFile(w, r, userPath)
 }
+
 func ClientHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {

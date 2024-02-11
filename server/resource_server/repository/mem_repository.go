@@ -168,7 +168,13 @@ func (r *MemoryRepository) GetUser(username string) (*serverModels.User, error) 
 		return &serverModels.User{}, fmt.Errorf("user not found")
 	}
 	password := r.storage[username]["password"]
+	userID := r.storage[password]["user_id"]
+	userIdInt, err := strconv.Atoi(userID)
+	if err != nil {
+		return &serverModels.User{}, err
+	}
 	user := serverModels.User{
+		ID:        uint(userIdInt),
 		Email:     r.storage[password]["email"],
 		Username:  r.storage[password]["username"],
 		FirstName: r.storage[password]["first_name"],
@@ -186,6 +192,7 @@ func (r *MemoryRepository) GetUserByID(id int64) (*serverModels.User, error) {
 	}
 	password := r.storage[fmt.Sprintf("%d", id)]["password"]
 	user := serverModels.User{
+		ID:        uint(id),
 		Email:     r.storage[password]["email"],
 		Username:  r.storage[password]["username"],
 		FirstName: r.storage[password]["first_name"],

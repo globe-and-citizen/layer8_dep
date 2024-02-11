@@ -25,6 +25,7 @@ var (
 	Layer8Port         string
 	Layer8Version      string
 	Layer8LightsailURL string
+	SpBackendURL       string
 	Counter            int
 	ETunnelFlag        bool
 	privJWK_ecdh       *utils.JWK
@@ -33,8 +34,6 @@ var (
 	UpJWT              string
 	UUID               string
 )
-
-// var L8Client = internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port)
 
 func main() {
 	// Create channel to keep the Go thread alive
@@ -45,8 +44,6 @@ func main() {
 	Layer8Scheme = "http"
 	Layer8Host = "localhost"
 	Layer8Port = "5001"
-	// Layer8Host = "aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
-	// Layer8Scheme = "https"
 	// Layer8LightsailURL = "https://aws-container-service-t1.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com"
 
 	ETunnelFlag = false
@@ -102,6 +99,7 @@ func persistenceCheck(this js.Value, args []js.Value) interface{} {
 
 func initializeECDHTunnel(this js.Value, args []js.Value) interface{} {
 	backend := args[0].String()
+	SpBackendURL = backend
 
 	go func() {
 		var err error
@@ -259,7 +257,7 @@ func fetch(this js.Value, args []js.Value) interface{} {
 			// forward request to the layer8 proxy server
 			// res := L8Client.
 			// 	Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
-			res := internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port).Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
+			res := internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port).Do(SpBackendURL, url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
 
 			if res.Status >= 100 || res.Status < 300 { // Handle Success & Default Rejection
 				resHeaders := js.Global().Get("Headers").New()

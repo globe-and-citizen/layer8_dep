@@ -255,8 +255,6 @@ func fetch(this js.Value, args []js.Value) interface{} {
 
 		go func() {
 			// forward request to the layer8 proxy server
-			// res := L8Client.
-			// 	Do(url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
 			res := internals.NewClient(Layer8Scheme, Layer8Host, Layer8Port).Do(SpBackendURL, url, utils.NewRequest(method, headersMap, []byte(body)), userSymmetricKey)
 
 			if res.Status >= 100 || res.Status < 300 { // Handle Success & Default Rejection

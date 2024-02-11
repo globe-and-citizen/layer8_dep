@@ -40,11 +40,12 @@ func getPwd() {
 
 func main() {
 
-	config.InitDB()
-
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
+	}
+	if os.Getenv("DB_USER") != "" || os.Getenv("DB_PASSWORD") != "" {
+		config.InitDB()
 	}
 
 	proxyServerPort := os.Getenv("SERVER_PORT")
@@ -56,6 +57,8 @@ func main() {
 
 	// Register repository
 	repository := repo.NewRepository(config.DB)
+	// Use below line for in-memory repository and above if you want to use postgres on local
+	// repository := repo.NewMemoryRepository()
 
 	// Register service(usecase)
 	service := svc.NewService(repository)
@@ -146,6 +149,9 @@ func Server(port int, service interfaces.IService) {
 				handlers.InitTunnel(w, r)
 			case path == "/error":
 				handlers.TestError(w, r)
+			// TODO: For later, to be discussed more
+			// case path == "/tunnel":
+			// 	handlers.Tunnel(w, r)
 			default:
 				handlers.Tunnel(w, r)
 			}

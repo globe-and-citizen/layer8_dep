@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"embed"
+	"flag"
 	"fmt"
 	"globe-and-citizen/layer8/server/config"
 	"globe-and-citizen/layer8/server/handlers"
@@ -40,6 +41,23 @@ func getPwd() {
 
 func main() {
 
+	// Use flags to set the port
+	port := flag.Int("port", 8080, "Port to run the server on")
+	jwtKey := flag.String("jwtKey", "secret", "Key to sign JWT tokens")
+	MpKey := flag.String("MpKey", "secret", "Key to sign mpJWT tokens")
+	UpKey := flag.String("UpKey", "secret", "Key to sign upJWT tokens")
+	flag.Parse()
+
+	if *port != 8080 {
+		os.Setenv("SERVER_PORT", strconv.Itoa(*port))
+		os.Setenv("JWT_SECRET_KEY", *jwtKey)
+		os.Setenv("MP_123_SECRET_KEY", *MpKey)
+		os.Setenv("UP_999_SECRET_KEY", *UpKey)
+		repository := repo.NewMemoryRepository()
+		service := svc.NewService(repository)
+		Server(*port, service, repository)
+	}
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -56,9 +74,7 @@ func main() {
 	}
 
 	// Register repository
-	// repository := repo.NewRepository(config.DB)
-	// Use below line for in-memory repository and above if you want to use postgres on local
-	repository := repo.NewMemoryRepository()
+	repository := repo.NewRepository(config.DB)
 
 	// Register service(usecase)
 	service := svc.NewService(repository)
@@ -70,7 +86,7 @@ func main() {
 func Server(port int, service interfaces.IService, MemoryRepository interfaces.IRepository) {
 
 	// Uncomment below line and use `MemoryRepository` instead of `repository` in `OauthService` if you want to use in-memory repository
-	// repo, err := repository.CreateRepository("postgres")
+	// postgresRepository, err := repository.CreateRepository("postgres")
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }

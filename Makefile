@@ -34,6 +34,9 @@ run_backend: # Port 8000
 run_server: # Port 5001
 	cd server && go run main.go
 
+run_server_local: # Port 5001 with in-memory db
+	cd server && go run main.go -port=5001 -jwtKey=secret -MpKey=secret -UpKey=secret
+
 build_server_image:
 	docker build --tag layer8-server --file Dockerfile .
 

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"globe-and-citizen/layer8/server/config"
 	"globe-and-citizen/layer8/server/handlers"
-	"globe-and-citizen/layer8/server/internals/repository"
 	"io/fs"
 	"log"
 	"net/http"
@@ -57,9 +56,9 @@ func main() {
 	}
 
 	// Register repository
-	repository := repo.NewRepository(config.DB)
+	// repository := repo.NewRepository(config.DB)
 	// Use below line for in-memory repository and above if you want to use postgres on local
-	// repository := repo.NewMemoryRepository()
+	repository := repo.NewMemoryRepository()
 
 	// Register service(usecase)
 	service := svc.NewService(repository)
@@ -70,13 +69,14 @@ func main() {
 
 func Server(port int, service interfaces.IService, MemoryRepository interfaces.IRepository) {
 
-	repo, err := repository.CreateRepository("postgres")
-	if err != nil {
-		log.Fatal(err)
-	}
-	OauthService := &OauthSvc.Service{Repo: repo}
+	// Uncomment below line and use `MemoryRepository` instead of `repository` in `OauthService` if you want to use in-memory repository
+	// repo, err := repository.CreateRepository("postgres")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	OauthService := &OauthSvc.Service{Repo: MemoryRepository}
 
-	_, err = OauthService.AddTestClient()
+	_, err := OauthService.AddTestClient()
 	if err != nil {
 		log.Fatal(err)
 	}

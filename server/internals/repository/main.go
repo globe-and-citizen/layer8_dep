@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"globe-and-citizen/layer8/server/config"
 	"globe-and-citizen/layer8/server/models"
 	"time"
 )
@@ -34,5 +35,5 @@ type Repository interface {
 
 func InitDB() Repository {
 	// Register the postgres repository
-	return NewPostgresRepository()
+	return NewPostgresRepository(config.DB)
 }

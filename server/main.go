@@ -21,6 +21,7 @@ import (
 
 	svc "globe-and-citizen/layer8/server/resource_server/service"
 
+	"globe-and-citizen/layer8/server/internals/repository"
 	OauthSvc "globe-and-citizen/layer8/server/internals/service"
 
 	"github.com/joho/godotenv"
@@ -85,12 +86,10 @@ func main() {
 
 func Server(port int, service interfaces.IService, MemoryRepository interfaces.IRepository) {
 
-	// Uncomment below line and use `MemoryRepository` instead of `repository` in `OauthService` if you want to use in-memory repository
-	// postgresRepository, err := repository.CreateRepository("postgres")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	OauthService := &OauthSvc.Service{Repo: MemoryRepository}
+	// Uncomment below line and use `repository` instead of `MemoryRepository` in `OauthService` if you want to use local postgres db
+	postgresRepository := repository.InitDB()
+
+	OauthService := &OauthSvc.Service{Repo: postgresRepository}
 
 	_, err := OauthService.AddTestClient()
 	if err != nil {

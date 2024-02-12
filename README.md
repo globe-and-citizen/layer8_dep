@@ -8,7 +8,8 @@ docker run --env=POSTGRES_USER=default_user --env=POSTGRES_PASSWORD=1234 --env=P
 Hint, if on windows, check "services" by opening up the windows menu and searching "services"
 
 2) You will need to run the following queries in your database to create the necessary tables:
-```
+
+``` sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,

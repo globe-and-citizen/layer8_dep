@@ -127,9 +127,9 @@
             return;
           }
           await window.fetch(
-            "https://layer8devproxy.net/api/v1/register-client",
-            {
-              // await window.fetch("http://localhost:5001/api/v1/register-client", {
+            // "https://layer8devproxy.net/api/v1/register-client",
+            // {
+              await window.fetch("http://localhost:5001/api/v1/register-client", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -151,10 +151,8 @@
       const getClientData = async (clientName) => {
         try {
           await window.fetch(
-            "https://layer8devproxy.net/api/v1/register-client",
-            {
-              // const resp = await window.fetch("http://localhost:5001/api/v1/getClient",
-              //   {
+            // "https://layer8devproxy.net/api/v1/register-client", {
+            "http://localhost:5001/api/v1/getClient", {
               method: "GET",
               headers: {
                 "Content-Type": "Application/Json",

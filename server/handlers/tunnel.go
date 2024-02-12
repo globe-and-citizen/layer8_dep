@@ -21,7 +21,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
 	params := r.URL.Query()
 	var backend string
-	if _, ok := params["backend"]; ok != true {
+	if _, ok := params["backend"]; !ok {
 		res := utils.BuildErrorResponse("Failed to get User. Malformed query string.", "", utils.EmptyObj{})
 		if err := json.NewEncoder(w).Encode(res); err != nil {
 			log.Printf("Error sending response: %v", err)
@@ -79,7 +79,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 
 	// Convert resBodyTemp to []byte
 
-	resBodyTempBytes := []byte(resBodyTemp.String())
+	resBodyTempBytes := resBodyTemp.Bytes()
 
 	// Make a copy of the response body to send back to client
 	res.Body = io.NopCloser(bytes.NewBuffer(resBodyTemp.Bytes()))
@@ -103,7 +103,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	// // Make a json response of server_pubKeyECDH and up_JWT and send it back to client
 	data := map[string]interface{}{
 		"server_pubKeyECDH": server_pubKeyECDH,
-		"up_JWT":            upJWT,
+		"up-JWT":            upJWT,
 	}
 
 	fmt.Println("data (Going back to client): ", data)
@@ -144,13 +144,13 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	}
 	req.Header["x-tunnel"] = []string{"true"}
 
-	// Get up_JWT from request header and verify it
-	upJWT := r.Header.Get("up-jwt") // RAVI!
+	// Get up-JWT from request header and verify it
+	upJWT := r.Header.Get("up-jwt") // RAVI! LOOK HERE
 	fmt.Println("up-jwt coming from client: ", upJWT)
 
 	_, err = utilities.VerifyStandardToken(upJWT, os.Getenv("UP_999_SECRET_KEY"))
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("UP JWT verify error: ", err.Error())
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
@@ -166,13 +166,13 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println("\nReceived response from:", backendURL, " of code: ", res.StatusCode)
 
-	// Get mp_JWT from response header and verify it
+	// Get mp-JWT from response header and verify it
 	mpJWT := res.Header.Get("mp-jwt")
-	fmt.Println("mp_jwt coming from SP: ", mpJWT)
+	fmt.Println("mp-jwt coming from SP: ", mpJWT)
 
 	_, err = utilities.VerifyStandardToken(mpJWT, os.Getenv("MP_123_SECRET_KEY"))
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Println("MP JWT verify error: ", err.Error())
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
@@ -187,13 +187,18 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("ME TOO?", "DO IT!")
 	fmt.Println("w.Headers: ", w.Header())
 	//w.WriteHeader(res.StatusCode)
-	io.Copy(w, res.Body)
-
+	n, err := io.Copy(w, res.Body)
+	if err != nil {
+		fmt.Println("Error copying response:", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	fmt.Println("Copied", n, "bytes from response body to client")
 	fmt.Println("w.Headers 2: ", w.Header())
 }
 
 func TestError(w http.ResponseWriter, r *http.Request) {
-	err := fmt.Errorf("This is a test error.")
+	err := fmt.Errorf("this is a test error")
 	fmt.Println("Test error endpoint:", err.Error())
 	http.Error(w, err.Error(), http.StatusInternalServerError)
 	return

@@ -1,6 +1,10 @@
 ## NPM Install
 npm_install_all:
 	cd sp_mock/frontend && npm install && cd ../backend && npm install 
+
+go_mod_tidy:
+	cd ./server && go mod tidy
+
 go_mod_tidy_all:
 	cd interceptor && go mod tidy && cd ../middleware && go mod tidy && cd ../server && go mod tidy
 

@@ -1,15 +1,16 @@
 <script setup>
-import { computed, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import Navbar from "../components/Navbar.vue";
 import { useRouter } from "vue-router";
-
+import layer8_interceptor from 'layer8_interceptor'
+ 
+const BACKEND_URL =  import.meta.env.VITE_BACKEND_URL
 const router = useRouter();
 const SpToken = ref(localStorage.getItem("SP_TOKEN") || null);
 const L8Token = ref(localStorage.getItem("L8_TOKEN") || null);
 const isLoggedIn = computed(() => SpToken.value !== null);
+
 let nextPoem = ref({});
-// const BackendURL = "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com";
-const BackendURL = "http://localhost:5001";
 
 const userName = computed(() => {
   if (SpToken.value && SpToken.value.split(".").length > 1) {
@@ -30,10 +31,7 @@ const metaData = computed(() => {
 
 const getPoem = async () => {
   try {
-    console.log("going to try now 1...");
-    const resp = await layer8.fetch(BackendURL + "/nextpoem");
-    console.log("going to try now 2...");
-
+    const resp = await layer8_interceptor.fetch( BACKEND_URL + "/nextpoem");
     let poemObj = await resp.json();
 
     if (poemObj.title) {
@@ -51,6 +49,14 @@ const logoutUser = () => {
   localStorage.removeItem("SP_TOKEN");
   router.push({ name: "loginRegister" });
 };
+
+onMounted(async()=>{
+  let user = localStorage.getItem("_user") ? JSON.parse(localStorage.getItem("_user")) : null
+  let url = await layer8_interceptor.static(user.profile_image);
+  const pictureBox = document.getElementById("pictureBox");
+  pictureBox.src = url;
+})
+
 </script>
 
 <template>
@@ -64,6 +70,10 @@ const logoutUser = () => {
         v-if="isLoggedIn"
       >
         <h1>Welcome {{ userName }}!</h1>
+        <!-- <div v-if="user?.profile_image"> -->
+         <div> 
+          <img id="pictureBox">
+        </div>
         <h3>Your MetaData:</h3>
         <h4 v-if="metaData.displayName">
           Username: {{ metaData.displayName }}
@@ -73,6 +83,8 @@ const logoutUser = () => {
         <h4>
           Email Verified: Email is {{ metaData.isEmailVerified ? "" : "not" }} verified!
         </h4>
+
+
         <br />
         <div class="flex gap-6">
           <button class="btn" @click="getPoem">Get Next Poem</button>

@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	Ctl "globe-and-citizen/layer8/server/resource_server/controller"
+	"globe-and-citizen/layer8/server/resource_server/dto"
 	"globe-and-citizen/layer8/server/resource_server/interfaces"
 
 	repo "globe-and-citizen/layer8/server/resource_server/repository"
@@ -54,6 +55,15 @@ func main() {
 		os.Setenv("MP_123_SECRET_KEY", *MpKey)
 		os.Setenv("UP_999_SECRET_KEY", *UpKey)
 		repository := repo.NewMemoryRepository()
+		repository.RegisterUser(dto.RegisterUserDTO{
+			Email:       "user@test.com",
+			Username:    "tester",
+			FirstName:   "Test",
+			LastName:    "User",
+			Password:    "12341234",
+			Country:     "Antarctica",
+			DisplayName: "test_user_mem",
+		})
 		service := svc.NewService(repository)
 		Server(*port, service, repository)
 	}

@@ -3,7 +3,7 @@ module globe-and-citizen/layer8/server
 go 1.21.4
 
 require (
-	github.com/globe-and-citizen/layer8-utils v0.0.0-20230927121854-b5403af080d8
+	github.com/globe-and-citizen/layer8-utils v0.0.0-20240116170643-192c8eb65295
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/google/uuid v1.5.0

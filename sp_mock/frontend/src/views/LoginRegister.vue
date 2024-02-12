@@ -23,7 +23,6 @@ const isLoading = ref(false);
 
 // Functions
 const registerUser = async () => {
-  //console.log("BACKEND_URL", BACKEND_URL)
   try {
     let resp = await layer8_interceptor.fetch(BACKEND_URL + "/api/register", {
       method: "POST",
@@ -47,7 +46,7 @@ const registerUser = async () => {
 
 const loginUser = async () => {
   if (loginEmail.value == "" || loginPassword.value == "") {
-    console.log("login failed. Input needed");
+    console.log("Login failed. Input needed");
     throw new Error("input needed");
   }
 
@@ -106,7 +105,6 @@ const loginWithLayer8Popup = async () => {
 
   window.addEventListener("message", async (event) => {
     if (event.data.redr) {
-      console.log("event.data.redr: ", event.data.redr)
       setTimeout(() => {
         layer8_interceptor.fetch(BACKEND_URL + "/api/login/layer8/auth", {
           method: "POST",
@@ -135,7 +133,6 @@ const uploadProfilePicture = async (e) => {
   const file = e.target.files[0];
   const formdata = new FormData();
   formdata.append("file", file);
-  //console.log("BACKEND_URL", BACKEND_URL)
   layer8_interceptor.fetch(BACKEND_URL + "/api/profile/upload", {
     method: "POST",
     headers: {

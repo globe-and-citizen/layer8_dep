@@ -50,21 +50,12 @@ const logoutUser = () => {
   router.push({ name: "loginRegister" });
 };
 
-// watch(isLoggedIn, async ()=>{
-//   let user = localStorage.getItem("_user") ? JSON.parse(localStorage.getItem("_user")) : null
-//   console.log("value: ", user)
-//   let url = await layer8_interceptor.static(user.profile_image);
-//   console.log("url: ", url)
-//   const pictureBox = document.getElementById("pictureBox");
-//   pictureBox.src = url;
-// })
-
-setTimeout(async()=>{
+onMounted(async()=>{
   let user = localStorage.getItem("_user") ? JSON.parse(localStorage.getItem("_user")) : null
   let url = await layer8_interceptor.static(user.profile_image);
   const pictureBox = document.getElementById("pictureBox");
   pictureBox.src = url;
-},500)
+})
 
 </script>
 

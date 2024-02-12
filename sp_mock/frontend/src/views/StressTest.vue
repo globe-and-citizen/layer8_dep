@@ -46,15 +46,11 @@ async function getError(){
 
 let x = 0
 async function getNextPicture(){
-  let idx = x%7
+  let idx = x%2
   const pictureURLs = [
-    'http://localhost:8000/media/1.png',
-    'http://localhost:8000/media/2.png',
-    'http://localhost:8000/media/3.png',
-    'http://localhost:8000/media/4.png',
-    'http://localhost:8000/media/5.png',
+    'http://localhost:8000/media/boy.png',
+    'http://localhost:8000/media/girl.png',
   ]
-  console.log("idx: ", idx)
   let url = await layer8_interceptor.static(pictureURLs[idx]);
   const element = document.getElementById("pictureBox");
   element.src = url;

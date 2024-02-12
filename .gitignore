@@ -157,9 +157,11 @@ out
 go.work
 go.work.sum
 
+
+
+# Layer8 Team Specifics
 proxy/certificates
 resource_server/backend/certificates
-
 .idea
-
 interceptor*.json
+sp_mock/backend/uploads/dynamic/

@@ -30,7 +30,7 @@ const layer8Auth = new ClientOAuth2({
 
 const layer8_middleware = require("layer8_middleware")
 
-const upload = layer8_middleware.multipart({ dest: "uploads" });
+const upload = layer8_middleware.multipart({ dest: "uploads/dynamic" });
 
 app.get("/healthcheck", (req, res) => {
   console.log("Enpoint for testing");
@@ -51,7 +51,7 @@ app.use('/test', (req, res) => {
 
 app.post("/", (req, res) => {
   console.log("Enpoint for testing");
-  console.log("headers:: ", req.headers);
+  console.log("headers: ", req.headers);
   console.log("req.body: ", req.body);
   res.setHeader("x-header-test", "1234");
   res.send("Server has registered a POST.");
@@ -66,9 +66,7 @@ app.get("/nextpoem", (req, res) => {
 });
 
 app.post("/api/register", async (req, res) => {
-  console.log("req.body: ", req.body);
   const { password, email, profile_image } = req.body;
-  console.log(password, email, profile_image);
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -78,22 +76,14 @@ app.post("/api/register", async (req, res) => {
     console.log("err: ", err);
     res.status(500).send({ error: "Something went wrong!" });
   }
-
-
-
 });
 
 app.post("/api/login", async (req, res) => {
-  console.log("res.custom_test_prop: ", res.custom_test_prop);
-  console.log("req.body: ", req.body);
-  console.log("users: ", users);
+  //console.log("users: ", users);
   const { email, password } = req.body;
   const user = users.find((u) => u.email === email);
-  console.log("user: ", user);
   if (user && (await bcrypt.compare(password, user.password))) {
     const token = jwt.sign({ email }, SECRET_KEY);
-    // console.log("token: ", token);
-    console.log("user: ", user)
     res.status(200).json({ user, token });
   } else {
     res.status(401).json({ error: "Invalid credentials!" });
@@ -107,7 +97,6 @@ app.get("/api/login/layer8/auth", async (req, res) => {
 });
 
 app.post("/api/login/layer8/auth", async (req, res) => {
-  console.log("Do I even run?");
   const { callback_url } = req.body;
   const user = await layer8Auth.code
     .getToken(callback_url)
@@ -120,18 +109,17 @@ app.post("/api/login/layer8/auth", async (req, res) => {
           })
         )
         .then((res) => {
-          console.log("response: ", res);
+          //console.log("response: ", res);
           return JSON.parse(res.body);
         })
         .catch((err) => {
-          console.log("from popsicle: ", err);
+          console.log("Error from pkg Popsicle: ", err);
         });
     })
     .catch((err) => {
       console.log("err: ", err);
     });
 
-  console.log("user: ", user)
   const isEmailVerified = user.is_email_verified.value;
   let displayName = "";
   let countryName = "";
@@ -144,8 +132,6 @@ app.post("/api/login/layer8/auth", async (req, res) => {
     countryName = user.country_name.value;
   }
 
-  console.log("Display Name: ", displayName);
-  console.log("Country Name: ", countryName);
   const token = jwt.sign(
     { isEmailVerified, displayName, countryName },
     SECRET_KEY
@@ -162,7 +148,7 @@ app.post("/api/profile/upload", upload.single('file'), (req, res) => {
 
   res.status(200).json({ 
     message: "File uploaded successfully!",
-    url: `${req.protocol}://${req.get('host')}/media/${req.file?.name}`
+    url: `${req.protocol}://${req.get('host')}/media/dynamic/${req.file?.name}`
   });
 });
 

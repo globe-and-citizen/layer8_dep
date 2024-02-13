@@ -20,9 +20,9 @@ import (
 
 	repo "globe-and-citizen/layer8/server/resource_server/repository"
 
-	svc "globe-and-citizen/layer8/server/resource_server/service"
+	svc "globe-and-citizen/layer8/server/resource_server/service" // there are two services
 
-	OauthSvc "globe-and-citizen/layer8/server/internals/service"
+	OauthSvc "globe-and-citizen/layer8/server/internals/service" // there are two services
 
 	"github.com/joho/godotenv"
 )
@@ -47,8 +47,10 @@ func main() {
 	jwtKey := flag.String("jwtKey", "secret", "Key to sign JWT tokens")
 	MpKey := flag.String("MpKey", "secret", "Key to sign mpJWT tokens")
 	UpKey := flag.String("UpKey", "secret", "Key to sign upJWT tokens")
+
 	flag.Parse()
 
+	// If the port is not set to 8080, you're going to use an memory implementation
 	if *port != 8080 {
 		os.Setenv("SERVER_PORT", strconv.Itoa(*port))
 		os.Setenv("JWT_SECRET_KEY", *jwtKey)
@@ -65,13 +67,15 @@ func main() {
 			DisplayName: "test_user_mem",
 		})
 		service := svc.NewService(repository)
-		Server(*port, service, repository)
+		Server(*port, service, repository) // Run server (which never returns)
 	}
 
+	// If the port is 8080, you're going to be in production and loading from an .env
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
+
 	if os.Getenv("DB_USER") != "" || os.Getenv("DB_PASSWORD") != "" {
 		config.InitDB()
 	}
@@ -89,7 +93,7 @@ func main() {
 	// Register service(usecase)
 	service := svc.NewService(repository)
 
-	Server(proxyServerPortInt, service, repository)
+	Server(proxyServerPortInt, service, repository) // Run server (which never returns)
 
 }
 

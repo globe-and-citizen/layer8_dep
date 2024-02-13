@@ -126,6 +126,11 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Ravi Adds Path: ", r.URL.Path)
 	fmt.Println("Host:", r.Header.Get("X-Forwarded-Host"))
 
+	// TOMORROW'S LABOUR: FINISH TESTING THEN
+	// 1) WORK THE DEVOPS FLOW
+	// 2) DEAL WITH THE PATH GOING IN THE HEADER....
+	// 3) Look at the in_memory code
+
 	// backendURL := fmt.Sprintf(os.Getenv("VITE_BACKEND")+"%s", r.URL)
 	backendURL := fmt.Sprintf("http://%s", r.Header.Get("X-Sp-Backend-Url")+r.URL.Path)
 

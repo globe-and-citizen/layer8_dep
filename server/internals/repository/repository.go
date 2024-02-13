@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"globe-and-citizen/layer8/server/config"
 	"globe-and-citizen/layer8/server/models"
 	"strings"
 	"time"
@@ -14,9 +13,9 @@ type PostgresRepository struct {
 	storage map[string][]byte
 }
 
-func NewPostgresRepository() *PostgresRepository {
+func NewPostgresRepository(db *gorm.DB) *PostgresRepository {
 	return &PostgresRepository{
-		db:      config.DB,
+		db:      db,
 		storage: make(map[string][]byte),
 	}
 }

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"globe-and-citizen/layer8/server/resource_server/dto"
 	interfaces "globe-and-citizen/layer8/server/resource_server/interfaces"
 	"globe-and-citizen/layer8/server/resource_server/models"
@@ -21,6 +22,9 @@ func NewService(repo interfaces.IRepository) interfaces.IService {
 }
 
 func (s *service) RegisterUser(req dto.RegisterUserDTO) error {
+	if req.Email == "" {
+		return fmt.Errorf("email is required")
+	}
 	if err := validator.New().Struct(req); err != nil {
 		return err
 	}

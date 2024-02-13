@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 	"embed"
+	"flag"
 	"fmt"
 	"globe-and-citizen/layer8/server/config"
 	"globe-and-citizen/layer8/server/handlers"
-	"globe-and-citizen/layer8/server/internals/repository"
-	"globe-and-citizen/layer8/server/internals/usecases"
 	"io/fs"
 	"log"
 	"net/http"
@@ -16,11 +15,14 @@ import (
 	"strings"
 
 	Ctl "globe-and-citizen/layer8/server/resource_server/controller"
+	"globe-and-citizen/layer8/server/resource_server/dto"
 	"globe-and-citizen/layer8/server/resource_server/interfaces"
 
 	repo "globe-and-citizen/layer8/server/resource_server/repository"
 
 	svc "globe-and-citizen/layer8/server/resource_server/service"
+
+	OauthSvc "globe-and-citizen/layer8/server/internals/service"
 
 	"github.com/joho/godotenv"
 )
@@ -40,11 +42,38 @@ func getPwd() {
 
 func main() {
 
-	config.InitDB()
+	// Use flags to set the port
+	port := flag.Int("port", 8080, "Port to run the server on")
+	jwtKey := flag.String("jwtKey", "secret", "Key to sign JWT tokens")
+	MpKey := flag.String("MpKey", "secret", "Key to sign mpJWT tokens")
+	UpKey := flag.String("UpKey", "secret", "Key to sign upJWT tokens")
+	flag.Parse()
+
+	if *port != 8080 {
+		os.Setenv("SERVER_PORT", strconv.Itoa(*port))
+		os.Setenv("JWT_SECRET_KEY", *jwtKey)
+		os.Setenv("MP_123_SECRET_KEY", *MpKey)
+		os.Setenv("UP_999_SECRET_KEY", *UpKey)
+		repository := repo.NewMemoryRepository()
+		repository.RegisterUser(dto.RegisterUserDTO{
+			Email:       "user@test.com",
+			Username:    "tester",
+			FirstName:   "Test",
+			LastName:    "User",
+			Password:    "12341234",
+			Country:     "Antarctica",
+			DisplayName: "test_user_mem",
+		})
+		service := svc.NewService(repository)
+		Server(*port, service, repository)
+	}
 
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
+	}
+	if os.Getenv("DB_USER") != "" || os.Getenv("DB_PASSWORD") != "" {
+		config.InitDB()
 	}
 
 	proxyServerPort := os.Getenv("SERVER_PORT")
@@ -60,19 +89,18 @@ func main() {
 	// Register service(usecase)
 	service := svc.NewService(repository)
 
-	Server(proxyServerPortInt, service)
+	Server(proxyServerPortInt, service, repository)
 
 }
 
-func Server(port int, service interfaces.IService) {
+func Server(port int, service interfaces.IService, MemoryRepository interfaces.IRepository) {
 
-	repo, err := repository.CreateRepository("postgres")
-	if err != nil {
-		log.Fatal(err)
-	}
-	usecase := &usecases.UseCase{Repo: repo}
+	// Uncomment below line and use `repository` instead of `MemoryRepository` in `OauthService` if you want to use local postgres db
+	// postgresRepository := repository.InitDB()
 
-	_, err = usecase.AddTestClient()
+	OauthService := &OauthSvc.Service{Repo: MemoryRepository}
+
+	_, err := OauthService.AddTestClient()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,7 +118,7 @@ func Server(port int, service interfaces.IService) {
 				return
 			}
 
-			r = r.WithContext(context.WithValue(r.Context(), "usecase", usecase))
+			r = r.WithContext(context.WithValue(r.Context(), "Oauthservice", OauthService))
 			r = r.WithContext(context.WithValue(r.Context(), "service", service))
 
 			staticFS, _ := fs.Sub(StaticFiles, "dist")
@@ -146,6 +174,9 @@ func Server(port int, service interfaces.IService) {
 				handlers.InitTunnel(w, r)
 			case path == "/error":
 				handlers.TestError(w, r)
+			// TODO: For later, to be discussed more
+			// case path == "/tunnel":
+			// 	handlers.Tunnel(w, r)
 			default:
 				handlers.Tunnel(w, r)
 			}

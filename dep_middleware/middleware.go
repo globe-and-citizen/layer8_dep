@@ -64,7 +64,7 @@ func doECDHWithClient(request, response js.Value) {
 		return
 	}
 
-	// MpJWT := headers.Get("mp-jwt").String()
+	MpJWT := headers.Get("mp-jwt").String()
 	// fmt.Println("[L8Middleware] MpWT at SP BE (Middleware): ", MpJWT)
 
 	UUIDMapOfJWTs = append(UUIDMapOfJWTs, map[string]string{clientUUID: MpJWT})

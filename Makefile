@@ -7,7 +7,8 @@ go_mod_tidy:
 
 go_mod_tidy_all:
 	cd interceptor && go mod tidy && cd ../middleware && go mod tidy && cd ../server && go mod tidy
-
+go_test:
+	cd server && go test ./... -v -cover
 copy_wasm_exec_js:
 	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./interceptor/dist/wasm_exec.js
 	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./middleware/dist/wasm_exec.js
@@ -36,6 +37,9 @@ run_backend: # Port 8000
 # Serve 3-in-1 server
 run_server: # Port 5001
 	cd server && go run main.go
+
+run_server_local: # Port 5001 with in-memory db
+	cd server && go run main.go -port=5001 -jwtKey=secret -MpKey=secret -UpKey=secret
 
 build_server_image:
 	docker build --tag layer8-server --file Dockerfile .

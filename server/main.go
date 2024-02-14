@@ -121,8 +121,12 @@ func Server(port int, service interfaces.IService) {
 				Ctl.LoginUserPage(w, r)
 			case path == "/user-register-page":
 				Ctl.RegisterUserPage(w, r)
-			case path == "/register":
+			case path == "/client-register-page":
 				Ctl.ClientHandler(w, r)
+			case path == "/client-login-page":
+				Ctl.LoginClientPage(w, r)
+			case path == "/client-profile":
+				Ctl.ClientProfilePage(w, r)
 			case path == "/api/v1/register-user":
 				Ctl.RegisterUserHandler(w, r)
 			case path == "/api/v1/register-client":
@@ -131,10 +135,16 @@ func Server(port int, service interfaces.IService) {
 				Ctl.GetClientData(w, r)
 			case path == "/api/v1/login-precheck":
 				Ctl.LoginPrecheckHandler(w, r)
+			case path == "/api/v1/client-login-precheck":
+				Ctl.ClientLoginPrecheckHandler(w, r)
 			case path == "/api/v1/login-user":
 				Ctl.LoginUserHandler(w, r)
+			case path == "/api/v1/login-client":
+				Ctl.LoginClientHandler(w, r)
 			case path == "/api/v1/profile":
 				Ctl.ProfileHandler(w, r)
+			case path == "/api/v1/client-profile":
+				Ctl.ClientProfileHandler(w, r)
 			case path == "/api/v1/verify-email":
 				Ctl.VerifyEmailHandler(w, r)
 			case path == "/api/v1/change-display-name":

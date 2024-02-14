@@ -50,7 +50,7 @@ func main() {
 
 	flag.Parse()
 
-	// If the port is not set to 8080, you're going to use an memory implementation
+	// Port 8080 is the default so this line may as well read, "if no port is set, run the code within the code block."
 	if *port != 8080 {
 		os.Setenv("SERVER_PORT", strconv.Itoa(*port))
 		os.Setenv("JWT_SECRET_KEY", *jwtKey)
@@ -67,20 +67,21 @@ func main() {
 			DisplayName: "test_user_mem",
 		})
 		service := svc.NewService(repository)
-		Server(*port, service, repository) // Run server (which never returns)
+		Server(*port, service, repository) // Run server
 	}
 
-	// If the port is 8080, you're going to be in production and loading from an .env
+	// If the above code block runs, this section is never reached.
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
+	// If the user has set a database user or password, init the database
 	if os.Getenv("DB_USER") != "" || os.Getenv("DB_PASSWORD") != "" {
 		config.InitDB()
 	}
 
-	proxyServerPort := os.Getenv("SERVER_PORT")
+	proxyServerPort := os.Getenv("SERVER_PORT") // Port override
 
 	proxyServerPortInt, err := strconv.Atoi(proxyServerPort)
 	if err != nil {
@@ -99,9 +100,13 @@ func main() {
 
 func Server(port int, service interfaces.IService, MemoryRepository interfaces.IRepository) {
 
-	// Uncomment below line and use `repository` instead of `MemoryRepository` in `OauthService` if you want to use local postgres db
-	// postgresRepository := repository.InitDB()
+	// CHOOSE TO USE POSTRGRES OR IN_MEMORY IMPLEMENTATION BY COMMENTING / UNCOMMENTING
 
+	// ** USE LOCAL POSTGRES DB **
+	// postgresRepository := repo2.InitDB()
+	// OauthService := &OauthSvc.Service{Repo: postgresRepository}
+
+	// ** USE THE IN MEMORY IMPLEMENTATION **
 	OauthService := &OauthSvc.Service{Repo: MemoryRepository}
 
 	_, err := OauthService.AddTestClient()

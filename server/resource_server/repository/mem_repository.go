@@ -229,7 +229,7 @@ func (r *MemoryRepository) SetClient(client *serverModels.Client) error {
 func (r *MemoryRepository) GetClient(id string) (*serverModels.Client, error) {
 	if strings.Contains(id, ":") {
 		id = id[strings.LastIndex(id, ":")+1:]
-		fmt.Println("ID check:", id)
+		// fmt.Println("ID check:", id)
 	}
 	if _, ok := r.storage[id]; !ok {
 		fmt.Println("client not found while using GetClient")

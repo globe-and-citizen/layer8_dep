@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"globe-and-citizen/layer8/server/models"
 	"strings"
 	"time"
@@ -22,6 +23,7 @@ func NewPostgresRepository(db *gorm.DB) *PostgresRepository {
 
 func (r *PostgresRepository) LoginUserPrecheck(username string) (string, error) {
 	var user models.User
+	fmt.Println("RAVI 2: ", user)
 	err := r.db.Where("username = ?", username).First(&user).Error
 	if err != nil {
 		return "", err

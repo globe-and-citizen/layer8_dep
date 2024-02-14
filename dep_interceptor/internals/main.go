@@ -123,8 +123,8 @@ func (c *Client) do(data []byte, sharedSecret *utils.JWK, Url string, SpBackendU
 	// add headers
 	r.Header.Add("X-Forwarded-Host", parsedURL.Host)
 	r.Header.Add("X-Forwarded-Proto", parsedURL.Scheme)
-	r.Header.Add("X-Sp-Backend-Url", SpBackendURL)
 	r.Header.Add("Content-Type", "application/json")
+
 	// Add custom headers being sent to the client side [Important]
 	for k, v := range headers {
 		r.Header.Add(k, v)

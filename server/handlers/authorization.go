@@ -91,7 +91,6 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	case "POST":
-		fmt.Println("L93")
 		var (
 			clientID        = r.URL.Query().Get("client_id")
 			scopes          = r.URL.Query().Get("scope")
@@ -140,7 +139,6 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				http.Redirect(w, r, "/login?next="+r.URL.String(), http.StatusSeeOther)
-				fmt.Println("line 141: ")
 				return
 			}
 		} else {
@@ -153,16 +151,15 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/login?next="+r.URL.String(), http.StatusSeeOther)
 			return
 		}
-		fmt.Println("scopes before user decision: ", scopes)
-		fmt.Println("L155")
+		// fmt.Println("scopes before user decision: ", scopes)
 		if r.FormValue("share_display_name") == "true" {
 			scopes += "," + constants.READ_USER_DISPLAY_NAME_SCOPE
 		}
 		if r.FormValue("share_country") == "true" {
 			scopes += "," + constants.READ_USER_COUNTRY_SCOPE
 		}
-		fmt.Println("L162")
-		fmt.Println("scopes after user decision: ", scopes)
+
+		// fmt.Println("scopes after user decision: ", scopes)
 		// generate authorization url
 		authURL, err := service.GenerateAuthorizationURL(&oauth2.Config{
 			ClientID:    client.ID,
@@ -189,7 +186,6 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		http.Redirect(w, r, authURL.String(), http.StatusSeeOther)
-		fmt.Println("line 182")
 		return
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

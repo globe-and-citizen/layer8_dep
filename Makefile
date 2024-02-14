@@ -7,25 +7,9 @@ go_mod_tidy:
 
 go_mod_tidy_all:
 	cd interceptor && go mod tidy && cd ../middleware && go mod tidy && cd ../server && go mod tidy
+
 go_test:
 	cd server && go test ./... -v -cover
-copy_wasm_exec_js:
-	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./interceptor/dist/wasm_exec.js
-	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./middleware/dist/wasm_exec.js
-	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./server/assets-v1/cdn/interceptor/wasm_exec.js
-	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./server/assets-v1/cdn/wasm_exec_v1.js
-
-## Interceptor Calls
-build_interceptor: ## must do from a bash terminal ..
-	## Put WASM file directly in the CDN of the auth server
-	## cd interceptor/ && GOARCH=wasm GOOS=js go build -o dist/interceptor.wasm && cp ./dist/interceptor.wasm ../proxy/assets/cdn/interceptor/interceptor__local.wasm && cp ./dist/wasm_exec.js ../proxy/assets/cdn/interceptor/wasm_exec.js
-	## Put WASM file directly in the sp_mock frontend
-	## cd interceptor/ && GOARCH=wasm GOOS=js go build -o dist/interceptor.wasm && cp ./dist/interceptor.wasm ../sp_mock/frontend/public/interceptor.wasm && cp ./dist/wasm_exec.js ../sp_mock/frontend/public/wasm_exec.js
-	@'$(MAKE)' -C ./interceptor build
-
-## Build Middleware
-build_middleware:
-	cd ./middleware/ && GOARCH=wasm GOOS=js go build -o ./dist/middleware.wasm && cp ./dist/middleware.wasm ../sp_mock/backend/dist/middleware.wasm
 
 ## Run Mock
 run_frontend: # Port 5173
@@ -83,3 +67,24 @@ run_local_db:
 		-e POSTGRES_PASSWORD=postgres \
 		-e POSTGRES_DBNAME=postgres \
 		-p 5434:5432 postgres:14.3
+
+
+
+## DEPRECATED CALLS
+build_middleware:
+	cd ./middleware/ && GOARCH=wasm GOOS=js go build -o ./dist/middleware.wasm && cp ./dist/middleware.wasm ../sp_mock/backend/dist/middleware.wasm
+
+
+build_interceptor: ## must do from a bash terminal ..
+	## Put WASM file directly in the CDN of the auth server
+	## cd interceptor/ && GOARCH=wasm GOOS=js go build -o dist/interceptor.wasm && cp ./dist/interceptor.wasm ../proxy/assets/cdn/interceptor/interceptor__local.wasm && cp ./dist/wasm_exec.js ../proxy/assets/cdn/interceptor/wasm_exec.js
+	## Put WASM file directly in the sp_mock frontend
+	## cd interceptor/ && GOARCH=wasm GOOS=js go build -o dist/interceptor.wasm && cp ./dist/interceptor.wasm ../sp_mock/frontend/public/interceptor.wasm && cp ./dist/wasm_exec.js ../sp_mock/frontend/public/wasm_exec.js
+	@'$(MAKE)' -C ./interceptor build
+
+copy_wasm_exec_js:
+	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./interceptor/dist/wasm_exec.js
+	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./middleware/dist/wasm_exec.js
+	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./server/assets-v1/cdn/interceptor/wasm_exec.js
+	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./server/assets-v1/cdn/wasm_exec_v1.js
+

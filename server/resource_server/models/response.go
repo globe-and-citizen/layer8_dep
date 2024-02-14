@@ -18,3 +18,9 @@ type ProfileResponseOutput struct {
 	Country       string `json:"country"`
 	EmailVerified bool   `json:"email_verified"`
 }
+type ClientResponseOutput struct {
+	ID         string `json:"id"`
+	Secret      string `json:"secret"`
+	Name     string `json:"name"`
+	RedirectURI      string `json:"redirect_uri"`
+}

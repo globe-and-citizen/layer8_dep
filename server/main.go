@@ -3,11 +3,10 @@ package main
 import (
 	"context"
 	"embed"
+	"flag"
 	"fmt"
-	"globe-and-citizen/layer8/proxy/config"
-	"globe-and-citizen/layer8/proxy/handlers"
-	"globe-and-citizen/layer8/proxy/internals/repository"
-	"globe-and-citizen/layer8/proxy/internals/usecases"
+	"globe-and-citizen/layer8/server/config"
+	"globe-and-citizen/layer8/server/handlers"
 	"io/fs"
 	"log"
 	"net/http"
@@ -15,12 +14,20 @@ import (
 	"strconv"
 	"strings"
 
-	Ctl "globe-and-citizen/layer8/proxy/resource_server/controller"
+	Ctl "globe-and-citizen/layer8/server/resource_server/controller"
+	"globe-and-citizen/layer8/server/resource_server/dto"
+	"globe-and-citizen/layer8/server/resource_server/interfaces"
+
+	repo "globe-and-citizen/layer8/server/resource_server/repository"
+
+	svc "globe-and-citizen/layer8/server/resource_server/service" // there are two services
+
+	OauthSvc "globe-and-citizen/layer8/server/internals/service" // there are two services
 
 	"github.com/joho/godotenv"
 )
 
-//go:embed dist/*
+// go:embed dist
 var StaticFiles embed.FS
 
 var workingDirectory string
@@ -35,33 +42,74 @@ func getPwd() {
 
 func main() {
 
-	config.InitDB()
+	// Use flags to set the port
+	port := flag.Int("port", 8080, "Port to run the server on")
+	jwtKey := flag.String("jwtKey", "secret", "Key to sign JWT tokens")
+	MpKey := flag.String("MpKey", "secret", "Key to sign mpJWT tokens")
+	UpKey := flag.String("UpKey", "secret", "Key to sign upJWT tokens")
 
+	flag.Parse()
+
+	// Port 8080 is the default so this line may as well read, "if no port is set, run the code within the code block."
+	if *port != 8080 {
+		os.Setenv("SERVER_PORT", strconv.Itoa(*port))
+		os.Setenv("JWT_SECRET_KEY", *jwtKey)
+		os.Setenv("MP_123_SECRET_KEY", *MpKey)
+		os.Setenv("UP_999_SECRET_KEY", *UpKey)
+		repository := repo.NewMemoryRepository()
+		repository.RegisterUser(dto.RegisterUserDTO{
+			Email:       "user@test.com",
+			Username:    "tester",
+			FirstName:   "Test",
+			LastName:    "User",
+			Password:    "12341234",
+			Country:     "Antarctica",
+			DisplayName: "test_user_mem",
+		})
+		service := svc.NewService(repository)
+		Server(*port, service, repository) // Run server
+	}
+
+	// If the above code block runs, this section is never reached.
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	proxyServerPort := os.Getenv("SERVER_PORT")
+	// If the user has set a database user or password, init the database
+	if os.Getenv("DB_USER") != "" || os.Getenv("DB_PASSWORD") != "" {
+		config.InitDB()
+	}
+
+	proxyServerPort := os.Getenv("SERVER_PORT") // Port override
 
 	proxyServerPortInt, err := strconv.Atoi(proxyServerPort)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	Server(proxyServerPortInt)
+	// Register repository
+	repository := repo.NewRepository(config.DB)
+
+	// Register service(usecase)
+	service := svc.NewService(repository)
+
+	Server(proxyServerPortInt, service, repository) // Run server (which never returns)
 
 }
 
-func Server(port int) {
+func Server(port int, service interfaces.IService, MemoryRepository interfaces.IRepository) {
 
-	repo, err := repository.CreateRepository("postgres")
-	if err != nil {
-		log.Fatal(err)
-	}
-	usecase := &usecases.UseCase{Repo: repo}
+	// CHOOSE TO USE POSTRGRES OR IN_MEMORY IMPLEMENTATION BY COMMENTING / UNCOMMENTING
 
-	_, err = usecase.AddTestClient()
+	// ** USE LOCAL POSTGRES DB **
+	// postgresRepository := repo2.InitDB()
+	// OauthService := &OauthSvc.Service{Repo: postgresRepository}
+
+	// ** USE THE IN MEMORY IMPLEMENTATION **
+	OauthService := &OauthSvc.Service{Repo: MemoryRepository}
+
+	_, err := OauthService.AddTestClient()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -79,7 +127,8 @@ func Server(port int) {
 				return
 			}
 
-			r = r.WithContext(context.WithValue(r.Context(), "usecase", usecase))
+			r = r.WithContext(context.WithValue(r.Context(), "Oauthservice", OauthService))
+			r = r.WithContext(context.WithValue(r.Context(), "service", service))
 
 			staticFS, _ := fs.Sub(StaticFiles, "dist")
 			httpFS := http.FileServer(http.FS(staticFS))
@@ -101,8 +150,18 @@ func Server(port int) {
 				http.StripPrefix("/assets-v1", http.FileServer(http.Dir("./assets-v1"))).ServeHTTP(w, r)
 
 			// Resource Server endpoints
+			case path == "/":
+				Ctl.IndexHandler(w, r)
+			case path == "/user":
+				Ctl.UserHandler(w, r)
+			case path == "/register":
+				Ctl.ClientHandler(w, r)
 			case path == "/api/v1/register-user":
 				Ctl.RegisterUserHandler(w, r)
+			case path == "/api/v1/register-client":
+				Ctl.RegisterClientHandler(w, r)
+			case path == "/api/v1/getClient":
+				Ctl.GetClientData(w, r)
 			case path == "/api/v1/login-precheck":
 				Ctl.LoginPrecheckHandler(w, r)
 			case path == "/api/v1/login-user":
@@ -120,12 +179,13 @@ func Server(port int) {
 				httpFS.ServeHTTP(w, r)
 
 			// Proxy Server endpoints
-			case path == "/":
-				Ctl.IndexHandler(w, r)
 			case path == "/init-tunnel":
 				handlers.InitTunnel(w, r)
 			case path == "/error":
 				handlers.TestError(w, r)
+			// TODO: For later, to be discussed more
+			// case path == "/tunnel":
+			// 	handlers.Tunnel(w, r)
 			default:
 				handlers.Tunnel(w, r)
 			}

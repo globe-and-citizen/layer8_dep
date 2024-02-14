@@ -123,11 +123,10 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("\n\n*************")
 	fmt.Println(r.Method) // > GET  | > POST
 	fmt.Println(r.URL)    // (http://localhost:5000/api/v1 ) > /api/v1
-	fmt.Println("Ravi Adds Path: ", r.URL.Path)
 	fmt.Println("Host:", r.Header.Get("X-Forwarded-Host"))
 
-	backendURL := fmt.Sprintf(os.Getenv("VITE_BACKEND")+"%s", r.URL)
-	// backendURL := fmt.Sprintf("https://%s%s", r.Header.Get("X-Forwarded-Host"), r.URL)
+	// backendURL := fmt.Sprintf(os.Getenv("VITE_BACKEND")+"%s", r.URL)
+	backendURL := fmt.Sprintf("http://%s", r.Header.Get("X-Forwarded-Host")+r.URL.Path)
 
 	// create the request
 	req, err := http.NewRequest(r.Method, backendURL, r.Body)
@@ -183,9 +182,6 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("header pairs from SP: ", k, v)
 	}
 
-	w.Header()["setme"] = []string{"string"}
-	w.Header().Add("ME TOO?", "DO IT!")
-	fmt.Println("w.Headers: ", w.Header())
 	//w.WriteHeader(res.StatusCode)
 	n, err := io.Copy(w, res.Body)
 	if err != nil {

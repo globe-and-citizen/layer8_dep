@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"globe-and-citizen/layer8/server/constants"
-	"globe-and-citizen/layer8/server/internals/usecases"
+	svc "globe-and-citizen/layer8/server/internals/service"
 	"globe-and-citizen/layer8/server/models"
 	"html/template"
 	"log"
@@ -19,7 +19,7 @@ import (
 )
 
 func Authorize(w http.ResponseWriter, r *http.Request) {
-	usecase := r.Context().Value("usecase").(*usecases.UseCase)
+	service := r.Context().Value("Oauthservice").(*svc.Service)
 
 	switch r.Method {
 	case "GET":
@@ -39,7 +39,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			scopeDescriptions = append(scopeDescriptions, constants.ScopeDescriptions[scope])
 		}
 		// get the client
-		client, err := usecase.GetClient(clientID)
+		client, err := service.GetClient(clientID)
 		if err != nil {
 			log.Println(err)
 			// redirect to the redirect_uri with error
@@ -62,14 +62,14 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 		// check that the user is logged in
 		token, err := r.Cookie("token")
 		if token != nil && err == nil {
-			user, err := usecase.GetUserByToken(token.Value)
+			user, err := service.GetUserByToken(token.Value)
 			if err != nil || user == nil {
 				http.Redirect(w, r, "/login?next="+next, http.StatusSeeOther)
 				return
 			}
 		} else {
 			http.Redirect(w, r, "/login?next="+next, http.StatusSeeOther)
-			
+
 			return
 		}
 
@@ -91,7 +91,6 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	case "POST":
-		fmt.Println("L93")
 		var (
 			clientID        = r.URL.Query().Get("client_id")
 			scopes          = r.URL.Query().Get("scope")
@@ -115,7 +114,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			scopes = constants.READ_USER_SCOPE
 		}
 		// get the client
-		client, err := usecase.GetClient(clientID)
+		client, err := service.GetClient(clientID)
 		if err != nil {
 			log.Println(err)
 			if returnResult {
@@ -131,7 +130,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 		var user *models.User
 		token, err := r.Cookie("token") // Ravi you may need to renag....
 		if token != nil && err == nil {
-			user, err = usecase.GetUserByToken(token.Value)
+			user, err = service.GetUserByToken(token.Value)
 			if err != nil || user == nil {
 				if returnResult {
 					w.Header().Set("Content-Type", "application/json")
@@ -140,7 +139,6 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				http.Redirect(w, r, "/login?next="+r.URL.String(), http.StatusSeeOther)
-				fmt.Println("line 141: ")
 				return
 			}
 		} else {
@@ -153,18 +151,17 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/login?next="+r.URL.String(), http.StatusSeeOther)
 			return
 		}
-		fmt.Println("scopes before user decision: ", scopes)
-		fmt.Println("L155")
+		// fmt.Println("scopes before user decision: ", scopes)
 		if r.FormValue("share_display_name") == "true" {
 			scopes += "," + constants.READ_USER_DISPLAY_NAME_SCOPE
 		}
 		if r.FormValue("share_country") == "true" {
 			scopes += "," + constants.READ_USER_COUNTRY_SCOPE
 		}
-		fmt.Println("L162")
-		fmt.Println("scopes after user decision: ", scopes)
+
+		// fmt.Println("scopes after user decision: ", scopes)
 		// generate authorization url
-		authURL, err := usecase.GenerateAuthorizationURL(&oauth2.Config{
+		authURL, err := service.GenerateAuthorizationURL(&oauth2.Config{
 			ClientID:    client.ID,
 			RedirectURL: client.RedirectURI,
 			Scopes:      strings.Split(scopes, ","),
@@ -189,7 +186,6 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		http.Redirect(w, r, authURL.String(), http.StatusSeeOther)
-		fmt.Println("line 182")
 		return
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -198,7 +194,7 @@ func Authorize(w http.ResponseWriter, r *http.Request) {
 }
 
 func OAuthToken(w http.ResponseWriter, r *http.Request) {
-	usecase := r.Context().Value("usecase").(*usecases.UseCase)
+	service := r.Context().Value("Oauthservice").(*svc.Service)
 
 	// exchange code for token
 	switch r.Method {
@@ -231,7 +227,7 @@ func OAuthToken(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// get the client
-		client, err := usecase.GetClient(clientID)
+		client, err := service.GetClient(clientID)
 		if err != nil {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
@@ -246,7 +242,7 @@ func OAuthToken(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// exchange code for token
-		token, err := usecase.ExchangeCodeForToken(&oauth2.Config{
+		token, err := service.ExchangeCodeForToken(&oauth2.Config{
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
 			RedirectURL:  redirectURI,

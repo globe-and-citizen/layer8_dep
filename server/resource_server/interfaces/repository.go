@@ -15,7 +15,7 @@ type IRepository interface {
 	LoginUser(req dto.LoginUserDTO) (models.User, error)
 	LoginClient(req dto.LoginClientDTO) (models.Client, error)
 	ProfileUser(userID uint) (models.User, []models.UserMetadata, error)
-	ProfileClient(userID string) (models.Client, error)
+	ProfileClient(username string) (models.Client, error)
 	VerifyEmail(userID uint) error
 	UpdateDisplayName(userID uint, req dto.UpdateDisplayNameDTO) error
 	RegisterClient(req dto.RegisterClientDTO) error

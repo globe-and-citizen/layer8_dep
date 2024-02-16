@@ -98,15 +98,17 @@ func (s *service) LoginUser(req dto.LoginUserDTO) (models.LoginUserResponseOutpu
 	return tokenResp, nil
 }
 
+// RAVI Buidling in new In memory Functionatity
 func (s *service) LoginClient(req dto.LoginClientDTO) (models.LoginUserResponseOutput, error) {
 	if err := validator.New().Struct(req); err != nil {
 		return models.LoginUserResponseOutput{}, err
 	}
-	user, err := s.repository.LoginClient(req)
+	client, err := s.repository.LoginClient(req)
 	if err != nil {
 		return models.LoginUserResponseOutput{}, err
 	}
-	tokenResp, err := utils.CompleteClientLogin(req, user)
+
+	tokenResp, err := utils.CompleteClientLogin(req, client)
 	if err != nil {
 		return models.LoginUserResponseOutput{}, err
 	}
@@ -137,15 +139,15 @@ func (s *service) ProfileUser(userID uint) (models.ProfileResponseOutput, error)
 	return profileResp, nil
 }
 
-func (s *service) ProfileClient(userID string) (models.ClientResponseOutput, error) {
-	clientData, err := s.repository.ProfileClient(userID)
+func (s *service) ProfileClient(userName string) (models.ClientResponseOutput, error) {
+	clientData, err := s.repository.ProfileClient(userName)
 	if err != nil {
 		return models.ClientResponseOutput{}, err
 	}
 	clientModel := models.ClientResponseOutput{
 		ID:          clientData.ID,
 		Secret:      clientData.Secret,
-		Name:        clientData.Name,
+		Name:        clientData.Username,
 		RedirectURI: clientData.RedirectURI,
 	}
 	return clientModel, nil

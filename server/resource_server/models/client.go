@@ -1,5 +1,6 @@
 package models
 
+// RAVI
 type Client struct {
 	ID          string `json:"id"`
 	Secret      string `json:"secret"`
@@ -7,7 +8,7 @@ type Client struct {
 	RedirectURI string `json:"redirect_uri"`
 	Username    string `gorm:"column:username; unique; not null" json:"username"`
 	Password    string `gorm:"column:password; not null" json:"password"`
-	Salt      string `gorm:"column:salt; not null" json:"salt"`
+	Salt        string `gorm:"column:salt; not null" json:"salt"`
 }
 
 func (Client) TableName() string {

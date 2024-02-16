@@ -128,18 +128,14 @@ func CompleteLogin(req dto.LoginUserDTO, user models.User) (models.LoginUserResp
 	return resp, nil
 }
 
+// RAVI
 func CompleteClientLogin(req dto.LoginClientDTO, client models.Client) (models.LoginUserResponseOutput, error) {
-	HashedAndSaltedPass := SaltAndHashPassword(req.Password, client.Salt)
-
-	if client.Password != HashedAndSaltedPass {
-		return models.LoginUserResponseOutput{}, fmt.Errorf("invalid password")
-	}
 
 	JWT_SECRET_STR := os.Getenv("JWT_SECRET")
 	JWT_SECRET_BYTE := []byte(JWT_SECRET_STR)
 
 	expirationTime := time.Now().Add(60 * time.Minute)
-	claims := &models.Claims{
+	claims := &models.ClientClaims{
 		UserName: client.Username,
 		UserID:   client.ID,
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -176,6 +172,7 @@ func ValidateToken(tokenString string) (uint, error) {
 	}
 	return claims.UserID, nil
 }
+
 func ValidateClientToken(tokenString string) (string, error) {
 	claims := &models.ClientClaims{}
 	JWT_SECRET_STR := os.Getenv("JWT_SECRET")
@@ -189,7 +186,7 @@ func ValidateClientToken(tokenString string) (string, error) {
 	if !token.Valid {
 		return "", fmt.Errorf("invalid token")
 	}
-	return claims.UserID, nil
+	return claims.UserName, nil
 }
 
 func GenerateToken(user models.User) (string, error) {

@@ -19,7 +19,6 @@ type LoginUserDTO struct {
 type LoginClientDTO struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-	Salt     string `json:"salt"`
 }
 
 type LoginPrecheckDTO struct {
@@ -31,8 +30,8 @@ type UpdateDisplayNameDTO struct {
 }
 
 type RegisterClientDTO struct {
-	Name    string `json:"name" validate:"required"`
-	RedirectURI   string `json:"redirect_uri" validate:"required"`
-	Username   string `json:"username" validate:"required,min=3,max=50"`
-	Password   string `json:"password" validate:"required"`
+	Name        string `json:"name" validate:"required"`
+	RedirectURI string `json:"redirect_uri" validate:"required"`
+	Username    string `json:"username" validate:"required,min=3,max=50"`
+	Password    string `json:"password" validate:"required"`
 }

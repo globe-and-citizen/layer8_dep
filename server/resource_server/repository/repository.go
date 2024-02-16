@@ -78,9 +78,9 @@ func (r *Repository) RegisterClient(req dto.RegisterClientDTO) error {
 		Secret:      clientSecret,
 		Name:        req.Name,
 		RedirectURI: req.RedirectURI,
-		Username:  	 req.Username,
+		Username:    req.Username,
 		Password:    HashedAndSaltedPass,
-		Salt: 		 rmSalt,
+		Salt:        rmSalt,
 	}
 
 	if err := r.connection.Create(&client).Error; err != nil {
@@ -108,7 +108,11 @@ func (r *Repository) LoginPreCheckUser(req dto.LoginPrecheckDTO) (string, string
 
 func (r *Repository) LoginPreCheckClient(req dto.LoginPrecheckDTO) (string, string, error) {
 	var client models.Client
-	if err := config.DB.Where("username = ?", req.Username).First(&client).Error; err != nil {
+	// RAVI
+	// if err := config.DB.Where("username = ?", req.Username).First(&client).Error; err != nil {
+	// 	return "", "", err
+	// }
+	if err := r.connection.Where("username = ?", req.Username).First(&client).Error; err != nil {
 		return "", "", err
 	}
 	return client.Username, client.Salt, nil
@@ -124,7 +128,11 @@ func (r *Repository) LoginUser(req dto.LoginUserDTO) (models.User, error) {
 
 func (r *Repository) LoginClient(req dto.LoginClientDTO) (models.Client, error) {
 	var client models.Client
-	if err := config.DB.Where("username = ?", req.Username).First(&client).Error; err != nil {
+	// RAVI HERE
+	// if err := config.DB.Where("username = ?", req.Username).First(&client).Error; err != nil {
+	// 	return models.Client{}, err
+	// }
+	if err := r.connection.Where("username = ?", req.Username).First(&client).Error; err != nil {
 		return models.Client{}, err
 	}
 	return client, nil
@@ -144,7 +152,7 @@ func (r *Repository) ProfileUser(userID uint) (models.User, []models.UserMetadat
 
 func (r *Repository) ProfileClient(userID string) (models.Client, error) {
 	var client models.Client
-	if err := config.DB.Where("id = ?", userID).First(&client).Error; err != nil {
+	if err := r.connection.Where("id = ?", userID).First(&client).Error; err != nil {
 		return models.Client{}, err
 	}
 	return client, nil

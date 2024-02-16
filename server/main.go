@@ -5,7 +5,7 @@ import (
 	"embed"
 	"flag"
 	"fmt"
-	"globe-and-citizen/layer8/server/config" 
+	"globe-and-citizen/layer8/server/config"
 	"globe-and-citizen/layer8/server/handlers"
 	"io/fs"
 	"log"
@@ -177,7 +177,7 @@ func Server(port int, service interfaces.IService, MemoryRepository interfaces.I
 			case path == "/api/v1/login-user":
 				Ctl.LoginUserHandler(w, r)
 			case path == "/api/v1/login-client":
-				Ctl.LoginClientHandler(w, r)
+				Ctl.LoginClientHandler(w, r) // Login Client
 			case path == "/api/v1/profile":
 				Ctl.ProfileHandler(w, r)
 			case path == "/api/v1/client-profile":

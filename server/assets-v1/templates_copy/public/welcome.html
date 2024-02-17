@@ -20,34 +20,36 @@
   <body>
     <div id="app">
       <div class="welcome-container">
-        <div class="flex space-x-7 justify-center h-[100vh]">
+        <div class="md:flex md:space-x-7 justify-center md:h-[100vh]">
           <div class="self-center">
-            <h1 class="text-start text-[42px] font-bold text-[#333333] mb-12">
-              Welcome page! 
+            <h1
+              class="text-start md:mb-12 mb-4 md:text-[42px] text-3xl font-bold text-[#333333]"
+            >
+              Welcome page!
             </h1>
-            <p class="text-start font-normal text-sm text-[#333333] mb-11">
+            <p class="text-start font-normal text-sm text-[#333333] md:mb-11 mb-4">
               Explore the incredible features and benefits our platform has to
               offer. From user-friendly interfaces to advanced tools, we're
-              dedicated to making your experience extraordinary. To getstarted,
+              dedicated to making your experience extraordinary. To get started,
               please choose the appropriate login option below.
             </p>
             <div class="flex space-x-7">
               <button
                 @click="loginAsAUser"
-                class="border border-black bg-white px-10 py-4 text-[211F54] font-normal text-sm hover:bg-black hover:text-white"
+                class="border border-black bg-white md:px-10 px-2 md:py-4 py-2 text-[211F54] font-normal text-sm hover:bg-black hover:text-white"
               >
                 Login as a User
               </button>
               <button
                 @click="loginAsAClient"
-                class="border border-black bg-white px-10 py-4 text-[211F54] font-normal text-sm hover:bg-black hover:text-white"
+                class="border border-black bg-white md:px-10 px-2 md:py-4 py-2 text-[211F54] font-normal text-sm hover:bg-black hover:text-white"
               >
                 Login as a Client
               </button>
             </div>
           </div>
           <img
-            class="w-[564px] h-[564px] self-center"
+            class="md:w-[564px] md:h-[564px] self-center"
             src="/assets-v1/templates_copy/assets/images/team-working.png"
           />
         </div>

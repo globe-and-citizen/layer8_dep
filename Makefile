@@ -1,6 +1,6 @@
 ## NPM Install
 npm_install_all:
-	cd sp_mock/frontend && npm install && cd ../backend && npm install 
+	cd sp_mock/frontend && npm install && npm i layer8_interceptor && cd ../backend && npm install && npm i layer8_middleware
 
 go_mod_tidy:
 	cd ./server && go mod tidy

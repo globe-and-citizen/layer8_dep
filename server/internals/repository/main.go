@@ -35,5 +35,5 @@ type Repository interface {
 
 func InitDB() Repository {
 	// Register the postgres repository
-	return NewPostgresRepository(config.DB)
+	return NewOauthRepository(config.DB)
 }

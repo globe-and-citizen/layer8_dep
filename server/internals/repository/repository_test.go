@@ -26,7 +26,7 @@ func TestLoginUserPrecheck(t *testing.T) {
 	}
 
 	// Create the user repository with the mock database connection
-	repo := repository.NewPostgresRepository(db)
+	repo := repository.NewOauthRepository(db)
 
 	// Make a mock loginPrecheck input
 	username := "test_user"
@@ -61,7 +61,7 @@ func TestGetUser(t *testing.T) {
 	}
 
 	// Create the user repository with the mock database connection
-	repo := repository.NewPostgresRepository(db)
+	repo := repository.NewOauthRepository(db)
 
 	// Make a mock getUser input
 	username := "test_user"
@@ -101,7 +101,7 @@ func TestGetUserByID(t *testing.T) {
 	}
 
 	// Create the user repository with the mock database connection
-	repo := repository.NewPostgresRepository(db)
+	repo := repository.NewOauthRepository(db)
 
 	// Make a mock getUserByID input
 	id := int64(1)
@@ -141,7 +141,7 @@ func TestGetUserMetadata(t *testing.T) {
 	}
 
 	// Create the user repository with the mock database connection
-	repo := repository.NewPostgresRepository(db)
+	repo := repository.NewOauthRepository(db)
 
 	// Make a mock getUserMetadata input
 	userID := int64(1)
@@ -178,7 +178,7 @@ func TestSetClient(t *testing.T) {
 	}
 
 	// Create the user repository with the mock database connection
-	repo := repository.NewPostgresRepository(db)
+	repo := repository.NewOauthRepository(db)
 
 	// Make a mock setClient input
 	client := &models.Client{
@@ -219,7 +219,7 @@ func TestGetClient(t *testing.T) {
 	}
 
 	// Create the user repository with the mock database connection
-	repo := repository.NewPostgresRepository(db)
+	repo := repository.NewOauthRepository(db)
 
 	// Make a mock getClient input
 	id := "test_id"
@@ -257,7 +257,7 @@ func TestSetTTL(t *testing.T) {
 	}
 
 	// Create the user repository with the mock database connection
-	repo := repository.NewPostgresRepository(db)
+	repo := repository.NewOauthRepository(db)
 
 	// Call the function and check the result
 	err = repo.SetTTL("test_key", []byte("test_value"), 1)
@@ -280,7 +280,7 @@ func TestGetTTL(t *testing.T) {
 	}
 
 	// Create the user repository with the mock database connection
-	repo := repository.NewPostgresRepository(db)
+	repo := repository.NewOauthRepository(db)
 
 	// Call the function and check the result
 	_, err = repo.GetTTL("test_key")

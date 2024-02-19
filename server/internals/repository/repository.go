@@ -14,7 +14,7 @@ type PostgresRepository struct {
 	storage map[string][]byte
 }
 
-func NewPostgresRepository(db *gorm.DB) *PostgresRepository {
+func NewOauthRepository(db *gorm.DB) *PostgresRepository {
 	return &PostgresRepository{
 		db:      db,
 		storage: make(map[string][]byte),

@@ -126,7 +126,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Host:", r.Header.Get("X-Forwarded-Host"))
 
 	// backendURL := fmt.Sprintf(os.Getenv("VITE_BACKEND")+"%s", r.URL)
-	backendURL := fmt.Sprintf("https://%s", r.Header.Get("X-Forwarded-Host")+r.URL.Path)
+	backendURL := fmt.Sprintf("http://%s", r.Header.Get("X-Forwarded-Host")+r.URL.Path)
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {

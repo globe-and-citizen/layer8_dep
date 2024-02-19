@@ -18,11 +18,12 @@ import (
 	"globe-and-citizen/layer8/server/resource_server/dto"
 	"globe-and-citizen/layer8/server/resource_server/interfaces"
 
-	repo "globe-and-citizen/layer8/server/resource_server/repository"
+	oauthRepo "globe-and-citizen/layer8/server/internals/repository"
+	rsRepo "globe-and-citizen/layer8/server/resource_server/repository"
 
 	svc "globe-and-citizen/layer8/server/resource_server/service" // there are two services
 
-	OauthSvc "globe-and-citizen/layer8/server/internals/service" // there are two services
+	oauthSvc "globe-and-citizen/layer8/server/internals/service" // there are two services
 
 	"github.com/joho/godotenv"
 )
@@ -56,7 +57,7 @@ func main() {
 		os.Setenv("JWT_SECRET_KEY", *jwtKey)
 		os.Setenv("MP_123_SECRET_KEY", *MpKey)
 		os.Setenv("UP_999_SECRET_KEY", *UpKey)
-		repository := repo.NewMemoryRepository()
+		repository := rsRepo.NewMemoryRepository()
 		repository.RegisterUser(dto.RegisterUserDTO{
 			Email:       "user@test.com",
 			Username:    "tester",
@@ -90,20 +91,26 @@ func main() {
 	}
 
 	// Register repository
-	repository := repo.NewRepository(config.DB)
-
+	rsRepository := rsRepo.NewRepository(config.DB)
 	// Register service(usecase)
-	service := svc.NewService(repository)
+	service := svc.NewService(rsRepository)
 
-	Server(proxyServerPortInt, service, repository) // Run server (which never returns)
+	Server(proxyServerPortInt, service, rsRepository) // Run server (which never returns)
 
 }
 
-func Server(port int, service interfaces.IService, repository interfaces.IRepository) {
+func Server(port int, service interfaces.IService, memoryRepository interfaces.IRepository) {
 
-	OauthService := &OauthSvc.Service{Repo: repository}
+	// CHOOSE TO USE POSTRGRES OR IN_MEMORY IMPLEMENTATION BY COMMENTING / UNCOMMENTING
 
-	_, err := OauthService.AddTestClient()
+	// ** USE LOCAL POSTGRES DB **
+	oauthRepository := oauthRepo.NewOauthRepository(config.DB)
+	oauthService := &oauthSvc.Service{Repo: oauthRepository}
+
+	// ** USE THE IN MEMORY IMPLEMENTATION **
+	// oauthService := &oauthSvc.Service{Repo: memoryRepository}
+
+	_, err := oauthService.AddTestClient()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -121,7 +128,7 @@ func Server(port int, service interfaces.IService, repository interfaces.IReposi
 				return
 			}
 
-			r = r.WithContext(context.WithValue(r.Context(), "Oauthservice", OauthService))
+			r = r.WithContext(context.WithValue(r.Context(), "Oauthservice", oauthService))
 			r = r.WithContext(context.WithValue(r.Context(), "service", service))
 
 			staticFS, _ := fs.Sub(StaticFiles, "dist")

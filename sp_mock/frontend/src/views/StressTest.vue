@@ -48,8 +48,8 @@ let x = 0
 async function getNextPicture(){
   let idx = x%2
   const pictureURLs = [
-    'http://localhost:8000/media/boy.png',
-    'http://localhost:8000/media/girl.png',
+    'https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/media/boy.png',
+    'https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/media/girl.png',
   ]
   let url = await layer8_interceptor.static(pictureURLs[idx]);
   const element = document.getElementById("pictureBox");

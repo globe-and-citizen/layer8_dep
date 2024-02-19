@@ -50,8 +50,8 @@ func main() {
 
 	flag.Parse()
 
-	// Port 8080 is the default so this line may as well read, "if no port is set, run the code within the code block."
-	if *port != 8080 {
+	// Use flags for using in-memory repository, otherwise app will use database
+	if *port != 8080 && *jwtKey != "" && *MpKey != "" && *UpKey != "" {
 		os.Setenv("SERVER_PORT", strconv.Itoa(*port))
 		os.Setenv("JWT_SECRET_KEY", *jwtKey)
 		os.Setenv("MP_123_SECRET_KEY", *MpKey)
@@ -67,6 +67,7 @@ func main() {
 			DisplayName: "test_user_mem",
 		})
 		service := svc.NewService(repository)
+		fmt.Println("Running app with in-memory repository")
 		Server(*port, service, repository) // Run server
 	}
 
@@ -98,16 +99,9 @@ func main() {
 
 }
 
-func Server(port int, service interfaces.IService, MemoryRepository interfaces.IRepository) {
+func Server(port int, service interfaces.IService, repository interfaces.IRepository) {
 
-	// CHOOSE TO USE POSTRGRES OR IN_MEMORY IMPLEMENTATION BY COMMENTING / UNCOMMENTING
-
-	// ** USE LOCAL POSTGRES DB **
-	// postgresRepository := repo2.InitDB()
-	// OauthService := &OauthSvc.Service{Repo: postgresRepository}
-
-	// ** USE THE IN MEMORY IMPLEMENTATION **
-	OauthService := &OauthSvc.Service{Repo: MemoryRepository}
+	OauthService := &OauthSvc.Service{Repo: repository}
 
 	_, err := OauthService.AddTestClient()
 	if err != nil {

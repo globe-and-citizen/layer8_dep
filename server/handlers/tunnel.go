@@ -43,7 +43,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("b64PubJWK: ", b64PubJWK)
 	fmt.Println("x-ecdh-init: ", r.Header.Get("x-ecdh-init"))
 
-	backendURL := fmt.Sprintf("http://%s", backend)
+	backendURL := fmt.Sprintf("https://%s", backend)
 	fmt.Println("User agent is attempting to initialize this backend SP: ", backendURL)
 
 	// create the request
@@ -126,7 +126,7 @@ func Tunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Host:", r.Header.Get("X-Forwarded-Host"))
 
 	// backendURL := fmt.Sprintf(os.Getenv("VITE_BACKEND")+"%s", r.URL)
-	backendURL := fmt.Sprintf("http://%s", r.Header.Get("X-Forwarded-Host")+r.URL.Path)
+	backendURL := fmt.Sprintf("https://%s", r.Header.Get("X-Forwarded-Host")+r.URL.Path)
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {

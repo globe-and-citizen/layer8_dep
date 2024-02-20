@@ -86,6 +86,7 @@ func UserHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("userPath: ", userPath)
 	http.ServeFile(w, r, userPath)
 }
+
 func ClientHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
@@ -101,6 +102,7 @@ func ClientHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("userPath: ", userPath)
 	http.ServeFile(w, r, userPath)
 }
+
 func LoginClientPage(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
@@ -179,6 +181,8 @@ func LoginPrecheckHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+// RAVI
 func ClientLoginPrecheckHandler(w http.ResponseWriter, r *http.Request) {
 	newService := r.Context().Value("service").(interfaces.IService)
 	var req dto.LoginPrecheckDTO
@@ -233,6 +237,7 @@ func LoginClientHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//fmt.Println("tokenResp: ", tokenResp)
 	if err := json.NewEncoder(w).Encode(tokenResp); err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to get client profile", err)
 		return
@@ -265,13 +270,14 @@ func ClientProfileHandler(w http.ResponseWriter, r *http.Request) {
 	newService := r.Context().Value("service").(interfaces.IService)
 	tokenString := r.Header.Get("Authorization")
 	tokenString = tokenString[7:]
-	userID, err := utils.ValidateClientToken(tokenString)
+	userName, err := utils.ValidateClientToken(tokenString)
 	if err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to get user profile", err)
 		return
 	}
 
-	profileResp, err := newService.ProfileClient(userID)
+	// RAVI
+	profileResp, err := newService.ProfileClient(userName)
 	if err != nil {
 		utils.HandleError(w, http.StatusBadRequest, "Failed to get user profile", err)
 		return

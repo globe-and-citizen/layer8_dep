@@ -117,34 +117,19 @@ func CompleteLogin(req dto.LoginUserDTO, user models.User) (models.LoginUserResp
 		return models.LoginUserResponseOutput{}, fmt.Errorf("invalid password")
 	}
 
-	JWT_SECRET_STR := os.Getenv("JWT_SECRET")
-	JWT_SECRET_BYTE := []byte(JWT_SECRET_STR)
-
-	expirationTime := time.Now().Add(60 * time.Minute)
-	claims := &models.Claims{
-		UserName: user.Username,
-		UserID:   user.ID,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-			Issuer:    "GlobeAndCitizen",
-		},
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(JWT_SECRET_BYTE)
+	tokenString, err := GenerateToken(user)
 	if err != nil {
 		return models.LoginUserResponseOutput{}, err
 	}
+
 	resp := models.LoginUserResponseOutput{
 		Token: tokenString,
 	}
 	return resp, nil
 }
-func CompleteClientLogin(req dto.LoginClientDTO, client models.Client) (models.LoginUserResponseOutput, error) {
-	HashedAndSaltedPass := SaltAndHashPassword(req.Password, client.Salt)
 
-	if client.Password != HashedAndSaltedPass {
-		return models.LoginUserResponseOutput{}, fmt.Errorf("invalid password")
-	}
+// RAVI
+func CompleteClientLogin(req dto.LoginClientDTO, client models.Client) (models.LoginUserResponseOutput, error) {
 
 	JWT_SECRET_STR := os.Getenv("JWT_SECRET")
 	JWT_SECRET_BYTE := []byte(JWT_SECRET_STR)
@@ -163,10 +148,12 @@ func CompleteClientLogin(req dto.LoginClientDTO, client models.Client) (models.L
 	if err != nil {
 		return models.LoginUserResponseOutput{}, err
 	}
+
 	resp := models.LoginUserResponseOutput{
 		Token: tokenString,
 	}
 	fmt.Println(resp)
+
 	return resp, nil
 }
 
@@ -185,6 +172,7 @@ func ValidateToken(tokenString string) (uint, error) {
 	}
 	return claims.UserID, nil
 }
+
 func ValidateClientToken(tokenString string) (string, error) {
 	claims := &models.ClientClaims{}
 	JWT_SECRET_STR := os.Getenv("JWT_SECRET")
@@ -198,5 +186,26 @@ func ValidateClientToken(tokenString string) (string, error) {
 	if !token.Valid {
 		return "", fmt.Errorf("invalid token")
 	}
-	return claims.UserID, nil
+	return claims.UserName, nil
+}
+
+func GenerateToken(user models.User) (string, error) {
+	JWT_SECRET_STR := os.Getenv("JWT_SECRET")
+	JWT_SECRET_BYTE := []byte(JWT_SECRET_STR)
+
+	expirationTime := time.Now().Add(60 * time.Minute)
+	claims := &models.Claims{
+		UserName: user.Username,
+		UserID:   user.ID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			Issuer:    "GlobeAndCitizen",
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString(JWT_SECRET_BYTE)
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
 }

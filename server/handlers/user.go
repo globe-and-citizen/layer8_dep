@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"globe-and-citizen/layer8/server/internals/usecases"
+	svc "globe-and-citizen/layer8/server/internals/service"
 	"log"
 	"net/http"
 	"strings"
@@ -11,12 +11,12 @@ import (
 // UserInfo handles requests to get a user's anonymized data
 // The last step of the oauth flow
 func UserInfo(w http.ResponseWriter, r *http.Request) {
-	usecase := r.Context().Value("usecase").(*usecases.UseCase)
+	service := r.Context().Value("Oauthservice").(*svc.Service)
 
 	switch r.Method {
 	case "GET":
 		token := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
-		data, err := usecase.AccessResourcesWithToken(token)
+		data, err := service.AccessResourcesWithToken(token)
 		if err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusUnauthorized)

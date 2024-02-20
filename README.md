@@ -8,7 +8,8 @@ docker run --env=POSTGRES_USER=default_user --env=POSTGRES_PASSWORD=1234 --env=P
 Hint, if on windows, check "services" by opening up the windows menu and searching "services"
 
 2) You will need to run the following queries in your database to create the necessary tables:
-```
+
+``` sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -51,12 +52,11 @@ CREATE TABLE user_metadata (
 
 ## Run the sp_mock frontend & backend
 1) In any terminal, run make `$make npm_install_all`
-2) In any terminal, run make `$make go_mod_tidy_all`
-3) In a bash terminal, run make `$make build_middleware`
+2) In any terminal, run make `$make go_mod_tidy`
+3) Navigate to `./server` and run `go get "github.com/globe-and-citizen/layer8-utils"`
 4) Clone `.env.dev` to `.env` in `sp_mock/backend`
 5) Navigate to the root directory. Run `$make run_backend`
-6) Clone `.env.dev` to `.env` in `interceptor`
-7) In a bash terminal run make `$make build_interceptor`
+4) Clone `.env.dev` to `.env` in `sp_mock/frontend`
 8) Navigate to the root directory. Run `$make run_frontend`
 9) Configure the `.env` in `/server` to connect to your local PG implementation
     Example: 
@@ -73,7 +73,7 @@ CREATE TABLE user_metadata (
     MP_123_SECRET_KEY=
     SSL_ROOT_CERT=
     ```
-10) With Golang installed, run `$make run_server`
+10) With Golang installed, run `$make run_server` from the root directory
 11) Navigate to `http://localhost:5001`. Register a new Layer8 user.
 12) Navigate to `http://localhost:5173` to register and login a user of the sp_mock.
 

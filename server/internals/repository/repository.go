@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"globe-and-citizen/layer8/server/config"
+	"fmt"
 	"globe-and-citizen/layer8/server/models"
 	"strings"
 	"time"
@@ -14,15 +14,16 @@ type PostgresRepository struct {
 	storage map[string][]byte
 }
 
-func NewPostgresRepository() *PostgresRepository {
+func NewPostgresRepository(db *gorm.DB) *PostgresRepository {
 	return &PostgresRepository{
-		db:      config.DB,
+		db:      db,
 		storage: make(map[string][]byte),
 	}
 }
 
 func (r *PostgresRepository) LoginUserPrecheck(username string) (string, error) {
 	var user models.User
+	fmt.Println("RAVI 2: ", user)
 	err := r.db.Where("username = ?", username).First(&user).Error
 	if err != nil {
 		return "", err

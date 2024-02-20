@@ -153,20 +153,22 @@
             alert("Please enter a username and password!");
             return;
           }
-          //const respOne = await window.fetch("https://layer8devproxy.net/api/v1/client-login-precheck",{
-          const respOne = await window.fetch("http://localhost:5001/api/v1/client-login-precheck",{
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                username: username.value,
-              }),
-            }
-          );
-          const responseOne = await respOne.json()
 
+          // THIS IS LIKELY UNNECESSARY
+          //const respOne = await window.fetch("https://layer8devproxy.net/api/v1/client-login-precheck",{
+          // const respOne = await window.fetch("http://localhost:5001/api/v1/client-login-precheck",{
+          //     method: "POST",
+          //     headers: {
+          //       "Content-Type": "application/json",
+          //     },
+          //     body: JSON.stringify({
+          //       username: username.value,
+          //     }),
+          //   }
+          // );
+          // const responseOne = await respOne.json()
           //const respTwo = await window.fetch("https://layer8devproxy.net/api/v1/login-client",{
+
           const respTwo = await window.fetch("http://localhost:5001/api/v1/login-client",{
               method: "POST",
               headers: {
@@ -175,7 +177,6 @@
               body: JSON.stringify({
                 username: username.value,
                 password: password.value,
-                salt: responseOne.salt,
               }),
             }
           );

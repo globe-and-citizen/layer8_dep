@@ -695,6 +695,10 @@ video {
   margin-top: 1.5rem;
 }
 
+.pt-40 {
+  padding-top: 10rem;
+}
+
 .mb-0 {
   margin-bottom: 0px;
 }

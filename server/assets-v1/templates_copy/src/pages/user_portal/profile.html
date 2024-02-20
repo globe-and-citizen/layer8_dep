@@ -152,7 +152,7 @@
                 </div>
                 <div>
                   <label class="font-normal text-black text-sm text-start mb-2 block">Display Name</label>
-                  <input class="border border-[#BDC3CA] rounded-lg px-5 py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full" :value="user.display_name" v-model="newDisplayName" />
+                  <input class="border border-[#BDC3CA] rounded-lg px-5 py-4 text-start text-base text-[#8F8F8F] focus:outline-none w-full" type="text" v-model="newDisplayName" />
                 </div>
                 <div class="col-span-2">Email is <span v-if="!user.email_verified">not</span> verified.</div>
                 <button
@@ -198,8 +198,8 @@
             }
           );
           const data = await resp.json();
-          console.log("resp", resp);
           user.value = data;
+          newDisplayName.value = data.display_name
         } catch (error) {
           console.error(error);
         }

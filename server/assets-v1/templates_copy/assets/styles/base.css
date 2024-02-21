@@ -2,7 +2,7 @@
 .welcome-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 20px;
+    /* padding: 20px; */
     box-sizing: border-box; 
 }
 
@@ -14,21 +14,21 @@
 
 @media (min-width: 768px) {
     .welcome-container {
-        padding: 30px;
+        /* padding: 30px; */
         font-size: 20px;
     }
 }
 
 @media (min-width: 992px) {
     .welcome-container {
-        padding: 40px;
+        /* padding: 40px; */
         font-size: 22px;
     }
 }
 
 @media (min-width: 1200px) {
     .welcome-container {
-        padding: 50px;
+        /* padding: 50px; */
         font-size: 24px;
     }
 }

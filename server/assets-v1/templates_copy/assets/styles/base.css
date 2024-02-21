@@ -1,43 +1,36 @@
-/* Base styles */
-.welcome-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    /* padding: 20px; */
-    box-sizing: border-box; 
-}
+ @media (max-width: 640px) {
+     .welcome-container {
+         max-width: 48rem;
+         margin-right: auto;
+         margin-left: auto;
+         padding-right: 1rem;
+         padding-left: 1rem;
+     }
+ }
 
-@media (min-width: 576px) {
-    .welcome-container {
-        font-size: 18px;
-    }
-}
+ @media (min-width: 640px) {
+     .welcome-container {
+         padding-right: 1rem;
+         padding-left: 1rem;
+     }
+ }
 
-@media (min-width: 768px) {
-    .welcome-container {
-        /* padding: 30px; */
-        font-size: 20px;
-    }
-}
+ @media (min-width: 1024px) {
+     .welcome-container {
+         max-width: 1200px;
+         margin-right: auto;
+         margin-left: auto;
+         padding-right: 2rem;
+         padding-left: 2rem;
+     }
+ }
 
-@media (min-width: 992px) {
-    .welcome-container {
-        /* padding: 40px; */
-        font-size: 22px;
-    }
-}
+ .user-container {
+     max-width: 1220px;
+     margin: 0 auto;
+ }
 
-@media (min-width: 1200px) {
-    .welcome-container {
-        /* padding: 50px; */
-        font-size: 24px;
-    }
-}
-
-.user-container {
-    max-width: 1220px;
-    margin: 0 auto;
-}
-.client-container {
-    max-width: 1120px;
-    margin: 0 auto;
-}
+ .client-container {
+     max-width: 1120px;
+     margin: 0 auto;
+ }

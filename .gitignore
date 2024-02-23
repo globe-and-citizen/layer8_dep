@@ -165,3 +165,4 @@ resource_server/backend/certificates
 .idea
 interceptor*.json
 sp_mock/backend/uploads/dynamic/
+*uploads/

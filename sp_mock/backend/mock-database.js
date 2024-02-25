@@ -20,12 +20,12 @@ module.exports = {
         {
             "email": "star",
             "password": "$2b$10$ssDWc4sXNoafqEdAsvH8TOUXywGsFHsPEODTZlSB4AKe8cqe1PmCi",
-            "profile_image": "http://localhost:8000/media/girl.png",
+            "profile_image": "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/media/girl.png",
         },
         {
             "email": "tester",
             "password": "$2b$10$vPCe/tNw/t2MHK/tGetY1exyvp4AhTC9w6mY5jyHHRAJrClfd1yYW",
-            "profile_image": "http://localhost:8000/media/boy.png",
+            "profile_image": "https://container-service-3.gej3a3qi2as1a.ca-central-1.cs.amazonlightsail.com/media/boy.png",
         }
     ]
 }

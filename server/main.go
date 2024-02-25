@@ -18,11 +18,12 @@ import (
 	"globe-and-citizen/layer8/server/resource_server/dto"
 	"globe-and-citizen/layer8/server/resource_server/interfaces"
 
-	repo "globe-and-citizen/layer8/server/resource_server/repository"
+	oauthRepo "globe-and-citizen/layer8/server/internals/repository"
+	rsRepo "globe-and-citizen/layer8/server/resource_server/repository"
 
 	svc "globe-and-citizen/layer8/server/resource_server/service" // there are two services
 
-	OauthSvc "globe-and-citizen/layer8/server/internals/service" // there are two services
+	oauthSvc "globe-and-citizen/layer8/server/internals/service" // there are two services
 
 	"github.com/joho/godotenv"
 )
@@ -50,13 +51,13 @@ func main() {
 
 	flag.Parse()
 
-	// Port 8080 is the default so this line may as well read, "if no port is set, run the code within the code block."
-	if *port != 8080 {
+	// Use flags for using in-memory repository, otherwise app will use database
+	if *port != 8080 && *jwtKey != "" && *MpKey != "" && *UpKey != "" {
 		os.Setenv("SERVER_PORT", strconv.Itoa(*port))
 		os.Setenv("JWT_SECRET_KEY", *jwtKey)
 		os.Setenv("MP_123_SECRET_KEY", *MpKey)
 		os.Setenv("UP_999_SECRET_KEY", *UpKey)
-		repository := repo.NewMemoryRepository()
+		repository := rsRepo.NewMemoryRepository()
 		repository.RegisterUser(dto.RegisterUserDTO{
 			Email:       "user@test.com",
 			Username:    "tester",
@@ -67,6 +68,7 @@ func main() {
 			DisplayName: "test_user_mem",
 		})
 		service := svc.NewService(repository)
+		fmt.Println("Running app with in-memory repository")
 		Server(*port, service, repository) // Run server
 	}
 
@@ -89,27 +91,26 @@ func main() {
 	}
 
 	// Register repository
-	repository := repo.NewRepository(config.DB)
-
+	rsRepository := rsRepo.NewRepository(config.DB)
 	// Register service(usecase)
-	service := svc.NewService(repository)
+	service := svc.NewService(rsRepository)
 
-	Server(proxyServerPortInt, service, repository) // Run server (which never returns)
+	Server(proxyServerPortInt, service, rsRepository) // Run server (which never returns)
 
 }
 
-func Server(port int, service interfaces.IService, MemoryRepository interfaces.IRepository) {
+func Server(port int, service interfaces.IService, memoryRepository interfaces.IRepository) {
 
 	// CHOOSE TO USE POSTRGRES OR IN_MEMORY IMPLEMENTATION BY COMMENTING / UNCOMMENTING
 
 	// ** USE LOCAL POSTGRES DB **
-	// postgresRepository := repo2.InitDB()
-	// OauthService := &OauthSvc.Service{Repo: postgresRepository}
+	oauthRepository := oauthRepo.NewOauthRepository(config.DB)
+	oauthService := &oauthSvc.Service{Repo: oauthRepository}
 
 	// ** USE THE IN MEMORY IMPLEMENTATION **
-	OauthService := &OauthSvc.Service{Repo: MemoryRepository}
+	// oauthService := &oauthSvc.Service{Repo: memoryRepository}
 
-	_, err := OauthService.AddTestClient()
+	_, err := oauthService.AddTestClient()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -127,7 +128,7 @@ func Server(port int, service interfaces.IService, MemoryRepository interfaces.I
 				return
 			}
 
-			r = r.WithContext(context.WithValue(r.Context(), "Oauthservice", OauthService))
+			r = r.WithContext(context.WithValue(r.Context(), "Oauthservice", oauthService))
 			r = r.WithContext(context.WithValue(r.Context(), "service", service))
 
 			staticFS, _ := fs.Sub(StaticFiles, "dist")

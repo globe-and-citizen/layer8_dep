@@ -43,11 +43,10 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("b64PubJWK: ", b64PubJWK)
 	fmt.Println("x-ecdh-init: ", r.Header.Get("x-ecdh-init"))
 
-	backendURL := fmt.Sprintf("http://%s", backend)
-	fmt.Println("User agent is attempting to initialize this backend SP: ", backendURL)
+	fmt.Println("User agent is attempting to initialize this backend SP: ", backend)
 
 	// create the request
-	req, err := http.NewRequest(r.Method, backendURL, r.Body)
+	req, err := http.NewRequest(r.Method, backend, r.Body)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -84,7 +83,7 @@ func InitTunnel(w http.ResponseWriter, r *http.Request) {
 	// Make a copy of the response body to send back to client
 	res.Body = io.NopCloser(bytes.NewBuffer(resBodyTemp.Bytes()))
 
-	fmt.Println("\nReceived response from 8000:", backendURL, " of code: ", res.StatusCode)
+	fmt.Println("\nReceived response from 8000:", backend, " of code: ", res.StatusCode)
 
 	upJWT, err := utilities.GenerateStandardToken(os.Getenv("UP_999_SECRET_KEY"))
 	if err != nil {

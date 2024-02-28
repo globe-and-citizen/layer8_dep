@@ -87,3 +87,4 @@ copy_wasm_exec_js:
 	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./middleware/dist/wasm_exec.js
 	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./server/assets-v1/cdn/interceptor/wasm_exec.js
 	cp "$(shell go env GOROOT)/misc/wasm/wasm_exec.js" ./server/assets-v1/cdn/wasm_exec_v1.js
+

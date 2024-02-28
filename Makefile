@@ -48,10 +48,10 @@ run_sp_mock_backend_image:
 	docker run -p 8000:8000 -t sp_mock_backend
 
 push_layer8_server_image:
-	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label layer8-server-version-17 --image layer8-server:latest
+	aws lightsail push-container-image --region ca-central-1 --service-name aws-container-service-t1 --label layer8-server-version-18 --image layer8-server:latest
 
 push_sp_mock_frontend_image:
-	aws lightsail push-container-image --region ca-central-1 --service-name container-service-2 --label frontendversion9 --image sp_mock_frontend:latest
+	aws lightsail push-container-image --region ca-central-1 --service-name container-service-2 --label frontendversion10 --image sp_mock_frontend:latest
 
 push_sp_mock_backend_image:
 	aws lightsail push-container-image --region ca-central-1 --service-name container-service-3 --label backendversion15 --image sp_mock_backend:latest

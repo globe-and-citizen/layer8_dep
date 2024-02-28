@@ -3,7 +3,7 @@ name: Build and Deploy to Lightsail
 on:
   push:
     branches:
-      - '*'
+      - "*"
 
 jobs:
   build-and-deploy:
@@ -30,8 +30,11 @@ jobs:
       - name: Build and Push Docker Image to Lightsail
         run: |
           docker build --tag layer8-server --file Dockerfile .
-          echo $AWS_ACCESS_KEY_ID | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+          docker login -u AWS -p "$(aws ecr get-login-password --region $AWS_REGION)" $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
           aws lightsail push-container-image --region $AWS_REGION --service-name aws-container-service-t1 --label layer8-server-version-1 --image layer8-server:latest
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
 
       - name: Logout from Docker
         run: docker logout

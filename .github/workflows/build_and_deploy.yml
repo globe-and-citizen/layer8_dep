@@ -19,8 +19,9 @@ jobs:
 
       - name: Set up Docker
         run: |
+          sudo apt-get remove --purge containerd.io containerd
           sudo apt-get update
-          sudo apt-get install -y docker.io
+          sudo apt-get install docker.io
           sudo usermod -aG docker $USER
           newgrp docker
 

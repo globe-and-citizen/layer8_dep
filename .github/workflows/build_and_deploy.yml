@@ -1,0 +1,30 @@
+name: Build and Deploy to Lightsail
+
+on:
+  push:
+    branches:
+      - "*"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Docker
+        uses: actions/setup-docker@v2
+
+      - name: Build and Push Docker Image to Lightsail
+        run: |
+          docker build --tag layer8-server --file Dockerfile .
+          echo $AWS_ACCESS_KEY_ID | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+          aws lightsail push-container-image --region $AWS_REGION --service-name aws-container-service-t1 --label layer8-server-version-1 --image layer8-server:latest
+
+      - name: Logout from Docker
+        run: docker logout

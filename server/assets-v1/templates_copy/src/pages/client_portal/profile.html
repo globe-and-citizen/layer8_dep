@@ -14,65 +14,77 @@
     <title>Authentication Page</title>
     <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
   </head>
-  <body class="bg-[#E5E5E5] h-dvh">
+  <body class="bg-[#E5E5E5] h-dvh relative">
     <div id="app">
       <div>
-        <div class="py-3 px-7 mb-4 bg-white rounded-b-2xl flex justify-between">
-          <div class="flex space-x-4 items-center">
-            <img src="/assets-v1/templates_copy/assets/images/user_image.png" />
-            <div>{{ user.name }}</div>
+        <div @click="showSidebar(false)" v-show="sidebarShow" class="absolute block md:hidden lg:hidden top-0 left-0 h-dvh w-full bg-opacity-50 backdrop-blur-lg text-black">
+          <div class="w-[70%] h-dvh md:col-span-1 bg-white rounded-2xl px-5 py-2">
+              <div>
+                  <span class="flex justify-end mb-4" @click="showSidebar(false)">&#x2715;</span>
+                  <div
+                      class="flex space-x-2.5 items-center pl-7 py-2.5 cursor-pointer mb-5 rounded-md bg-[#e4f6ff]"
+                  >
+                      <img src="/assets-v1/templates_copy/assets/images/icons/project-info.svg" alt="">
+                      <span class="font-medium text-[#2F80ED] text-base">Project info</span>
+                  </div>
+                  <div
+                      @click="logoutUser"
+                      class="flex space-x-2.5 items-center pl-7 py-3 cursor-pointer mb-5"
+                  >
+                      <img src="/assets-v1/templates_copy/assets/images/icons/logout-icon.svg" alt="">
+                      <span class="font-medium text-black text-base">Log out</span>
+                  </div>
+              </div>
           </div>
-          <div class="p-2 rounded-xl bg-[#3751FE] text-white">Pay with metamask</div>
         </div>
-        <div class="grid md:grid-cols-5 lg:grid-cols-5 gap-x-4 m-4">
-            <div class="md:col-span-1 bg-white rounded-2xl px-5 py-6 hidden md:block lg:block">
+        <div class="py-3 px-4 md:px-7 mb-2 md:mb-4 bg-white rounded-b-2xl flex justify-between items-center">
+          <div class="hidden md:block lg:block">
+            <div class="flex space-x-4 items-center">
+              <img src="/assets-v1/templates_copy/assets/images/user_image.png" />
+              <div>{{ user.name }}</div>
+            </div>
+          </div>
+          <div class="cursor-pointer block md:hidden lg:hidden" @click="showSidebar(true)">
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 6C2 5.44772 2.44772 5 3 5H21C21.5523 5 22 5.44772 22 6C22 6.55228 21.5523 7 21 7H3C2.44772 7 2 6.55228 2 6Z" fill="currentColor" /><path d="M2 12.0322C2 11.4799 2.44772 11.0322 3 11.0322H21C21.5523 11.0322 22 11.4799 22 12.0322C22 12.5845 21.5523 13.0322 21 13.0322H3C2.44772 13.0322 2 12.5845 2 12.0322Z" fill="currentColor" /><path d="M3 17.0645C2.44772 17.0645 2 17.5122 2 18.0645C2 18.6167 2.44772 19.0645 3 19.0645H21C21.5523 19.0645 22 18.6167 22 18.0645C22 17.5122 21.5523 17.0645 21 17.0645H3Z" fill="currentColor" /></svg>
+          </div>
+          <div class="p-2 rounded-xl text-sm md:text-base bg-[#3751FE] text-white">Pay with metamask</div>
+        </div>
+        <div @click="showSidebar(false)" class="grid md:grid-cols-5 lg:grid-cols-5 gap-x-4 m-4">
+            <div class="md:col-span-1 bg-white rounded-2xl px-2 md:px-5 py-3 md:py-6 hidden md:block lg:block">
                 <div>
                     <div
-                        class="flex space-x-2.5 items-center pl-7 py-2.5 cursor-pointer mb-5 rounded-md bg-[#e4f6ff]"
+                        class="flex space-x-2.5 items-center pl-2 md:pl-3 lg:pl-7 py-2.5 cursor-pointer mb-2 md:mb-5 rounded-md bg-[#e4f6ff]"
                     >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M19 3H14.82C14.4 1.84 13.3 1 12 1C10.7 1 9.6 1.84 9.18 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM12 3C12.55 3 13 3.45 13 4C13 4.55 12.55 5 12 5C11.45 5 11 4.55 11 4C11 3.45 11.45 3 12 3ZM14 17H7V15H14V17ZM17 13H7V11H17V13ZM17 9H7V7H17V9Z" fill="#2F80ED"/>
-                        </svg>
-                        <span class="font-medium text-[#2F80ED] text-base">Project info</span>
+                        <img src="/assets-v1/templates_copy/assets/images/icons/project-info.svg" alt="">
+                        <span class="font-medium text-[#2F80ED] text-sm md:text-base">Project info</span>
                     </div>
                     <div
                         @click="logoutUser"
-                        class="flex space-x-2.5 items-center pl-7 py-3 cursor-pointer mb-5"
+                        class="flex space-x-2.5 items-center pl-2 md:pl-3 lg:pl-7 py-3 cursor-pointer mb-5"
                     >
-                        <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        >
-                        <path
-                            d="M6.91625 14.7756C6.91625 15.0258 6.81688 15.2656 6.64001 15.4425C6.46314 15.6194 6.22326 15.7188 5.97312 15.7188H1.57187C1.15499 15.7188 0.755175 15.5531 0.460391 15.2584C0.165608 14.9636 0 14.5638 0 14.1469V1.57188C0 1.15499 0.165608 0.755175 0.460391 0.460392C0.755175 0.165608 1.15499 0 1.57187 0H5.97312C6.22326 0 6.46314 0.0993647 6.64001 0.276235C6.81688 0.453105 6.91625 0.692993 6.91625 0.943125C6.91625 1.19326 6.81688 1.43315 6.64001 1.61002C6.46314 1.78689 6.22326 1.88625 5.97312 1.88625H1.88625V13.8325H5.97312C6.22326 13.8325 6.46314 13.9319 6.64001 14.1087C6.81688 14.2856 6.91625 14.5255 6.91625 14.7756ZM15.4429 7.19211L12.2991 4.04836C12.122 3.87119 11.8817 3.77165 11.6311 3.77165C11.3805 3.77165 11.1402 3.87119 10.963 4.04836C10.7859 4.22554 10.6863 4.46585 10.6863 4.71641C10.6863 4.96698 10.7859 5.20728 10.963 5.38446L12.4964 6.91625H5.97312C5.72299 6.91625 5.4831 7.01561 5.30623 7.19249C5.12936 7.36936 5.03 7.60924 5.03 7.85938C5.03 8.10951 5.12936 8.34939 5.30623 8.52627C5.4831 8.70314 5.72299 8.8025 5.97312 8.8025H12.4964L10.9623 10.3359C10.7851 10.513 10.6855 10.7533 10.6855 11.0039C10.6855 11.2545 10.7851 11.4948 10.9623 11.672C11.1394 11.8491 11.3797 11.9487 11.6303 11.9487C11.8809 11.9487 12.1212 11.8491 12.2983 11.672L15.4421 8.52821C15.5301 8.44064 15.5999 8.33657 15.6476 8.22196C15.6952 8.10735 15.7198 7.98445 15.7199 7.86032C15.72 7.7362 15.6955 7.61327 15.648 7.49861C15.6005 7.38394 15.5308 7.27979 15.4429 7.19211Z"
-                            fill="black"
-                        />
-                        </svg>
+                        <img src="/assets-v1/templates_copy/assets/images/icons/logout-icon.svg" alt="">
                         <span class="font-medium text-black text-base">Log out</span>
                     </div>
                 </div>
             </div>
             <div class="md:col-span-4">
-                <div class="font-bold text-4xl text-[#2F80ED] text-center my-12">Welcome “{{ user.name }}!” Client Portal</div>
+                <div class="font-bold text-2xl md:text-4xl text-[#2F80ED] text-center my-4 md:my-12">Welcome “{{ user.name }}!” Client Portal</div>
                 <div class="grid md:grid-cols-2 md:gap-x-4">
-                    <div class="bg-white rounded-2xl py-4 px-6 mb-6 md:mb-0">
-                        <h1 class="font-medium text-xl text-black mb-4">Your data</h1>
-                        <p class="font-normal text-base text-[#8E8E93] mb-12">Your product data to use on your own project</p>
+                    <div class="bg-white rounded-2xl py-3 md:py-4 px-4 md:px-6 mb-6 md:mb-0">
+                        <h1 class="font-medium text-lg md:text-xl text-black mb-2 md:mb-4">Your data</h1>
+                        <p class="font-normal text-sm md:text-base text-[#8E8E93] mb-6 md:mb-12">Your product data to use on your own project</p>
                         <div class="grid grid-cols-3">
-                            <ul class="col-span-1 flex flex-col space-y-6 my-auto">
+                            <ul class="col-span-1 flex flex-col space-y-3 md:space-y-6 my-auto">
                                 <li class="font-bold text-lg text-black">Name:</li>
                                 <li class="font-bold text-lg text-black">Redirect URI:</li>
                                 <li class="font-bold text-lg text-black">UUID:</li>
                                 <li class="font-bold text-lg text-black">Secret:</li>    
                             </ul>
                             <div class="col-span-2 flex flex-col space-y-2">
-                                <input class="bg-white border border-[#EADFD8] p-3 rounded-lg w-full font-medium" :value="user.name" />
-                                <input class="bg-white border border-[#EADFD8] p-3 rounded-lg w-full font-medium" :value="user.redirect_uri" />
+                                <input class="bg-white border border-[#EADFD8] p-1 md:p-3 rounded-lg w-full font-medium" :value="user.name" />
+                                <input class="bg-white border border-[#EADFD8] p-1 md:p-3 rounded-lg w-full font-medium" :value="user.redirect_uri" />
                                 <div class="flex items-center space-x-2">
-                                  <input readonly class="bg-[#ECF4FD] border border-[#EADFD8] p-3 rounded-lg w-full font-medium" :value="user.id" />
+                                  <input readonly class="bg-[#ECF4FD] border border-[#EADFD8] p-1 md:p-3 rounded-lg w-full font-medium" :value="user.id" />
                                   <button v-if="isCopied != user.id" @click="copyToClipboard(user.id)">
                                     <svg fill="#000000" width="30px" height="30px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                                       <path d="M14 12V2H4V0h12v12h-2zM0 4h12v12H0V4zm2 2v8h8V6H2z" fill-rule="evenodd"/>
@@ -86,7 +98,7 @@
                                   </div>
                                 </div>
                                 <div class="flex items-center space-x-2">
-                                  <input readonly class="bg-[#ECF4FD] border border-[#EADFD8] p-3 rounded-lg w-full font-medium" :value="user.secret" />
+                                  <input readonly class="bg-[#ECF4FD] border border-[#EADFD8] p-1 md:p-3 rounded-lg w-full font-medium" :value="user.secret" />
                                   <button v-if="isCopied != user.secret" @click="copyToClipboard(user.secret)">
                                     <svg fill="#000000" width="30px" height="30px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                                       <path d="M14 12V2H4V0h12v12h-2zM0 4h12v12H0V4zm2 2v8h8V6H2z" fill-rule="evenodd"/>
@@ -106,7 +118,7 @@
                 </div>
             </div>
         </div>
-      </div>
+      </div>  
     </div>
 
     <script>
@@ -120,6 +132,7 @@
         redirect_uri: "",
       });
       const isCopied = ref("")
+      const sidebarShow = ref(false)
 
       const getUserDetails = async () => {
         try {
@@ -164,6 +177,11 @@
         window.location.href = "http://localhost:5001/";
       };
 
+      const showSidebar = (value) => {
+        sidebarShow.value = value
+        document.body.style.overflow = value ? "hidden" : "auto";
+      }
+
       const app = createApp({
         setup() {
           onMounted(() => {
@@ -174,7 +192,9 @@
             user,
             logoutUser,
             copyToClipboard,
-            isCopied
+            isCopied,
+            sidebarShow,
+            showSidebar
           };
         },
       });

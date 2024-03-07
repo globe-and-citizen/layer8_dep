@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="/assets-v1/templates_copy/assets/styles/output.css"
+    />
+    <link
+      rel="stylesheet"
+      href="/assets-v1/templates_copy/assets/styles/base.css"
+    />
+    <title>Authentication Page</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3"></script>
+  </head>
+  <body class="bg-[#E5E5E5] h-dvh">
+    <div id="app">
+      <div>
+        <div class="py-3 px-7 mb-4 bg-white rounded-b-2xl flex justify-between">
+          <div class="flex space-x-4 items-center">
+            <img src="/assets-v1/templates_copy/assets/images/user_image.png" />
+            <div>{{ user.name }}</div>
+          </div>
+          <div class="p-2 rounded-xl bg-[#3751FE] text-white">Pay with metamask</div>
+        </div>
+        <div class="grid grid-cols-5 gap-x-4 m-4">
+            <div class="col-span-1 bg-white rounded-2xl px-5 py-6">
+                <div>
+                    <div
+                        class="flex space-x-2.5 items-center pl-7 py-2.5 cursor-pointer mb-5 rounded-md bg-[#e4f6ff]"
+                    >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 3H14.82C14.4 1.84 13.3 1 12 1C10.7 1 9.6 1.84 9.18 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM12 3C12.55 3 13 3.45 13 4C13 4.55 12.55 5 12 5C11.45 5 11 4.55 11 4C11 3.45 11.45 3 12 3ZM14 17H7V15H14V17ZM17 13H7V11H17V13ZM17 9H7V7H17V9Z" fill="#2F80ED"/>
+                        </svg>
+                        <span class="font-medium text-[#2F80ED] text-base">Project info</span>
+                    </div>
+                    <div
+                        @click="logoutUser"
+                        class="flex space-x-2.5 items-center pl-7 py-3 cursor-pointer mb-5"
+                    >
+                        <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        >
+                        <path
+                            d="M6.91625 14.7756C6.91625 15.0258 6.81688 15.2656 6.64001 15.4425C6.46314 15.6194 6.22326 15.7188 5.97312 15.7188H1.57187C1.15499 15.7188 0.755175 15.5531 0.460391 15.2584C0.165608 14.9636 0 14.5638 0 14.1469V1.57188C0 1.15499 0.165608 0.755175 0.460391 0.460392C0.755175 0.165608 1.15499 0 1.57187 0H5.97312C6.22326 0 6.46314 0.0993647 6.64001 0.276235C6.81688 0.453105 6.91625 0.692993 6.91625 0.943125C6.91625 1.19326 6.81688 1.43315 6.64001 1.61002C6.46314 1.78689 6.22326 1.88625 5.97312 1.88625H1.88625V13.8325H5.97312C6.22326 13.8325 6.46314 13.9319 6.64001 14.1087C6.81688 14.2856 6.91625 14.5255 6.91625 14.7756ZM15.4429 7.19211L12.2991 4.04836C12.122 3.87119 11.8817 3.77165 11.6311 3.77165C11.3805 3.77165 11.1402 3.87119 10.963 4.04836C10.7859 4.22554 10.6863 4.46585 10.6863 4.71641C10.6863 4.96698 10.7859 5.20728 10.963 5.38446L12.4964 6.91625H5.97312C5.72299 6.91625 5.4831 7.01561 5.30623 7.19249C5.12936 7.36936 5.03 7.60924 5.03 7.85938C5.03 8.10951 5.12936 8.34939 5.30623 8.52627C5.4831 8.70314 5.72299 8.8025 5.97312 8.8025H12.4964L10.9623 10.3359C10.7851 10.513 10.6855 10.7533 10.6855 11.0039C10.6855 11.2545 10.7851 11.4948 10.9623 11.672C11.1394 11.8491 11.3797 11.9487 11.6303 11.9487C11.8809 11.9487 12.1212 11.8491 12.2983 11.672L15.4421 8.52821C15.5301 8.44064 15.5999 8.33657 15.6476 8.22196C15.6952 8.10735 15.7198 7.98445 15.7199 7.86032C15.72 7.7362 15.6955 7.61327 15.648 7.49861C15.6005 7.38394 15.5308 7.27979 15.4429 7.19211Z"
+                            fill="black"
+                        />
+                        </svg>
+                        <span class="font-medium text-black text-base">Log out</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-span-4">
+                <div class="font-bold text-4xl text-[#2F80ED] text-center my-12">Welcome “{{ user.name }}!” Client Portal</div>
+                <div class="grid grid-cols-2 gap-x-4">
+                    <div class="bg-white rounded-2xl py-4 px-6">
+                        <h1 class="font-medium text-xl text-black mb-4">Your data</h1>
+                        <p class="font-normal text-base text-[#8E8E93] mb-12">Your product data to use on your own project</p>
+                        <div class="grid grid-cols-3">
+                            <ul class="col-span-1 flex flex-col space-y-6 my-auto">
+                                <li class="font-bold text-lg text-black">Name:</li>
+                                <li class="font-bold text-lg text-black">Redirect URI:</li>
+                                <li class="font-bold text-lg text-black">UUID:</li>
+                                <li class="font-bold text-lg text-black">Secret:</li>    
+                            </ul>
+                            <div class="col-span-2 flex flex-col space-y-2">
+                                <input class="bg-white border border-[#EADFD8] p-3 rounded-lg w-full font-medium" :value="user.name" />
+                                <input class="bg-white border border-[#EADFD8] p-3 rounded-lg w-full font-medium" :value="user.redirect_uri" />
+                                <div class="flex items-center space-x-2">
+                                  <input readonly class="bg-[#ECF4FD] border border-[#EADFD8] p-3 rounded-lg w-full font-medium" :value="user.id" />
+                                  <button v-if="isCopied != user.id" @click="copyToClipboard(user.id)">
+                                    <svg fill="#000000" width="30px" height="30px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M14 12V2H4V0h12v12h-2zM0 4h12v12H0V4zm2 2v8h8V6H2z" fill-rule="evenodd"/>
+                                    </svg>
+                                  </button>
+                                  <div v-if="isCopied == user.id">
+                                    <svg fill="#000000" width="40px" height="40px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                                      <title>checked</title>
+                                      <path d="M26.5 27h-3c-0.276 0-0.5-0.224-0.5-0.5s0.224-0.5 0.5-0.5h2.5v-2.5c0-0.276 0.224-0.5 0.5-0.5 0.275 0 0.5 0.224 0.5 0.5v3c0 0.276-0.225 0.5-0.5 0.5zM26.5 21c-0.276 0-0.5-0.224-0.5-0.5v-3c0-0.276 0.224-0.5 0.5-0.5 0.275 0 0.5 0.224 0.5 0.5v3c0 0.276-0.225 0.5-0.5 0.5zM26.5 15c-0.276 0-0.5-0.224-0.5-0.5v-3c0-0.276 0.224-0.5 0.5-0.5 0.275 0 0.5 0.224 0.5 0.5v3c0 0.276-0.225 0.5-0.5 0.5zM26.5 9c-0.276 0-0.5-0.224-0.5-0.5v-2.5h-2.5c-0.276 0-0.5-0.224-0.5-0.5s0.224-0.5 0.5-0.5h3c0.275 0 0.5 0.224 0.5 0.5v3c0 0.276-0.225 0.5-0.5 0.5zM14.666 21.053c-0.184 0.185-0.483 0.185-0.668 0l-1.002-1.002c-0.002-0.003-0.001-0.007-0.003-0.009l-3.188-3.212c-0.185-0.184-0.185-0.483 0-0.668l1.002-1.003c0.185-0.185 0.484-0.185 0.669 0l2.86 2.881 6.014-6.013c0.184-0.185 0.483-0.185 0.668 0l1.002 1.003c0.186 0.185 0.186 0.484 0 0.669l-7.354 7.354zM20.5 6h-3c-0.276 0-0.5-0.224-0.5-0.5s0.224-0.5 0.5-0.5h3c0.275 0 0.5 0.224 0.5 0.5s-0.225 0.5-0.5 0.5zM14.5 6h-3c-0.276 0-0.5-0.224-0.5-0.5s0.224-0.5 0.5-0.5h3c0.275 0 0.5 0.224 0.5 0.5s-0.225 0.5-0.5 0.5zM8.5 27h-3c-0.276 0-0.5-0.224-0.5-0.5v-3c0-0.276 0.224-0.5 0.5-0.5s0.5 0.224 0.5 0.5v2.5h2.5c0.276 0 0.5 0.224 0.5 0.5s-0.224 0.5-0.5 0.5zM8.5 6h-2.5v2.5c0 0.276-0.224 0.5-0.5 0.5s-0.5-0.224-0.5-0.5v-3c0-0.276 0.224-0.5 0.5-0.5h3c0.276 0 0.5 0.224 0.5 0.5s-0.224 0.5-0.5 0.5zM5.5 11c0.276 0 0.5 0.224 0.5 0.5v3c0 0.276-0.224 0.5-0.5 0.5s-0.5-0.224-0.5-0.5v-3c0-0.276 0.224-0.5 0.5-0.5zM5.5 17c0.276 0 0.5 0.224 0.5 0.5v3c0 0.276-0.224 0.5-0.5 0.5s-0.5-0.224-0.5-0.5v-3c0-0.276 0.224-0.5 0.5-0.5zM11.5 26h3c0.275 0 0.5 0.224 0.5 0.5s-0.225 0.5-0.5 0.5h-3c-0.276 0-0.5-0.224-0.5-0.5s0.224-0.5 0.5-0.5zM17.5 26h3c0.275 0 0.5 0.224 0.5 0.5s-0.225 0.5-0.5 0.5h-3c-0.276 0-0.5-0.224-0.5-0.5s0.224-0.5 0.5-0.5z"></path>
+                                    </svg>
+                                  </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                  <input readonly class="bg-[#ECF4FD] border border-[#EADFD8] p-3 rounded-lg w-full font-medium" :value="user.secret" />
+                                  <button v-if="isCopied != user.secret" @click="copyToClipboard(user.secret)">
+                                    <svg fill="#000000" width="30px" height="30px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                                      <path d="M14 12V2H4V0h12v12h-2zM0 4h12v12H0V4zm2 2v8h8V6H2z" fill-rule="evenodd"/>
+                                    </svg>
+                                  </button>
+                                  <div v-if="isCopied == user.secret">
+                                    <svg fill="#000000" width="40px" height="40px" viewBox="0 0 32 32" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                                      <title>checked</title>
+                                      <path d="M26.5 27h-3c-0.276 0-0.5-0.224-0.5-0.5s0.224-0.5 0.5-0.5h2.5v-2.5c0-0.276 0.224-0.5 0.5-0.5 0.275 0 0.5 0.224 0.5 0.5v3c0 0.276-0.225 0.5-0.5 0.5zM26.5 21c-0.276 0-0.5-0.224-0.5-0.5v-3c0-0.276 0.224-0.5 0.5-0.5 0.275 0 0.5 0.224 0.5 0.5v3c0 0.276-0.225 0.5-0.5 0.5zM26.5 15c-0.276 0-0.5-0.224-0.5-0.5v-3c0-0.276 0.224-0.5 0.5-0.5 0.275 0 0.5 0.224 0.5 0.5v3c0 0.276-0.225 0.5-0.5 0.5zM26.5 9c-0.276 0-0.5-0.224-0.5-0.5v-2.5h-2.5c-0.276 0-0.5-0.224-0.5-0.5s0.224-0.5 0.5-0.5h3c0.275 0 0.5 0.224 0.5 0.5v3c0 0.276-0.225 0.5-0.5 0.5zM14.666 21.053c-0.184 0.185-0.483 0.185-0.668 0l-1.002-1.002c-0.002-0.003-0.001-0.007-0.003-0.009l-3.188-3.212c-0.185-0.184-0.185-0.483 0-0.668l1.002-1.003c0.185-0.185 0.484-0.185 0.669 0l2.86 2.881 6.014-6.013c0.184-0.185 0.483-0.185 0.668 0l1.002 1.003c0.186 0.185 0.186 0.484 0 0.669l-7.354 7.354zM20.5 6h-3c-0.276 0-0.5-0.224-0.5-0.5s0.224-0.5 0.5-0.5h3c0.275 0 0.5 0.224 0.5 0.5s-0.225 0.5-0.5 0.5zM14.5 6h-3c-0.276 0-0.5-0.224-0.5-0.5s0.224-0.5 0.5-0.5h3c0.275 0 0.5 0.224 0.5 0.5s-0.225 0.5-0.5 0.5zM8.5 27h-3c-0.276 0-0.5-0.224-0.5-0.5v-3c0-0.276 0.224-0.5 0.5-0.5s0.5 0.224 0.5 0.5v2.5h2.5c0.276 0 0.5 0.224 0.5 0.5s-0.224 0.5-0.5 0.5zM8.5 6h-2.5v2.5c0 0.276-0.224 0.5-0.5 0.5s-0.5-0.224-0.5-0.5v-3c0-0.276 0.224-0.5 0.5-0.5h3c0.276 0 0.5 0.224 0.5 0.5s-0.224 0.5-0.5 0.5zM5.5 11c0.276 0 0.5 0.224 0.5 0.5v3c0 0.276-0.224 0.5-0.5 0.5s-0.5-0.224-0.5-0.5v-3c0-0.276 0.224-0.5 0.5-0.5zM5.5 17c0.276 0 0.5 0.224 0.5 0.5v3c0 0.276-0.224 0.5-0.5 0.5s-0.5-0.224-0.5-0.5v-3c0-0.276 0.224-0.5 0.5-0.5zM11.5 26h3c0.275 0 0.5 0.224 0.5 0.5s-0.225 0.5-0.5 0.5h-3c-0.276 0-0.5-0.224-0.5-0.5s0.224-0.5 0.5-0.5zM17.5 26h3c0.275 0 0.5 0.224 0.5 0.5s-0.225 0.5-0.5 0.5h-3c-0.276 0-0.5-0.224-0.5-0.5s0.224-0.5 0.5-0.5z"></path>
+                                    </svg>
+                                  </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <img class="h-full w-full object-cover" src="/assets-v1/templates_copy/assets/images/widget.png"/>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const { ref, onMounted, createApp } = Vue;
+
+      const token = ref(localStorage.getItem("clientToken") || null);
+      const user = ref({
+        id: "",
+        secret: "",
+        name: "",
+        redirect_uri: "",
+      });
+      const isCopied = ref("")
+
+      const getUserDetails = async () => {
+        try {
+          //const resp = await window.fetch("https://layer8devproxy.net/api/v1/profile",
+          const resp = await window.fetch(
+            "http://localhost:5001/api/v1/client-profile",
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "Application/Json",
+                Authorization: `Bearer ${token.value}`,
+              },
+            }
+          );
+          const data = await resp.json();
+          console.log("resp", data);
+          user.value = data;
+        } catch (error) {
+          console.error(error);
+        }
+      };
+
+      const copyToClipboard = async (text) => {
+        try {
+          isCopied.value = text
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.setAttribute('readonly', '');
+          textarea.style.position = 'absolute';
+          textarea.style.left = '-9999px';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+        } catch (error) {
+          console.error(error)
+        }
+      }
+
+      const logoutUser = () => {
+        token.value = null;
+        localStorage.removeItem("clientToken");
+        window.location.href = "http://localhost:5001/";
+      };
+
+      const app = createApp({
+        setup() {
+          onMounted(() => {
+            getUserDetails();
+          });
+
+          return {
+            user,
+            logoutUser,
+            copyToClipboard,
+            isCopied
+          };
+        },
+      });
+
+      app.mount("#app");
+    </script>
+  </body>
+</html>

@@ -1,0 +1,43 @@
+/* Base styles */
+.welcome-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box; 
+}
+
+@media (min-width: 576px) {
+    .welcome-container {
+        font-size: 18px;
+    }
+}
+
+@media (min-width: 768px) {
+    .welcome-container {
+        padding: 30px;
+        font-size: 20px;
+    }
+}
+
+@media (min-width: 992px) {
+    .welcome-container {
+        padding: 40px;
+        font-size: 22px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .welcome-container {
+        padding: 50px;
+        font-size: 24px;
+    }
+}
+
+.user-container {
+    max-width: 1220px;
+    margin: 0 auto;
+}
+.client-container {
+    max-width: 1120px;
+    margin: 0 auto;
+}

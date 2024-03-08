@@ -11,8 +11,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 
 	Ctl "globe-and-citizen/layer8/server/resource_server/controller"
 	"globe-and-citizen/layer8/server/resource_server/dto"
@@ -41,6 +43,8 @@ func getPwd() {
 }
 
 func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
 
 	// Use flags to set the port
 	port := flag.Int("port", 8080, "Port to run the server on")
@@ -96,6 +100,7 @@ func main() {
 
 	Server(proxyServerPortInt, service, repository) // Run server (which never returns)
 
+	<-ctx.Done()
 }
 
 func Server(port int, service interfaces.IService, MemoryRepository interfaces.IRepository) {
@@ -192,5 +197,11 @@ func Server(port int, service interfaces.IService, MemoryRepository interfaces.I
 		}),
 	}
 	log.Printf("Starting server on port %d...", port)
-	log.Fatal(server.ListenAndServe())
+
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil {
+			log.Fatal(fmt.Sprintf("failed to listen and serve at addr=%s :%s", port, err))
+		}
+	}()
 }

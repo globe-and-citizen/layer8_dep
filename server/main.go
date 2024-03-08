@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 
 	Ctl "globe-and-citizen/layer8/server/resource_server/controller"
 	"globe-and-citizen/layer8/server/resource_server/dto"
@@ -42,7 +43,7 @@ func getPwd() {
 }
 
 func main() {
-	ctx, cancel := signal.NotifyContext(context.Background())
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
 	// Use flags to set the port

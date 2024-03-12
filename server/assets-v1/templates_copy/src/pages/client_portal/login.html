@@ -20,11 +20,11 @@
         <div class="client-container">
           <div class="grid grid-cols-1 md:grid-cols-2 bg-white h-dvh">
             <div class="self-center">
-              <h2 class="font-bold text-3xl text-[#3751FE] md:mb-24 mb-10">
+              <h2 class="font-bold text-3xl text-[#3751FE] md:mb-24 mb-10 animate-slideFromLeft">
                 Client Portal
               </h2>
-              <h1 class="font-bold text-4xl text-[#3751FE] mb-11">Login</h1>
-              <div class="mr-0 md:mr-16 lg:mr-28">
+              <h1 class="font-bold text-4xl text-[#3751FE] mb-11 animate-slideFromLeft">Login</h1>
+              <div class="mr-0 md:mr-16 lg:mr-28 animate-slideFromLeft">
                 <div class="relative border border-[#C1BBBB]">
                   <input
                     type="text"
@@ -65,12 +65,12 @@
                 </div>
                 <button
                   @click="loginClient"
-                  class="w-full py-4 border border-[#3751FE] text-[#3751FE] mb-7 hover:shadow-lg hover:text-white hover:bg-[#3751FE]"
+                  class="animate-bounce w-full py-4 border border-[#3751FE] text-[#3751FE] mb-7 hover:shadow-lg hover:text-white hover:bg-[#3751FE]"
                 >
                   Login
                 </button>
                 <a
-                  class="text-sm text-[#414141] font-normal text-start block cursor-pointer"
+                  class="animate-slideFromLeft text-sm text-[#414141] font-normal text-start block cursor-pointer"
                   href="http://localhost:5001/client-register-page"
                 >
                   Don't have an account? <span class="font-bold">Register</span>
@@ -82,7 +82,7 @@
         </div>
         <div class="hidden md:flex lg:flex items-center absolute lg:absolute bg-[#E5E5E5] right-0 top-0 pt-40 w-1/2 lg:w-1/2 h-dvh py-auto">
           <img
-            class="m-auto"
+            class="m-auto mt-10 animate-slideFromRight"
             src="/assets-v1/templates_copy/assets/images/client-image.png"
           />
         </div>
